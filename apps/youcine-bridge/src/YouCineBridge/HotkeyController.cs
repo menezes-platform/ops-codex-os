@@ -16,14 +16,21 @@ public sealed class HotkeyController : IDisposable
     private const uint ModControlAlt = 0x0003;
     private readonly Action<BridgeHotkey> _dispatch;
     private readonly Func<bool> _isYouCineFocused;
+    private readonly Action<int, int>? _registrationFailure;
     private readonly HotkeyWindow _window;
     private readonly System.Windows.Forms.Timer _focusTimer;
     private bool _f11Registered;
+    private bool _f11RegistrationAttempted;
     private bool _started;
-    public HotkeyController(Action<BridgeHotkey> dispatch, Func<bool> isYouCineFocused)
+
+    public HotkeyController(
+        Action<BridgeHotkey> dispatch,
+        Func<bool> isYouCineFocused,
+        Action<int, int>? registrationFailure = null)
     {
         _dispatch = dispatch;
         _isYouCineFocused = isYouCineFocused;
+        _registrationFailure = registrationFailure;
         _window = new HotkeyWindow(HandleHotkey);
         _focusTimer = new System.Windows.Forms.Timer { Interval = 200 };
         _focusTimer.Tick += (_, _) => SyncF11Registration();
@@ -38,16 +45,44 @@ public sealed class HotkeyController : IDisposable
         _ => null
     };
 
+    public static IReadOnlyList<int> RegisterAvailable(
+        IEnumerable<(int Id, uint Modifiers, uint Key)> bindings,
+        Func<int, uint, uint, bool> tryRegister)
+    {
+        var unavailable = new List<int>();
+        foreach (var binding in bindings)
+        {
+            if (!tryRegister(binding.Id, binding.Modifiers, binding.Key))
+                unavailable.Add(binding.Id);
+        }
+        return unavailable;
+    }
+
     public void Start()
     {
         if (_started) return;
-        RegisterRequired(1, ModControlAlt, (uint)Keys.P);
-        RegisterRequired(2, ModControlAlt, (uint)Keys.Y);
-        RegisterRequired(3, ModControlAlt, (uint)Keys.R);
+
+        RegisterAvailable(
+            new (int Id, uint Modifiers, uint Key)[]
+            {
+                (1, ModControlAlt, (uint)Keys.P),
+                (2, ModControlAlt, (uint)Keys.Y),
+                (3, ModControlAlt, (uint)Keys.R)
+            },
+            TryRegister);
+
         _focusTimer.Start();
         SyncF11Registration();
         _started = true;
     }
+
+    private bool TryRegister(int id, uint modifiers, uint key)
+    {
+        if (RegisterHotKey(_window.Handle, id, modifiers, key)) return true;
+        _registrationFailure?.Invoke(id, Marshal.GetLastWin32Error());
+        return false;
+    }
+
     private void HandleHotkey(int id)
     {
         var action = ResolveAction(id, _isYouCineFocused());
@@ -57,23 +92,18 @@ public sealed class HotkeyController : IDisposable
     private void SyncF11Registration()
     {
         var shouldRegister = _isYouCineFocused();
-        if (shouldRegister == _f11Registered) return;
         if (shouldRegister)
         {
-            RegisterRequired(4, 0, (uint)Keys.F11);
-            _f11Registered = true;
+            if (_f11RegistrationAttempted) return;
+            _f11RegistrationAttempted = true;
+            _f11Registered = TryRegister(4, 0, (uint)Keys.F11);
+            return;
         }
-        else
-        {
-            UnregisterHotKey(_window.Handle, 4);
-            _f11Registered = false;
-        }
-    }
 
-    private void RegisterRequired(int id, uint modifiers, uint key)
-    {
-        if (!RegisterHotKey(_window.Handle, id, modifiers, key))
-            throw new InvalidOperationException($"Nao foi possivel registrar hotkey {id}.");
+        if (!_f11RegistrationAttempted) return;
+        if (_f11Registered) UnregisterHotKey(_window.Handle, 4);
+        _f11Registered = false;
+        _f11RegistrationAttempted = false;
     }
 
     public void Dispose()
@@ -83,6 +113,7 @@ public sealed class HotkeyController : IDisposable
         _window.Dispose();
         _focusTimer.Dispose();
     }
+
     private sealed class HotkeyWindow : NativeWindow, IDisposable
     {
         private readonly Action<int> _handler;
