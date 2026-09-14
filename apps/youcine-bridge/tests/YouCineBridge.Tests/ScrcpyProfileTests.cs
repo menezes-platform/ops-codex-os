@@ -11,6 +11,7 @@ public sealed class ScrcpyProfileTests
         Assert.Contains("--serial", args);
         Assert.Contains("100.106.31.127:38177", args);
         Assert.Contains("--new-display=1920x1080/240", args);
+        Assert.Contains("--flex-display", args);
         Assert.Contains("--start-app=+com.world.youcinemobile", args);
         Assert.Contains("--no-vd-system-decorations", args);
         Assert.Contains("--audio-source=playback", args);

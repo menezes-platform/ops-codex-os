@@ -14,6 +14,7 @@ public sealed record ScrcpyProfile(
         {
             "--serial", endpoint,
             $"--new-display={Display}",
+            "--flex-display",
             "--start-app=+com.world.youcinemobile",
             "--no-vd-system-decorations",
             "--audio-source=playback",
