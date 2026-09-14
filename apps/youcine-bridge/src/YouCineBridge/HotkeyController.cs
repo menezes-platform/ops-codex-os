@@ -18,9 +18,6 @@ public sealed class HotkeyController : IDisposable
     private readonly Func<bool> _isYouCineFocused;
     private readonly Action<int, int>? _registrationFailure;
     private readonly HotkeyWindow _window;
-    private readonly System.Windows.Forms.Timer _focusTimer;
-    private bool _f11Registered;
-    private bool _f11RegistrationAttempted;
     private bool _started;
 
     public HotkeyController(
@@ -32,8 +29,6 @@ public sealed class HotkeyController : IDisposable
         _isYouCineFocused = isYouCineFocused;
         _registrationFailure = registrationFailure;
         _window = new HotkeyWindow(HandleHotkey);
-        _focusTimer = new System.Windows.Forms.Timer { Interval = 200 };
-        _focusTimer.Tick += (_, _) => SyncF11Registration();
     }
 
     public static BridgeHotkey? ResolveAction(int id, bool youCineFocused) => id switch
@@ -41,7 +36,6 @@ public sealed class HotkeyController : IDisposable
         1 => BridgeHotkey.TogglePip,
         2 => BridgeHotkey.Focus,
         3 => BridgeHotkey.Reconnect,
-        4 when youCineFocused => BridgeHotkey.ToggleFullscreen,
         _ => null
     };
 
@@ -71,8 +65,6 @@ public sealed class HotkeyController : IDisposable
             },
             TryRegister);
 
-        _focusTimer.Start();
-        SyncF11Registration();
         _started = true;
     }
 
@@ -89,29 +81,11 @@ public sealed class HotkeyController : IDisposable
         if (action is BridgeHotkey value) _dispatch(value);
     }
 
-    private void SyncF11Registration()
-    {
-        var shouldRegister = _isYouCineFocused();
-        if (shouldRegister)
-        {
-            if (_f11RegistrationAttempted) return;
-            _f11RegistrationAttempted = true;
-            _f11Registered = TryRegister(4, 0, (uint)Keys.F11);
-            return;
-        }
-
-        if (!_f11RegistrationAttempted) return;
-        if (_f11Registered) UnregisterHotKey(_window.Handle, 4);
-        _f11Registered = false;
-        _f11RegistrationAttempted = false;
-    }
 
     public void Dispose()
     {
-        _focusTimer.Stop();
-        for (var id = 1; id <= 4; id++) UnregisterHotKey(_window.Handle, id);
+        for (var id = 1; id <= 3; id++) UnregisterHotKey(_window.Handle, id);
         _window.Dispose();
-        _focusTimer.Dispose();
     }
 
     private sealed class HotkeyWindow : NativeWindow, IDisposable

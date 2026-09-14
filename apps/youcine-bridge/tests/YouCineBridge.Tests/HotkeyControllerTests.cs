@@ -8,16 +8,17 @@ public sealed class HotkeyControllerTests
     [InlineData(1, true, BridgeHotkey.TogglePip)]
     [InlineData(2, true, BridgeHotkey.Focus)]
     [InlineData(3, true, BridgeHotkey.Reconnect)]
-    [InlineData(4, true, BridgeHotkey.ToggleFullscreen)]
     public void ResolveAction_MapsRegisteredIds(int id, bool focused, BridgeHotkey expected)
     {
         Assert.Equal(expected, HotkeyController.ResolveAction(id, focused));
     }
 
-    [Fact]
-    public void ResolveAction_IgnoresF11WhenYouCineIsNotFocused()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ResolveAction_LeavesF11ToScrcpy(bool focused)
     {
-        Assert.Null(HotkeyController.ResolveAction(4, false));
+        Assert.Null(HotkeyController.ResolveAction(4, focused));
     }
 
     [Fact]
