@@ -5,6 +5,7 @@ const { tick } = require('./orchestrator');
 const { createEgoBrowserTransport } = require('./browser/ego-browser');
 const { createNotifier } = require('./notifier');
 const { createRemoteHealth } = require('./remote-health');
+const { parseMachineProviderIds, resolveMachineProviders } = require('./remote/machine-providers');
 
 function parseArgs(argv) {
   const out = {
@@ -14,6 +15,7 @@ function parseArgs(argv) {
     intervalSeconds: 15,
     includeSynthetic: false, runId: null,
     egoCommand: process.env.PERSISTD_EGO_COMMAND || 'ego-browser',
+    machineProviders: process.env.PERSISTD_MACHINE_PROVIDERS || 'rdc',
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -23,6 +25,7 @@ function parseArgs(argv) {
     else if (arg === '--rollover-minutes') out.rolloverMinutes = Number(argv[++i]);
     else if (arg === '--interval-seconds') out.intervalSeconds = Number(argv[++i]);
     else if (arg === '--ego-command') out.egoCommand = argv[++i];
+    else if (arg === '--machine-providers') out.machineProviders = argv[++i];
     else throw new Error(`UNKNOWN_ARG:${arg}`);
   }
   return out;
@@ -31,7 +34,9 @@ function parseArgs(argv) {
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 async function runOnce(options) {
-  const browser = createEgoBrowserTransport({ command: options.egoCommand });
+  const machineProviderIds = parseMachineProviderIds(options.machineProviders);
+  const machineProviders = resolveMachineProviders(machineProviderIds);
+  const browser = createEgoBrowserTransport({ command: options.egoCommand, machineProviders });
   const notifier = createNotifier({ browser });
   const remoteHealth = createRemoteHealth({ browser });
   return tick({
@@ -41,6 +46,7 @@ async function runOnce(options) {
     remoteHealth,
     rolloverMinutes: options.rolloverMinutes,
     includeSynthetic: options.includeSynthetic, runId: options.runId,
+    machineProviderIds,
   });
 }
 

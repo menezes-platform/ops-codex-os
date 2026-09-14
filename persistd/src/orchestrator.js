@@ -31,15 +31,58 @@ function resolveDisplayName(state = {}) {
   return token;
 }
 
-function appendChatHistory(state, chatId) {
-  if (!chatId) return state;
+function appendChatHistory(state, chatId, generation = null) {
+  if (!chatId || chatId === 'NONE') return state;
   let history = [];
   try { history = JSON.parse(state.CHAT_HISTORY_JSON || '[]'); } catch {}
-  if (history.some((item) => item.chatId === chatId)) return state;
-  return {
-    ...state,
-    CHAT_HISTORY_JSON: JSON.stringify([...history, { index: history.length + 1, chatId }]),
-  };
+  const normalizedGeneration = Number.isInteger(generation) && generation > 0 ? generation : null;
+  const existingIndex = history.findIndex((item) => item?.chatId === chatId);
+  if (existingIndex >= 0) {
+    if (normalizedGeneration == null || Number.isInteger(history[existingIndex]?.generation)) return state;
+    const next = [...history];
+    next[existingIndex] = { ...next[existingIndex], generation: normalizedGeneration };
+    return { ...state, CHAT_HISTORY_JSON: JSON.stringify(next) };
+  }
+  const item = { index: history.length + 1, chatId };
+  if (normalizedGeneration != null) item.generation = normalizedGeneration;
+  return { ...state, CHAT_HISTORY_JSON: JSON.stringify([...history, item]) };
+}
+
+function migrateLegacyChatHistoryGenerations(state) {
+  const currentGeneration = Number.parseInt(state.GENERATION || '0', 10);
+  const history = parseChatHistory(state);
+  if (!Number.isInteger(currentGeneration) || currentGeneration < 2) return state;
+  if (history.length !== currentGeneration - 1 || history.length === 0) return state;
+  if (!state.CHAT_ID || state.CHAT_ID === 'NONE' || history.at(-1)?.chatId !== state.CHAT_ID) return state;
+  const chatIds = [];
+  for (let index = 0; index < history.length; index++) {
+    const item = history[index];
+    if (item?.index !== index + 1 || !item?.chatId || item.chatId === 'NONE' || Number.isInteger(item?.generation)) return state;
+    chatIds.push(item.chatId);
+  }
+  if (new Set(chatIds).size !== chatIds.length) return state;
+  const migrated = history.map((item, index) => ({ ...item, generation: index + 2 }));
+  return { ...state, CHAT_HISTORY_JSON: JSON.stringify(migrated) };
+}
+
+
+function selectArchiveCandidate(state, now = new Date()) {
+  const currentGeneration = Number.parseInt(state.GENERATION || '0', 10);
+  if (currentGeneration < 2 || !state.CLAIM_RESUMED_AT || state.CLAIM_RESUMED_AT === 'NONE') return null;
+  const history = parseChatHistory(state);
+  const candidates = history.filter((item) => {
+    const generation = Number.parseInt(item?.generation, 10);
+    if (!Number.isInteger(generation) || generation <= 0) return false;
+    if (!item?.chatId || item.chatId === 'NONE' || item.chatId === state.CHAT_ID) return false;
+    if (generation >= currentGeneration) return false;
+    return item.archiveStatus !== 'ARCHIVED' && item.archiveStatus !== 'MANUAL_REQUIRED';
+  });
+  candidates.sort((a, b) => Number(a.generation) - Number(b.generation));
+  const candidate = candidates[0] || null;
+  if (!candidate) return null;
+  const retryAt = Date.parse(candidate.archiveNextAt || '');
+  if (Number.isFinite(retryAt) && retryAt > now.getTime()) return null;
+  return candidate;
 }
 
 async function notifyBlockedOnce({ controlPath, state, notifier, now }) {
@@ -94,6 +137,56 @@ function parseChatHistory(state) {
     const value = JSON.parse(state.CHAT_HISTORY_JSON || '[]');
     return Array.isArray(value) ? value : [];
   } catch { return []; }
+}
+
+function updateChatHistoryEntry(state, candidate, updates) {
+  const history = parseChatHistory(state);
+  const index = history.findIndex((item) => item?.chatId === candidate.chatId
+    && Number.parseInt(item?.generation, 10) === Number.parseInt(candidate.generation, 10));
+  if (index < 0) return state;
+  const next = [...history];
+  next[index] = { ...next[index], ...updates };
+  return { ...state, CHAT_HISTORY_JSON: JSON.stringify(next) };
+}
+
+async function retryChatArchive({ controlPath, state, browser, now }) {
+  const candidate = selectArchiveCandidate(state, now);
+  if (!candidate) return state;
+  if (!browser?.archiveChat) return state;
+  if (browser?.isRunChatBusy && state.CHAT_ID && state.CHAT_ID !== 'NONE') {
+    try {
+      const activity = await browser.isRunChatBusy({ state, chatId: state.CHAT_ID });
+      if (activity?.busy || activity?.ok === false) return state;
+    } catch { return state; }
+  }
+
+  let result;
+  try {
+    result = await browser.archiveChat({ state, chatId: candidate.chatId });
+  } catch {
+    result = { status: 'ARCHIVE_ERROR', ok: false, verified: false };
+  }
+
+  const fresh = readControl(controlPath);
+  if (fresh.GENERATION !== state.GENERATION || fresh.CHAT_ID !== state.CHAT_ID) return fresh;
+  const current = parseChatHistory(fresh).find((item) => item?.chatId === candidate.chatId
+    && Number.parseInt(item?.generation, 10) === Number.parseInt(candidate.generation, 10));
+  if (!current) return fresh;
+
+  const attempts = Number.parseInt(current.archiveAttempts || '0', 10) + 1;
+  let updates;
+  if (result?.ok === true && result?.verified === true) {
+    updates = { archiveStatus: 'ARCHIVED', archivedAt: now.toISOString(), archiveAttempts: attempts, archiveNextAt: 'NONE', archiveReason: 'NONE' };
+  } else {
+    const reason = String(result?.status || 'ARCHIVE_ERROR');
+    const manual = ['ARCHIVE_UNVERIFIED', 'MANUAL_REQUIRED', 'CURRENT_CHAT_MISSING'].includes(reason) || attempts >= 3;
+    updates = manual
+      ? { archiveStatus: 'MANUAL_REQUIRED', archiveAttempts: attempts, archiveNextAt: 'NONE', archiveReason: reason }
+      : { archiveStatus: 'FAILED', archiveAttempts: attempts, archiveNextAt: new Date(now.getTime() + Math.min(30 * 60_000, 2 * 60_000 * (2 ** Math.min(attempts - 1, 4)))).toISOString(), archiveReason: reason };
+  }
+  const updated = updateChatHistoryEntry(fresh, candidate, updates);
+  writeControlAtomic(controlPath, updated);
+  return updated;
 }
 
 function mergeDiscoveredChatHistory(state, discoveredChats = []) {
@@ -250,6 +343,8 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
   try {
     const now = clock();
     let state = readControl(controlPath);
+    const migratedLegacyState = migrateLegacyChatHistoryGenerations(state);
+    if (migratedLegacyState !== state) { state = migratedLegacyState; writeControlAtomic(controlPath, state); }
     let generation = Number.parseInt(state.GENERATION || '1', 10);
     const orphanCleanup = await retryOrphanTargetCleanup({ controlPath, state, browser, now });
     state = orphanCleanup.state;
@@ -275,6 +370,7 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
       if (state.CLAIM_CONFIRM_STATUS !== 'SENT') return { action: 'CLAIM_CONFIRM_RETRY', generation };
     }
     if (state.STATUS !== 'DONE') state = await retryActivePrune({ controlPath, state, browser, now });
+    if (state.STATUS !== 'DONE') state = await retryChatArchive({ controlPath, state, browser, now });
     state = await reconcileChatPresentation({
       controlPath, state, browser, activeTitles: state.STATUS !== 'DONE',
     });
@@ -403,8 +499,12 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
       }
     }
 
+    let claimedWithHistory = claimed;
+    if (claimed.CHAT_ID && claimed.CHAT_ID !== 'NONE' && claimed.CHAT_ID !== outcome?.chatId) {
+      claimedWithHistory = appendChatHistory(claimedWithHistory, claimed.CHAT_ID, generation);
+    }
     let finalState = claimLease({
-      ...claimed,
+      ...claimedWithHistory,
       CHAT_ID: outcome?.chatId || claimed.CHAT_ID || 'NONE',
       BROWSER_TASKSPACE_ID: outcome?.taskSpaceId || claimed.BROWSER_TASKSPACE_ID || 'NONE',
       TAKEOVER_EVIDENCE: outcome?.evidence || 'durable-claim-observed',
@@ -419,12 +519,11 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
       CLAIM_CONFIRMED_AT: 'NONE',
       CLAIM_RESUMED_AT: 'NONE',
     }, `G${nextGeneration}`, now, 90_000);
-    finalState = appendChatHistory(finalState, outcome?.chatId);
+    finalState = appendChatHistory(finalState, outcome?.chatId, nextGeneration);
     writeControlAtomic(controlPath, finalState);
 
     if (browser?.renameChat && outcome?.chatId) {
-      const history = JSON.parse(finalState.CHAT_HISTORY_JSON || '[]');
-      const title = buildChatTitle(finalState.DISPLAY_NAME, history.length);
+      const title = buildChatTitle(finalState.DISPLAY_NAME, nextGeneration);
       try { await browser.renameChat({ state: finalState, chatId: outcome.chatId, title }); } catch {}
     }
     if (outcome?.chatId) finalState = await retryActivePrune({ controlPath, state: finalState, browser, now });
@@ -435,10 +534,11 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
     if (twoPhaseClaim && finalState.CLAIM_CONFIRM_STATUS !== 'SENT') {
       return { action: 'CLAIM_CONFIRM_RETRY', generation: nextGeneration };
     }
+    finalState = await retryChatArchive({ controlPath, state: finalState, browser, now });
     return { action: 'ROLLED_OVER', generation: nextGeneration };
   } finally {
     release();
   }
 }
 
-module.exports = { tick, isRolloverDue, buildChatTitle, resolveDisplayName, appendChatHistory };
+module.exports = { tick, isRolloverDue, buildChatTitle, resolveDisplayName, appendChatHistory, selectArchiveCandidate, migrateLegacyChatHistoryGenerations };

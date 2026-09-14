@@ -76,10 +76,10 @@ try {
   previousTurnIdle = Boolean(await page.waitForFunction(() => !document.querySelector('[data-testid="stop-button"]'), undefined, { timeout: 30000 }))
 } catch { previousTurnIdle = false }
 if (!previousTurnIdle) throw new Error('Previous assistant turn did not settle')
-${commanderSetup}
 const assistants = page.locator('[data-message-author-role="assistant"]')
 const beforeAssistant = await assistants.count()
 await composer.fill(${js(message)})
+${commanderSetup}
 const sendButton = page.locator('[data-testid="send-button"]')
 if ((await sendButton.count()) > 0) await sendButton.first().click()
 else await composer.press('Enter')

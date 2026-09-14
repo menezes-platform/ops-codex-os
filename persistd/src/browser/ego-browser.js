@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn, execFileSync } = require('node:child_process');
 const {
-  buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
+  buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildArchiveChatScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
 } = require('./ego-script');
 const { buildFindAssistantLineScript, buildSendMessageScript } = require('./conversation-script');
 const { ensureEdgeBrowser } = require('./edge-host');
@@ -127,6 +127,12 @@ function createEgoBrowserTransport(options = {}) {
     },
     async renameChats({ state, chats }) {
       return run(buildRenameChatsScript({ runId: state.RUN_ID, chats }));
+    },
+    async archiveChat({ state, chatId }) {
+      if (!state.CHAT_ID || state.CHAT_ID === 'NONE') {
+        return { status: 'CURRENT_CHAT_MISSING', ok: false, verified: false, chatId };
+      }
+      return run(buildArchiveChatScript({ runId: state.RUN_ID, chatId, keepChatId: state.CHAT_ID }));
     },
     async discoverRunChats({ state }) {
       return run(buildDiscoverRunChatsScript({ runId: state.RUN_ID }));

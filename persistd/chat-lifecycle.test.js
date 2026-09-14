@@ -1,4 +1,4 @@
-const test = require('node:test');
+﻿const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const orchestrator = require('./src/orchestrator');
@@ -23,11 +23,84 @@ test('appends persistd-created chats without losing the legacy CHAT_ID', () => {
   ]);
 });
 
+test('records controller generation independently from chat-history index', () => {
+  const first = orchestrator.appendChatHistory({ CHAT_ID: 'legacy-final' }, 'chat-2', 2);
+  const second = orchestrator.appendChatHistory(first, 'chat-3', 3);
+  const enriched = orchestrator.appendChatHistory(second, 'chat-2', 2);
+
+  assert.deepEqual(JSON.parse(enriched.CHAT_HISTORY_JSON), [
+    { index: 1, chatId: 'chat-2', generation: 2 },
+    { index: 2, chatId: 'chat-3', generation: 3 },
+  ]);
+});
+
+test('selects only generations older than the current and immediate predecessor for archive', () => {
+  assert.equal(typeof orchestrator.selectArchiveCandidate, 'function');
+  const candidate = orchestrator.selectArchiveCandidate({
+    GENERATION: '5', CHAT_ID: 'chat-5', CLAIM_RESUMED_AT: '2026-09-09T12:00:00Z',
+    CHAT_HISTORY_JSON: JSON.stringify([
+      { index: 1, chatId: 'legacy-unknown' },
+      { index: 2, chatId: 'chat-2', generation: 2 },
+      { index: 3, chatId: 'chat-3', generation: 3 },
+      { index: 4, chatId: 'chat-4', generation: 4 },
+      { index: 5, chatId: 'chat-5', generation: 5 },
+    ]),
+  }, new Date('2026-09-09T12:01:00Z'));
+
+  assert.equal(candidate.chatId, 'chat-2');
+  assert.equal(candidate.generation, 2);
+  assert.notEqual(candidate.chatId, 'legacy-unknown');
+});
+
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { resolveRun } = require('./src/resolver');
 
+
+test('archives the immediate predecessor as soon as the successor has resumed', () => {
+  const candidate = orchestrator.selectArchiveCandidate({
+    GENERATION: '2', CHAT_ID: 'chat-2', CLAIM_RESUMED_AT: '2026-09-09T12:00:00Z',
+    CHAT_HISTORY_JSON: JSON.stringify([
+      { index: 1, chatId: 'chat-1', generation: 1 },
+      { index: 2, chatId: 'chat-2', generation: 2 },
+    ]),
+  }, new Date('2026-09-09T12:00:01Z'));
+
+  assert.equal(candidate?.chatId, 'chat-1');
+  assert.equal(candidate?.generation, 1);
+});
+
+test('rollover archives the predecessor only after the successor is durably confirmed and resumed', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-archive-predecessor-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'archive-predecessor', GENERATION: '1', STATUS: 'CONTEXT_RISK', DISPLAY_NAME: 'Archive',
+    STARTED_AT: '2026-09-09T11:00:00Z', CLAIMED_AT: '2026-09-09T11:00:00Z',
+    CLAIM_RESUMED_AT: '2026-09-09T11:00:30Z', PROJECT_ROOT: 'C:\\repo', CHAT_ID: 'chat-1',
+  });
+  const archived = [];
+  const browser = {
+    async createSuccessor({ state, nextGeneration }) {
+      return { status: 'CLAIM_REQUESTED', chatId: 'chat-2', targetId: 'target-2', taskSpaceId: 9,
+        requestLine: 'CLAIM_REQUEST ' + state.RUN_ID + ' G' + nextGeneration + ' ' + state.CLAIM_NONCE };
+    },
+    async renameChat() { return { ok: true }; },
+    async pruneRunTabs() { return { ok: true, remaining: 1 }; },
+    async sendClaimConfirmation() { return { ok: true, status: 'ASSISTANT_STARTED' }; },
+    async archiveChat({ chatId }) { archived.push(chatId); return { status: 'ARCHIVED', ok: true, verified: true }; },
+  };
+  const result = await orchestrator.tick({ root, browser, notifier: {}, rolloverMinutes: 0,
+    clock: () => new Date('2026-09-09T12:00:00Z') });
+  const final = readControl(controlPath);
+  const predecessor = JSON.parse(final.CHAT_HISTORY_JSON).find((item) => item.chatId === 'chat-1');
+
+  assert.equal(result.action, 'ROLLED_OVER');
+  assert.equal(final.GENERATION, '2');
+  assert.equal(final.CLAIM_CONFIRM_STATUS, 'SENT');
+  assert.ok(final.CLAIM_RESUMED_AT && final.CLAIM_RESUMED_AT !== 'NONE');
+  assert.deepEqual(archived, ['chat-1']);
+  assert.equal(predecessor.archiveStatus, 'ARCHIVED');
+});
 test('resolves only explicitly pending post-DONE lifecycle work', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-lifecycle-'));
   const legacyDir = path.join(root, 'legacy');
@@ -133,10 +206,10 @@ test('records and names a successor only after durable claim, without coupling r
   assert.equal(result.action, 'ROLLED_OVER');
   assert.equal(final.GENERATION, '2');
   assert.equal(final.STATUS, 'ACTIVE');
-  assert.deepEqual(JSON.parse(final.CHAT_HISTORY_JSON), [{ index: 1, chatId: 'chat-2' }]);
+  assert.deepEqual(JSON.parse(final.CHAT_HISTORY_JSON), [{ index: 1, chatId: 'chat-2', generation: 2 }]);
   assert.equal(renameCalls.length, 1);
   assert.equal(renameCalls[0].chatId, 'chat-2');
-  assert.equal(renameCalls[0].title, 'Conthabil 1');
+  assert.equal(renameCalls[0].title, 'Conthabil 2');
   assert.equal(String(renameCalls[0].state.GENERATION), '2');
 });
 
@@ -212,6 +285,34 @@ test('browser transport exposes cosmetic rename and isolated cleanup operations'
   assert.match(scripts[0], /Conthabil 1/);
   assert.match(scripts[1], /1 de 1/);
   assert.match(scripts[2], /taskSpaces\.complete/);
+});
+
+test('builds a fail-closed semantic archive script that preserves the current chat', () => {
+  assert.equal(typeof egoScript.buildArchiveChatScript, 'function');
+  const script = egoScript.buildArchiveChatScript({ runId: 'fisco', chatId: 'chat-2', keepChatId: 'chat-5' });
+  assert.doesNotMatch(script, /backend-api/);
+  assert.match(script, /chat-2/);
+  assert.match(script, /chat-5/);
+  assert.match(script, /Arquivar/);
+  assert.match(script, /Archive/);
+  assert.match(script, /ARCHIVE_UNVERIFIED/);
+  assert.match(script, /browser\.switchTab/);
+  assert.match(script, /browser\.closeTab/);
+  const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+  assert.doesNotThrow(() => new AsyncFunction(script));
+});
+
+test('browser transport exposes verified archive for one exact durable chat id', async () => {
+  let captured = '';
+  const transport = createEgoBrowserTransport({ runner: async (script) => {
+    captured = script;
+    return { status: 'ARCHIVED', ok: true, verified: true, chatId: 'chat-2' };
+  } });
+  assert.equal(typeof transport.archiveChat, 'function');
+  const result = await transport.archiveChat({ state: { RUN_ID: 'fisco', CHAT_ID: 'chat-5' }, chatId: 'chat-2' });
+  assert.equal(result.verified, true);
+  assert.match(captured, /chat-2/);
+  assert.match(captured, /chat-5/);
 });
 
 test('persistd recovers Edge when PROGRAMFILES(X86) is absent', () => {
@@ -338,7 +439,7 @@ test('discovery only reconciles taskspace metadata and cannot mutate chat author
   const renamed = [];
   const browser = {
     async discoverRunChats() { return { taskSpaceId: 38, chats: [
-      { chatId: '6a976d5d', title: 'Execução bloqueada Task 6' },
+      { chatId: '6a976d5d', title: 'ExecuÃ§Ã£o bloqueada Task 6' },
       { chatId: '6a976179', title: 'Desenho Arquitetural Gamificado' },
       { chatId: '6a9761e1', title: 'Design de arquitetura adaptativa' },
     ] }; },
@@ -632,6 +733,32 @@ test('persistd locally promotes a valid claim request before confirming successo
   assert.equal(confirmations[0].chatId, 'chat-5');
 });
 
+test('rollover records the durable predecessor generation before replacing CHAT_ID', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-predecessor-history-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'predecessor-history', GENERATION: '2', STATUS: 'CONTEXT_RISK', DISPLAY_NAME: 'FiscoBR',
+    STARTED_AT: '2026-09-02T10:00:00Z', CLAIMED_AT: '2026-09-02T10:00:30Z',
+    CLAIM_RESUMED_AT: '2026-09-02T10:01:00Z', PROJECT_ROOT: 'C:\\repo', CHAT_ID: 'chat-2',
+  });
+  const browser = {
+    async createSuccessor({ state, nextGeneration }) {
+      return { status: 'CLAIM_REQUESTED', chatId: 'chat-3', targetId: 'target-3', taskSpaceId: 37,
+        requestLine: `CLAIM_REQUEST ${state.RUN_ID} G${nextGeneration} ${state.CLAIM_NONCE}` };
+    },
+    async sendClaimConfirmation() { return { ok: true, status: 'CLAIM_CONFIRMED_SENT' }; },
+    async pruneRunTabs() { return { ok: true, remaining: 1 }; },
+  };
+  const result = await orchestrator.tick({ root, browser, notifier: {}, rolloverMinutes: 0,
+    clock: () => new Date('2026-09-02T10:02:00Z') });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'ROLLED_OVER');
+  assert.equal(final.CHAT_ID, 'chat-3');
+  assert.deepEqual(JSON.parse(final.CHAT_HISTORY_JSON), [
+    { index: 1, chatId: 'chat-2', generation: 2 },
+    { index: 2, chatId: 'chat-3', generation: 3 },
+  ]);
+});
+
 test('persistd rejects a mismatched claim request and closes the exact successor', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-two-phase-bad-'));
   const controlPath = makeRun(root, {
@@ -696,6 +823,53 @@ test('next tick retries failed claim confirmation without opening another succes
   assert.equal(final.CLAIM_CONFIRM_STATUS, 'SENT');
   assert.equal(confirms, 1);
   assert.equal(creates, 0);
+});
+
+test('active lifecycle archives only the oldest durable generation outside the two-chat window', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-archive-window-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'archive-window', GENERATION: '5', STATUS: 'ACTIVE', PROJECT_ROOT: 'C:\\repo',
+    STARTED_AT: '2026-09-02T10:00:00Z', CLAIMED_AT: '2026-09-02T10:01:00Z',
+    CLAIM_RESUMED_AT: '2026-09-02T10:01:30Z', CLAIM_CONFIRM_STATUS: 'SENT', CHAT_ID: 'chat-5',
+    CHAT_HISTORY_JSON: JSON.stringify([
+      { index: 1, chatId: 'chat-2', generation: 2 }, { index: 2, chatId: 'chat-3', generation: 3 },
+      { index: 3, chatId: 'chat-4', generation: 4 }, { index: 4, chatId: 'chat-5', generation: 5 },
+    ]),
+  });
+  const archives = [];
+  const result = await orchestrator.tick({ root, browser: {
+    async archiveChat(payload) { archives.push(payload); return { status: 'ARCHIVED', ok: true, verified: true }; },
+  }, notifier: {}, rolloverMinutes: 9999, clock: () => new Date('2026-09-02T10:02:00Z') });
+  const final = readControl(controlPath);
+  const history = JSON.parse(final.CHAT_HISTORY_JSON);
+  assert.equal(result.action, 'WATCHING');
+  assert.deepEqual(archives.map((item) => item.chatId), ['chat-2']);
+  assert.equal(history.find((item) => item.chatId === 'chat-2').archiveStatus, 'ARCHIVED');
+  assert.equal(history.find((item) => item.chatId === 'chat-3').archiveStatus, undefined);
+  assert.equal(history.find((item) => item.chatId === 'chat-4').archiveStatus, undefined);
+});
+
+test('unverified archive falls back to manual-required without blocking the active generation', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-archive-manual-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'archive-manual', GENERATION: '4', STATUS: 'ACTIVE', PROJECT_ROOT: 'C:\\repo',
+    STARTED_AT: '2026-09-02T10:00:00Z', CLAIMED_AT: '2026-09-02T10:01:00Z',
+    CLAIM_RESUMED_AT: '2026-09-02T10:01:30Z', CLAIM_CONFIRM_STATUS: 'SENT', CHAT_ID: 'chat-4',
+    CHAT_HISTORY_JSON: JSON.stringify([
+      { index: 1, chatId: 'chat-2', generation: 2 }, { index: 2, chatId: 'chat-3', generation: 3 },
+      { index: 3, chatId: 'chat-4', generation: 4 },
+    ]),
+  });
+  const result = await orchestrator.tick({ root, browser: {
+    async archiveChat() { return { status: 'ARCHIVE_UNVERIFIED', ok: false, verified: false }; },
+  }, notifier: {}, rolloverMinutes: 9999, clock: () => new Date('2026-09-02T10:02:00Z') });
+  const final = readControl(controlPath);
+  const archived = JSON.parse(final.CHAT_HISTORY_JSON).find((item) => item.chatId === 'chat-2');
+  assert.equal(result.action, 'WATCHING');
+  assert.equal(final.STATUS, 'ACTIVE');
+  assert.equal(final.GENERATION, '4');
+  assert.equal(archived.archiveStatus, 'MANUAL_REQUIRED');
+  assert.equal(archived.archiveReason, 'ARCHIVE_UNVERIFIED');
 });
 
 test('assistant line verifier waits for hydrated conversation content', () => {
@@ -1208,3 +1382,96 @@ test('rollover preflight records successful desktop self-heal and continues', as
   assert.equal(final.REMOTE_DESKTOP_HEALTH, 'HEALTHY');
   assert.equal(final.REMOTE_HEALTH_REPAIRED, 'true');
 });
+
+test('migrates exact contiguous legacy chat history into controller generations', () => {
+  assert.equal(typeof orchestrator.migrateLegacyChatHistoryGenerations, 'function');
+  const original = {
+    GENERATION: '5', CHAT_ID: 'chat-5',
+    CHAT_HISTORY_JSON: JSON.stringify([
+      { index: 1, chatId: 'chat-2' },
+      { index: 2, chatId: 'chat-3' },
+      { index: 3, chatId: 'chat-4' },
+      { index: 4, chatId: 'chat-5' },
+    ]),
+  };
+  const migrated = orchestrator.migrateLegacyChatHistoryGenerations(original);
+  assert.deepEqual(JSON.parse(migrated.CHAT_HISTORY_JSON), [
+    { index: 1, chatId: 'chat-2', generation: 2 },
+    { index: 2, chatId: 'chat-3', generation: 3 },
+    { index: 3, chatId: 'chat-4', generation: 4 },
+    { index: 4, chatId: 'chat-5', generation: 5 },
+  ]);
+  assert.equal(migrated.GENERATION, '5');
+  assert.equal(migrated.CHAT_ID, 'chat-5');
+});
+
+test('refuses legacy generation migration when the history cannot be proven exact', () => {
+  const ambiguous = {
+    GENERATION: '5', CHAT_ID: 'chat-5',
+    CHAT_HISTORY_JSON: JSON.stringify([
+      { index: 1, chatId: 'chat-2' },
+      { index: 2, chatId: 'chat-4' },
+      { index: 3, chatId: 'chat-5' },
+    ]),
+  };
+  const wrongTail = {
+    GENERATION: '5', CHAT_ID: 'chat-current',
+    CHAT_HISTORY_JSON: JSON.stringify([
+      { index: 1, chatId: 'chat-2' },
+      { index: 2, chatId: 'chat-3' },
+      { index: 3, chatId: 'chat-4' },
+      { index: 4, chatId: 'other-chat' },
+    ]),
+  };
+  assert.deepEqual(orchestrator.migrateLegacyChatHistoryGenerations(ambiguous), ambiguous);
+  assert.deepEqual(orchestrator.migrateLegacyChatHistoryGenerations(wrongTail), wrongTail);
+});
+
+test('persists safe legacy history migration even while the run is blocked', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-legacy-migrate-blocked-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'legacy-migrate-blocked', GENERATION: '5', STATUS: 'BLOCKED',
+    PROJECT_ROOT: 'C:\\repo', CHAT_ID: 'chat-5', BLOCKED_NOTIFICATION_STATUS: 'SENT',
+    CHAT_HISTORY_JSON: JSON.stringify([
+      { index: 1, chatId: 'chat-2' }, { index: 2, chatId: 'chat-3' },
+      { index: 3, chatId: 'chat-4' }, { index: 4, chatId: 'chat-5' },
+    ]),
+  });
+  let archives = 0;
+  const result = await orchestrator.tick({ root, browser: {
+    async archiveChat() { archives++; throw new Error('blocked run must not archive'); },
+  }, notifier: {}, clock: () => new Date('2026-09-09T15:00:00Z') });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'BLOCKED');
+  assert.equal(archives, 0);
+  assert.deepEqual(JSON.parse(final.CHAT_HISTORY_JSON).map(item => item.generation), [2, 3, 4, 5]);
+});
+test('Commander bootstrap verifies the actual inline plugin pill instead of arbitrary composer text', () => {
+  const { buildCommanderSetupScript } = require('./src/browser/commander-script');
+  const script = buildCommanderSetupScript();
+  assert.match(script, /data-inline-selection-pill/);
+  assert.match(script, /data-keyword/);
+  assert.doesNotMatch(script, /form\.innerText/);
+});
+
+test('successor and confirmation fill their message before attaching Commander', () => {
+  const successor = egoScript.buildSuccessorScript({ runId: 'order-fix', message: 'BATON_ORDER_SENTINEL', nextGeneration: 2 });
+  const confirmation = require('./src/browser/conversation-script').buildSendMessageScript({
+    runId: 'order-fix', chatId: 'chat-2', message: 'CONFIRM_ORDER_SENTINEL',
+    verifyLine: 'CLAIM_CONFIRMED order-fix G2 nonce', attachCommander: true, waitForAssistantStart: true,
+  });
+  assert.ok(successor.indexOf('await composer.fill("BATON_ORDER_SENTINEL")') < successor.indexOf('PERSISTD_COMMANDER_BOOTSTRAP_V1'));
+  assert.ok(confirmation.indexOf('await composer.fill("CONFIRM_ORDER_SENTINEL")') < confirmation.indexOf('PERSISTD_COMMANDER_BOOTSTRAP_V1'));
+});
+
+test('browser health probe verifies authenticated ChatGPT composer and tools control', () => {
+  const script = egoScript.buildHealthScript({ runId: 'health-contract' });
+  assert.match(script, /prompt-textarea/);
+  assert.match(script, /composer-plus-btn/);
+  assert.match(script, /AUTH_REQUIRED/);
+});
+
+
+
+
+

@@ -47,9 +47,9 @@ if (authRequired) {
   }
   if (!ready) throw new Error('ChatGPT composer not ready')
 
-  ${commanderSetup}
-
   await composer.fill(${js(message)})
+
+  ${commanderSetup}
   const sendButton = page.locator('[data-testid="send-button"]')
   if ((await sendButton.count()) > 0) await sendButton.first().click()
   else await composer.press('Enter')
@@ -160,6 +160,72 @@ for (const item of chats) {
   renamed++
 }
 console.log('PERSISTD_RESULT:' + JSON.stringify({ status: 'RENAMED', ok: renamed === chats.length, renamed, taskSpaceId: task.id }))
+`;
+}
+
+function buildArchiveChatScript({ runId, chatId, keepChatId }) {
+  const taskName = `persist:${runId}`;
+  return `
+const spaces = await taskSpaces.list()
+const target = spaces.find((item) => item.name === ${js(taskName)})
+let persistdResult = { status: 'TASKSPACE_MISSING', ok: false, verified: false, chatId: ${js(chatId)} }
+if (target) {
+  await taskSpaces.useOrCreate(${js(taskName)})
+  const parseChatId = (url) => { const match = /\\/c\\/([^/?#]+)/.exec(String(url || '')); return match ? match[1] : null }
+  const initialTabs = await browser.listTabs({ includeChrome: true })
+  const keep = initialTabs.find((tab) => parseChatId(tab.url) === ${js(keepChatId)})
+  if (!keep || ${js(chatId)} === ${js(keepChatId)}) {
+    persistdResult = { status: 'CURRENT_CHAT_MISSING', ok: false, verified: false, chatId: ${js(chatId)}, keepChatId: ${js(keepChatId)} }
+  } else {
+    let archiveTargetId = null
+    try {
+      const opened = await browser.openOrReuseTab('https://chatgpt.com/c/' + encodeURIComponent(${js(chatId)}), { wait: true, timeout: 20000 })
+      archiveTargetId = opened && opened.targetId ? opened.targetId : null
+      if (!archiveTargetId) throw new Error('ARCHIVE_TARGET_MISSING')
+      await browser.switchTab(archiveTargetId)
+      if (parseChatId(await page.url()) !== ${js(chatId)}) throw new Error('ARCHIVE_CHAT_ID_MISMATCH')
+      if (await page.getByTestId('close-sidebar-button').count() === 0) {
+        const openSidebar = page.getByRole('button', { name: /Abrir barra lateral|Open sidebar/i })
+        if (await openSidebar.count()) { await openSidebar.first().click(); await page.waitForTimeout(250) }
+      }
+      const currentTitle = await page.title()
+      const conversationLink = page.locator('a[href*="/c/' + ${js(chatId)} + '"]').first()
+      if ((await conversationLink.count()) === 0) throw new Error('MANUAL_REQUIRED:ARCHIVE_LINK_MISSING')
+      await conversationLink.hover(); await page.waitForTimeout(150)
+      let options = page.getByRole('button', { name: 'Abrir opções de conversa para ' + currentTitle }).first()
+      if ((await options.count()) === 0) options = page.getByRole('button', { name: 'Open conversation options for ' + currentTitle }).first()
+      if ((await options.count()) === 0) throw new Error('MANUAL_REQUIRED:ARCHIVE_OPTIONS_MISSING')
+      await options.click()
+      const archiveItem = page.getByRole('menuitem').filter({ hasText: /^(Arquivar|Archive)$/i }).first()
+      const archiveReady = await archiveItem.waitFor({ state: 'visible', timeout: 3000 })
+      if (!archiveReady) throw new Error('MANUAL_REQUIRED:ARCHIVE_MENU_MISSING')
+      await archiveItem.click()
+      await page.waitForTimeout(350)
+      if (await page.getByTestId('close-sidebar-button').count() === 0) {
+        const reopenSidebar = page.getByRole('button', { name: /Abrir barra lateral|Open sidebar/i })
+        if (await reopenSidebar.count()) { await reopenSidebar.first().click(); await page.waitForTimeout(250) }
+      }
+      let linkGone = false
+      try {
+        linkGone = Boolean(await page.waitForFunction((id) => ![...document.querySelectorAll('a[href]')].some((a) => String(a.getAttribute('href') || '').includes('/c/' + id)), ${js(chatId)}, { timeout: 5000 }))
+      } catch {}
+      const redirected = parseChatId(await page.url()) !== ${js(chatId)}
+      const verified = Boolean(linkGone || redirected)
+      persistdResult = { status: verified ? 'ARCHIVED' : 'ARCHIVE_UNVERIFIED', ok: verified, verified, chatId: ${js(chatId)}, keepChatId: ${js(keepChatId)} }
+    } catch (error) {
+      const message = error && error.message ? String(error.message) : String(error)
+      const manual = message.startsWith('MANUAL_REQUIRED:')
+      persistdResult = { status: manual ? 'MANUAL_REQUIRED' : 'ARCHIVE_ERROR', ok: false, verified: false, chatId: ${js(chatId)}, keepChatId: ${js(keepChatId)}, error: message }
+    } finally {
+      const remaining = await browser.listTabs({ includeChrome: true })
+      const keepStillOpen = remaining.find((tab) => tab.targetId === keep.targetId)
+      if (keepStillOpen) await browser.switchTab(keep.targetId)
+      const archiveStillOpen = archiveTargetId && remaining.find((tab) => tab.targetId === archiveTargetId)
+      if (archiveStillOpen && archiveTargetId !== keep.targetId) await browser.closeTab(archiveTargetId)
+    }
+  }
+}
+console.log('PERSISTD_RESULT:' + JSON.stringify(persistdResult))
 `;
 }
 
@@ -330,16 +396,40 @@ function buildHealthScript({ runId = 'health' } = {}) {
   const taskName = `persist:${runId}`;
   return `
 let persistdResult
+let healthTargetId = null
 try {
   const task = await taskSpaces.useOrCreate(${js(taskName)})
-  const tabs = await browser.listTabs({ includeChrome: true })
-  persistdResult = { status: 'HEALTHY', ok: true, taskSpaceId: task.id, tabCount: tabs.length }
+  const scratch = await browser.openOrReuseTab('about:blank', { wait: false })
+  if (!scratch || !scratch.targetId) throw new Error('HEALTH_SCRATCH_TARGET_MISSING')
+  healthTargetId = scratch.targetId
+  await browser.switchTab(healthTargetId)
+  await page.goto('https://chatgpt.com/', { timeout: 20000 })
+  const startInfo = await page.info()
+  const startUrl = 'url' in startInfo ? startInfo.url : await page.url()
+  const loginButton = page.getByRole('button', { name: /log in|sign in|entrar/i })
+  const loginLink = page.getByRole('link', { name: /log in|sign in|entrar/i })
+  let authRequired = /auth|login|signin/i.test(startUrl)
+  if (!authRequired && (await loginButton.count()) > 0) authRequired = await loginButton.first().isVisible()
+  if (!authRequired && (await loginLink.count()) > 0) authRequired = await loginLink.first().isVisible()
+  if (authRequired) {
+    persistdResult = { status: 'AUTH_REQUIRED', ok: false, taskSpaceId: task.id, url: startUrl }
+  } else {
+    const composer = page.locator('#prompt-textarea')
+    const composerReady = Boolean(await composer.waitFor({ state: 'visible', timeout: 10000 }))
+    const tools = page.getByTestId('composer-plus-btn')
+    const toolsReady = (await tools.count()) > 0 && await tools.first().isVisible()
+    const ok = composerReady && toolsReady
+    persistdResult = { status: ok ? 'HEALTHY' : 'UNHEALTHY', ok, taskSpaceId: task.id, url: startUrl, composerReady, toolsReady }
+  }
 } catch (error) {
   persistdResult = { status: 'UNHEALTHY', ok: false, error: error && error.message ? String(error.message) : String(error) }
+} finally {
+  if (healthTargetId) { try { await browser.closeTab(healthTargetId) } catch {} }
 }
 console.log('PERSISTD_RESULT:' + JSON.stringify(persistdResult))
 `;
 }
+
 function parseEgoResult(output) {
   const line = output.split(/\r?\n/).find((item) => item.startsWith('PERSISTD_RESULT:'));
   if (!line) throw new Error('EGO_RESULT_MISSING');
@@ -347,5 +437,5 @@ function parseEgoResult(output) {
 }
 
 module.exports = {
-  buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
+  buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildArchiveChatScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
 };
