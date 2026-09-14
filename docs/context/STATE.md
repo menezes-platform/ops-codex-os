@@ -1,34 +1,36 @@
-﻿# YouCine Bridge â€” Verified State
+# YouCine Bridge — Verified State
 
 ## Objective
-Build a one-click Windows bridge that runs YouCine through a persistent Android runtime, with fullscreen, free PiP, single-instance behavior, hotkeys, watchdog recovery, and no normal dependency on the Moto G75.
+Provide a one-click Windows launcher for YouCine using a persistent isolated Android runtime, with fullscreen, free PiP, single-instance behavior, hotkeys, watchdog recovery, and no normal dependency on the Moto.
 
 ## Current branch
 `feature/youcine-bridge`
 
-## Completed
-- C#/.NET 10 WinForms bridge scaffold.
-- Settings persistence and PiP geometry.
-- adb/scrcpy discovery and device resolution.
-- One managed scrcpy session with scoped restart of `com.world.youcinemobile`.
-- Fullscreen, windowed mode, free/resizable PiP, saved PiP bounds.
-- Single-instance gate, retry policy, global hotkeys, session watchdog.
-- Trusted `RuntimeEndpoint` support so a persistent Android runtime can be primary and the Moto G75 fallback.
-- `BridgeRuntimeCoordinator` implemented to own open/reconnect/stop lifecycle.
+## Verified implementation
+- .NET 10 WinForms bridge with deterministic adb/scrcpy discovery.
+- Trusted `RuntimeEndpoint` preference and persistent settings.
+- One managed scrcpy session with 1920x1080/240 virtual display and `--flex-display`.
+- Playback audio request, 12 Mbps video, 60 fps, initial fullscreen.
+- Free/resizable topmost PiP with persisted bounds.
+- Single-instance activation, reconnect, retry/backoff, watchdog, tray lifecycle, and rotating logs.
+- `Ctrl+Alt+P` PiP/fullscreen, `Ctrl+Alt+Y` focus, `Ctrl+Alt+R` reconnect.
+- F11 is handled natively by scrcpy 4.1 to avoid double fullscreen handling.
 
-## Verified evidence
-- Current full suite: 36/36 tests passed after RuntimeEndpoint and coordinator changes.
-- `RuntimeEndpoint` focused tests: 5/5 passed.
-- `BridgeRuntimeCoordinatorTests`: 2/2 passed.
-- Branch was pushed to GitHub at commit `1c40cbe` before the newest runtime/coordinator changes.
+## Persistent Android runtime
+- ReDroid Android 12 runs natively on the existing ARM64 AWS host.
+- Binder is configured to load at boot.
+- Docker container uses persistent `/data` and `restart=unless-stopped`.
+- ADB listens only on the Tailscale interface.
+- YouCine 1.17.5 is installed as `arm64-v8a` and survives container restart.
 
-## Infrastructure findings
-- Windows firmware virtualization is disabled; do not make local Android Emulator/BlueStacks the primary runtime.
-- `persistflow` and `tsim-vm` have Azure kernel 6.17 with Binder/BinderFS support.
-- LXD was initialized on both Linux VMs, but `lxc launch` proved unreliable; `tsim-vm` went offline during a VM launch attempt.
-- ReDroid remains the preferred persistent Android runtime, but it is not operational yet.
-- The Moto G75 ADB endpoint was unreachable during the latest migration probe, so no session/token data was read or copied.
+## Final evidence
+- Release build: 0 warnings / 0 errors.
+- VSTest/xUnit: 47 passed, 0 failed, 0 skipped.
+- Live virtual display created at 1920x1080/240 and 60 Hz.
+- YouCine reached `com.mobile.brasiltv.activity.MainAty` with no `UnsatisfiedLinkError`, fatal signal, or fatal exception.
+- Watchdog replaced a killed scrcpy process without duplication.
+- Reconnect hotkey replaced the managed session and returned to `MainAty`.
+- PiP toggle, focus hotkey, single-instance activation, and native F11 windowed/fullscreen round trip passed.
 
-## Current verification gap
-Full suite is green at 36/36; commit and push this checkpoint.
-
+## DoD
+COMPLETE.

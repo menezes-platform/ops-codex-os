@@ -1,28 +1,27 @@
 # YouCine Bridge — Handoff
 
-## Current phase
-Windows launcher/package is verified; finish Android connectivity so clicking **YouCine** opens a usable session.
+## Status
+DONE — one-click Windows bridge verified against the persistent ARM64 Android runtime.
 
-## Completed
-- Core bridge architecture implemented through TDD.
-- Free PiP, fullscreen/windowed mode, single-instance, watchdog, runtime endpoint preference, coordinator, tray lifecycle, and Start Menu packaging exist.
-- `install.ps1` publishes Release/win-x64, installs under `%LOCALAPPDATA%\Programs\YouCineBridge`, and creates `YouCine.lnk` without modifying taskbar pins.
-- Installed Start Menu shortcut was launched successfully and produced exactly one installed `YouCineBridge.exe` process.
-- Global hotkey registration now degrades per shortcut instead of aborting startup when another app owns one binding.
-- Runtime state and logs remain under `%LOCALAPPDATA%\YouCineBridge`.
+## Runtime
+- Primary runtime: persistent ReDroid Android 12 on the existing ARM64 AWS host.
+- ADB is bound only to the host's Tailscale address; no public ADB listener is used.
+- Persistent `/data`, Binder boot configuration, Docker autostart, and `restart=unless-stopped` are active.
+- YouCine `com.world.youcinemobile` 1.17.5 is installed natively as `arm64-v8a`.
+- Local Bridge settings select the persistent `RuntimeEndpoint`; the Moto is not required for normal use.
 
-## Validated
-- 47/47 full-suite tests pass after the hotkey-conflict regression fix.
-- Real installed smoke proves the Win32 1409 `Ctrl+Alt+P` conflict no longer aborts startup; the bridge reaches `DeviceResolver`.
-- Moto G75 is reachable over Tailscale at `100.106.31.127`.
-- Google Platform Tools 37.0.1 is present at the ToolLocator WinGet path.
-- Wireless Debugging is enabled on the Moto, but this Windows ADB client is not currently paired/connected; mDNS discovery returns no services.
+## Windows bridge
+- Installed under `%LOCALAPPDATA%\Programs\YouCineBridge` with Start Menu shortcut `YouCine`.
+- Canonical scrcpy 4.1 profile: 1920x1080/240 virtual display, `--flex-display`, playback audio, 12M bitrate, 60 fps, fullscreen.
+- F11 fullscreen handling is intentionally delegated to scrcpy's native F11 shortcut; the bridge owns `Ctrl+Alt+P/Y/R` only.
+- Single-instance, PiP, focus, reconnect, and watchdog recovery are active.
 
-## Pending
-- Complete ADB Wireless TLS pairing/connection to the Moto for the immediate usable smoke path.
-- Verify YouCine package launch, scrcpy fullscreen/PiP/input/audio, reconnect, and watchdog recovery.
-- Bring up a stable persistent Android/ReDroid host to remove normal phone dependency; `tsim-vm` is currently absent from the tailnet and `persistflow` lacks the installed binder module needed by ReDroid.
-- Migrate authenticated app state only if supported; never fabricate server entitlement.
+## Verification
+- Release build: 0 warnings, 0 errors.
+- Real xUnit execution through VSTest: 47/47 passed.
+- Real smoke: one bridge + one scrcpy, virtual display created, YouCine reached `MainAty`, no native fatal crash.
+- Killing managed scrcpy caused watchdog recovery with exactly one replacement session.
+- `Ctrl+Alt+R`, `Ctrl+Alt+P`, `Ctrl+Alt+Y`, and native F11 were verified live.
 
-## Exact next action
-Open Android **Wireless debugging → Pair device with pairing code**, pair this Windows ADB client using the shown port/code, connect to the advertised debugging port, then run the full real-session smoke and commit/push the verified checkpoint.
+## Remaining human-only action
+None required for bridge operation. Do not fabricate or bypass YouCine entitlement or account state.
