@@ -33,6 +33,15 @@ class MemoryAuthorityStore {
     return clone(this.runs.get(runId) || null);
   }
 
+  update(runId, updater) {
+    const current = this.runs.get(runId);
+    if (!current) throw new Error('RUN_NOT_FOUND');
+    const next = updater(clone(current));
+    if (!next || next.runId !== runId) throw new Error('INVALID_RUN_UPDATE');
+    this.runs.set(runId, clone(next));
+    return clone(next);
+  }
+
   claimSuccessor({ runId, expectedGeneration, generation, claimSecret }) {
     const state = this.runs.get(runId);
     if (!state) throw new Error('RUN_NOT_FOUND');
