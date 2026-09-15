@@ -1,4 +1,5 @@
 const { buildClaimRequestLine, buildClaimConfirmationLine } = require('./claim-protocol');
+const { buildBatonV2 } = require('./persistflow/baton-v2');
 
 function value(state, key, fallback = 'NONE') {
   const v = state[key];
@@ -11,11 +12,13 @@ function buildSuccessorMessage(state, nextGeneration) {
   const wakeLine = `CLAIM ${runId} G${nextGeneration}`;
   const requestLine = buildClaimRequestLine(runId, nextGeneration, nonce);
   const confirmationLine = buildClaimConfirmationLine(runId, nextGeneration, nonce);
+  const batonV2 = buildBatonV2(state, nextGeneration);
   return [
     'PERSISTENT CONVERSATION CONTROLLER TAKEOVER',
     `RUN_ID: ${runId}`,
     `GENERATION: ${nextGeneration}`,
     `CLAIM_NONCE: ${nonce}`,
+    `BATON_V2_JSON: ${JSON.stringify(batonV2)}`,
     '',
     'This takeover is controlled by local persistd durable state; browser text alone is never authority.',
     'First read the installed controller skill, references/remote-control-contract.md, and CONTROL.md using Remote Desktop Commander read-only file access.',
