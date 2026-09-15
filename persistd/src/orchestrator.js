@@ -7,6 +7,7 @@ const { buildSuccessorMessage } = require('./handoff');
 const { claimGeneration } = require('./claim-generation');
 const { buildClaimRequestLine } = require('./claim-protocol');
 const { buildTerminalMessage, buildAttentionMessage } = require('./notifier');
+const { evaluateWatchdog } = require('./persistflow/watchdog');
 
 function buildChatTitle(displayName, generation, totalGenerations) {
   const base = String(displayName || 'Persist').trim() || 'Persist';
@@ -56,7 +57,7 @@ async function notifyBlockedOnce({ controlPath, state, notifier, now }) {
 }
 
 function isRolloverDue(state, now, rolloverMinutes) {
-  if (['CONTEXT_RISK', 'ROLLOVER_INCOMPLETE', 'PREPARING_TAKEOVER'].includes(state.STATUS)) return true;
+  if (['CONTEXT_RISK', 'ROLLOVER_INCOMPLETE', 'PREPARING_TAKEOVER', 'RECOVERY_REQUIRED'].includes(state.STATUS)) return true;
   const anchorText = state.CLAIM_RESUMED_AT && state.CLAIM_RESUMED_AT !== 'NONE'
     ? state.CLAIM_RESUMED_AT
     : (state.CLAIMED_AT && state.CLAIMED_AT !== 'NONE' ? state.CLAIMED_AT : state.STARTED_AT);
@@ -242,7 +243,7 @@ async function finalizeDoneLifecycle({ controlPath, state, browser, now, generat
   return { action: 'FINALIZED', generation };
 }
 
-async function tick({ root, browser, notifier, remoteHealth = null, clock = () => new Date(), rolloverMinutes = 20, includeSynthetic = false, runId = null }) {
+async function tick({ root, browser, notifier, remoteHealth = null, clock = () => new Date(), rolloverMinutes = 20, watchdogStallMs = 2 * 60_000, watchdogRecoveryMs = 4 * 60_000, includeSynthetic = false, runId = null }) {
   const resolved = resolveRun(root, { includeSynthetic, includePendingDone: true, runId });
   if (!resolved) return { action: 'NO_INCOMPLETE_RUN' };
   const controlPath = resolved.CONTROL_PATH;
@@ -301,12 +302,50 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
 
     state = claimLease(state, `G${generation}`, now, 90_000);
     writeControlAtomic(controlPath, state);
+
+    let watchdogHealth = null;
+    const initialWatchdog = evaluateWatchdog(state, { now, stallMs: watchdogStallMs, recoveryMs: watchdogRecoveryMs });
+    if (initialWatchdog.status !== 'ACTIVE' && initialWatchdog.reason !== 'no_heartbeat') {
+      if (browser?.isRunChatBusy && state.CHAT_ID && state.CHAT_ID !== 'NONE') {
+        try {
+          const activity = await browser.isRunChatBusy({ state, chatId: state.CHAT_ID });
+          if (activity?.busy) {
+            state = { ...state, STATUS: 'ACTIVE', CONTROLLER_HEARTBEAT_AT: now.toISOString(), BLOCKED_REASON: 'NONE' };
+            writeControlAtomic(controlPath, state);
+            return { action: 'WORKER_BUSY', generation };
+          }
+          if (activity?.ok === false) return { action: 'WORKER_ACTIVITY_RETRY', generation };
+        } catch { return { action: 'WORKER_ACTIVITY_RETRY', generation }; }
+      }
+
+      if (remoteHealth?.preflight) {
+        try { watchdogHealth = await remoteHealth.preflight(state); }
+        catch { watchdogHealth = { ok: false, browser: 'UNHEALTHY', desktop: 'UNHEALTHY', repaired: false }; }
+        if (watchdogHealth?.browser !== 'HEALTHY') {
+          state = { ...state, STATUS: 'WAITING_BROWSER', BLOCKED_REASON: 'BROWSER_UNHEALTHY' };
+          writeControlAtomic(controlPath, state);
+          return { action: 'WAITING_BROWSER', generation };
+        }
+        if (!watchdogHealth?.ok) {
+          state = { ...state, STATUS: 'WAITING_TOOL', BLOCKED_REASON: 'REMOTE_CONTROL_UNHEALTHY' };
+          writeControlAtomic(controlPath, state);
+          return { action: 'REMOTE_CONTROL_RETRY', generation };
+        }
+      }
+
+      state = { ...state, STATUS: initialWatchdog.status, BLOCKED_REASON: 'NONE' };
+      writeControlAtomic(controlPath, state);
+      if (initialWatchdog.status === 'SUSPECTED_STALL') return { action: 'SUSPECTED_STALL', generation };
+    }
+
     if (!isRolloverDue(state, now, rolloverMinutes)) return { action: 'WATCHING', generation };
 
     if (remoteHealth?.preflight) {
-      let health;
-      try { health = await remoteHealth.preflight(state); }
-      catch { health = { ok: false, browser: 'UNHEALTHY', desktop: 'UNHEALTHY', repaired: false }; }
+      let health = watchdogHealth;
+      if (!health) {
+        try { health = await remoteHealth.preflight(state); }
+        catch { health = { ok: false, browser: 'UNHEALTHY', desktop: 'UNHEALTHY', repaired: false }; }
+      }
       state = { ...state, REMOTE_HEALTH_AT: now.toISOString(), REMOTE_BROWSER_HEALTH: health?.browser || 'UNKNOWN',
         REMOTE_DESKTOP_HEALTH: health?.desktop || 'UNKNOWN', REMOTE_HEALTH_REPAIRED: String(Boolean(health?.repaired)) };
       if (!health?.ok) {
