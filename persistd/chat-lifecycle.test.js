@@ -1208,3 +1208,72 @@ test('rollover preflight records successful desktop self-heal and continues', as
   assert.equal(final.REMOTE_DESKTOP_HEALTH, 'HEALTHY');
   assert.equal(final.REMOTE_HEALTH_REPAIRED, 'true');
 });
+test('browser transport archives one authoritative predecessor chat', async () => {
+  const egoScript = require('./src/browser/ego-script');
+  assert.equal(typeof egoScript.buildArchiveRunChatScript, 'function');
+  const script = egoScript.buildArchiveRunChatScript({ runId: 'archive-run', chatId: 'chat-old' });
+  assert.match(script, /chat-old/);
+  assert.match(script, /Arquivar|Archive/);
+  const seen = [];
+  const transport = createEgoBrowserTransport({ runner: async (code) => {
+    seen.push(code);
+    return { status: 'ARCHIVED', ok: true, chatId: 'chat-old' };
+  } });
+  assert.equal(typeof transport.archiveRunChat, 'function');
+  const result = await transport.archiveRunChat({ state: { RUN_ID: 'archive-run' }, chatId: 'chat-old' });
+  assert.equal(result.ok, true);
+  assert.match(seen[0], /chat-old/);
+});
+
+test('archives predecessor only after durable successor promotion', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-archive-rollover-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'archive-rollover', GENERATION: '1', STATUS: 'CONTEXT_RISK', DISPLAY_NAME: 'Archive',
+    STARTED_AT: '2026-09-01T12:00:00Z', CLAIMED_AT: '2026-09-01T12:00:00Z',
+    CHAT_ID: 'chat-old', PROJECT_ROOT: 'C:\\repo',
+  });
+  const archiveCalls = [];
+  const browser = {
+    async createSuccessor({ state, nextGeneration, controlPath: pathToControl }) {
+      writeControlAtomic(pathToControl, { ...state, GENERATION: String(nextGeneration), STATUS: 'ACTIVE',
+        CLAIMED_AT: '2026-09-01T12:01:00Z', LEASE_OWNER: `G${nextGeneration}` });
+      return { chatId: 'chat-new', taskSpaceId: 99, evidence: 'durable-claim' };
+    },
+    async archiveRunChat(payload) { archiveCalls.push(payload); return { ok: true, status: 'ARCHIVED' }; },
+    async pruneRunTabs() { return { ok: true, closed: 1, remaining: 1 }; },
+  };
+  const result = await orchestrator.tick({ root, browser, notifier: {}, rolloverMinutes: 0,
+    clock: () => new Date('2026-09-01T12:01:00Z') });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'ROLLED_OVER');
+  assert.equal(final.GENERATION, '2');
+  assert.equal(final.BROWSER_ARCHIVE_STATUS, 'SENT');
+  assert.equal(final.BROWSER_ARCHIVE_CHAT_ID, 'chat-old');
+  assert.equal(archiveCalls.length, 1);
+  assert.equal(archiveCalls[0].chatId, 'chat-old');
+});
+
+test('archive failure becomes durable debt and retries on the next tick', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-archive-retry-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'archive-retry', GENERATION: '2', STATUS: 'ACTIVE', DISPLAY_NAME: 'Archive',
+    STARTED_AT: '2026-09-01T12:00:00Z', CLAIMED_AT: '2026-09-01T12:59:00Z',
+    CHAT_ID: 'chat-new', BROWSER_ARCHIVE_STATUS: 'FAILED', BROWSER_ARCHIVE_CHAT_ID: 'chat-old',
+    BROWSER_ARCHIVE_DEBT_SINCE: '2026-09-01T12:58:00Z', PROJECT_ROOT: 'C:\\repo',
+  });
+  let archiveCalls = 0;
+  const browser = {
+    async archiveRunChat({ chatId }) {
+      archiveCalls++;
+      assert.equal(chatId, 'chat-old');
+      return { ok: true, status: 'ARCHIVED' };
+    },
+  };
+  const result = await orchestrator.tick({ root, browser, notifier: {}, rolloverMinutes: 20,
+    clock: () => new Date('2026-09-01T13:00:00Z') });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'WATCHING');
+  assert.equal(archiveCalls, 1);
+  assert.equal(final.BROWSER_ARCHIVE_STATUS, 'SENT');
+  assert.equal(final.BROWSER_ARCHIVE_DEBT_SINCE, 'NONE');
+});

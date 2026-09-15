@@ -137,6 +137,26 @@ async function retryActivePrune({ controlPath, state, browser, now }) {
   return updated;
 }
 
+
+async function retryPredecessorArchive({ controlPath, state, browser, now }) {
+  const pending = ['PENDING', 'FAILED'].includes(state.BROWSER_ARCHIVE_STATUS);
+  const chatId = state.BROWSER_ARCHIVE_CHAT_ID;
+  if (!pending || !chatId || chatId === 'NONE' || !browser?.archiveRunChat) return state;
+  let updated;
+  try {
+    const result = await browser.archiveRunChat({ state, chatId });
+    if (result?.ok) {
+      updated = { ...state, BROWSER_ARCHIVE_STATUS: 'SENT', BROWSER_ARCHIVED_AT: now.toISOString(), BROWSER_ARCHIVE_DEBT_SINCE: 'NONE' };
+    } else {
+      updated = { ...state, BROWSER_ARCHIVE_STATUS: 'FAILED', BROWSER_ARCHIVE_DEBT_SINCE: (state.BROWSER_ARCHIVE_DEBT_SINCE && state.BROWSER_ARCHIVE_DEBT_SINCE !== 'NONE') ? state.BROWSER_ARCHIVE_DEBT_SINCE : now.toISOString() };
+    }
+  } catch {
+    updated = { ...state, BROWSER_ARCHIVE_STATUS: 'FAILED', BROWSER_ARCHIVE_DEBT_SINCE: (state.BROWSER_ARCHIVE_DEBT_SINCE && state.BROWSER_ARCHIVE_DEBT_SINCE !== 'NONE') ? state.BROWSER_ARCHIVE_DEBT_SINCE : now.toISOString() };
+  }
+  writeControlAtomic(controlPath, updated);
+  return updated;
+}
+
 async function cleanupRunScratchQuietly({ browser, state }) {
   if (!browser?.cleanupRunScratchTabs) return;
   try { await browser.cleanupRunScratchTabs({ state }); } catch {}
@@ -275,6 +295,7 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
       if (state.CLAIM_CONFIRM_STATUS === 'RATE_LIMITED') return { action: 'RATE_LIMIT_BACKOFF', generation, retryAt: state.RATE_LIMIT_UNTIL };
       if (state.CLAIM_CONFIRM_STATUS !== 'SENT') return { action: 'CLAIM_CONFIRM_RETRY', generation };
     }
+    if (state.STATUS !== 'DONE') state = await retryPredecessorArchive({ controlPath, state, browser, now });
     if (state.STATUS !== 'DONE') state = await retryActivePrune({ controlPath, state, browser, now });
     state = await reconcileChatPresentation({
       controlPath, state, browser, activeTitles: state.STATUS !== 'DONE',
@@ -442,6 +463,7 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
       }
     }
 
+    const predecessorChatId = claimed.CHAT_ID && claimed.CHAT_ID !== 'NONE' && claimed.CHAT_ID !== outcome?.chatId ? claimed.CHAT_ID : null;
     let finalState = claimLease({
       ...claimed,
       CHAT_ID: outcome?.chatId || claimed.CHAT_ID || 'NONE',
@@ -451,6 +473,9 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
       BLOCKED_NOTIFICATION_STATUS: 'NONE',
       DISPLAY_NAME: resolveDisplayName(claimed),
       CHAT_TITLE_STATUS: 'PENDING', BROWSER_CLEANUP_STATUS: 'PENDING',
+      BROWSER_ARCHIVE_STATUS: predecessorChatId ? 'PENDING' : 'SKIPPED',
+      BROWSER_ARCHIVE_CHAT_ID: predecessorChatId || 'NONE',
+      BROWSER_ARCHIVE_DEBT_SINCE: 'NONE',
       BROWSER_PRUNE_STATUS: outcome?.chatId ? 'PENDING' : 'SKIPPED',
       BROWSER_PRUNE_CHAT_ID: outcome?.chatId || 'NONE',
       CLAIM_CONFIRM_STATUS: twoPhaseClaim ? 'PENDING' : 'SKIPPED',
@@ -466,6 +491,7 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
       const title = buildChatTitle(finalState.DISPLAY_NAME, history.length);
       try { await browser.renameChat({ state: finalState, chatId: outcome.chatId, title }); } catch {}
     }
+    if (predecessorChatId) finalState = await retryPredecessorArchive({ controlPath, state: finalState, browser, now });
     if (outcome?.chatId) finalState = await retryActivePrune({ controlPath, state: finalState, browser, now });
 
     if (twoPhaseClaim) {

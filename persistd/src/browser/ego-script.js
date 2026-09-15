@@ -163,6 +163,30 @@ console.log('PERSISTD_RESULT:' + JSON.stringify({ status: 'RENAMED', ok: renamed
 `;
 }
 
+
+function buildArchiveRunChatScript({ runId, chatId }) {
+  const taskName = `persist:${runId}`;
+  return `
+await taskSpaces.useOrCreate(${js(taskName)})
+await browser.openOrReuseTab('https://chatgpt.com/c/' + encodeURIComponent(${js(chatId)}), { wait: true, timeout: 20000 })
+const currentTitle = await page.title()
+if (await page.getByTestId('close-sidebar-button').count() === 0) {
+  const openSidebar = page.getByRole('button', { name: 'Abrir barra lateral' })
+  if (await openSidebar.count()) { await openSidebar.click(); await page.waitForTimeout(250) }
+}
+let options = page.getByRole('button', { name: 'Abrir opções de conversa para ' + currentTitle }).first()
+if (await options.count() === 0) options = page.getByRole('button', { name: 'Open conversation options for ' + currentTitle }).first()
+if (await options.count() === 0) throw new Error('Conversation options missing for archive: ' + currentTitle)
+await options.click()
+let archiveItem = page.getByText('Arquivar', { exact: true }).first()
+if (await archiveItem.count() === 0) archiveItem = page.getByText('Archive', { exact: true }).first()
+if (await archiveItem.count() === 0) throw new Error('Archive menu item missing')
+await archiveItem.click()
+await page.waitForTimeout(500)
+console.log('PERSISTD_RESULT:' + JSON.stringify({ status: 'ARCHIVED', ok: true, chatId: ${js(chatId)} }))
+`;
+}
+
 function buildDiscoverRunChatsScript({ runId }) {
   const taskName = `persist:${runId}`;
   return `
@@ -347,5 +371,5 @@ function parseEgoResult(output) {
 }
 
 module.exports = {
-  buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
+  buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildArchiveRunChatScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
 };
