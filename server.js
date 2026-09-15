@@ -1,5 +1,7 @@
 const http = require('node:http');
-const { MemoryAuthorityStore } = require('./persistd/src/persistflow/authority-store');
+const os = require('node:os');
+const path = require('node:path');
+const { MemoryAuthorityStore, FileAuthorityStore } = require('./persistd/src/persistflow/authority-store');
 const { PersistFlowService } = require('./persistd/src/persistflow/service');
 
 function sendJson(res, statusCode, body) {
@@ -30,6 +32,11 @@ function errorStatus(error) {
   return 500;
 }
 
+function createProductionStore({ env = process.env, homedir = os.homedir() } = {}) {
+  const directory = env.PERSISTFLOW_DATA_DIR || path.join(homedir, '.persistflow-data');
+  return new FileAuthorityStore(directory);
+}
+
 function createServer({ store = new MemoryAuthorityStore(), clock = () => new Date() } = {}) {
   const service = new PersistFlowService({ store, clock });
   return http.createServer(async (req, res) => {
@@ -39,7 +46,7 @@ function createServer({ store = new MemoryAuthorityStore(), clock = () => new Da
         return sendJson(res, 200, { service: 'persistflow', status: 'ok' });
       }
       if (req.method === 'GET' && url.pathname === '/healthz') {
-        return sendJson(res, 200, { ok: true, service: 'persistflow' });
+        return sendJson(res, 200, { ok: true, service: 'persistflow', authority: store.kind, durable: store.kind !== 'memory' });
       }
       if (req.method === 'POST' && url.pathname === '/v1/runs') {
         const run = service.startRun(await readJson(req));
@@ -77,7 +84,12 @@ function createServer({ store = new MemoryAuthorityStore(), clock = () => new Da
 
 if (require.main === module) {
   const port = Number(process.env.PORT || 3000);
-  createServer().listen(port, '0.0.0.0', () => process.stdout.write(`persistflow listening on ${port}\n`));
+  const store = createProductionStore();
+  const server = createServer({ store });
+  server.listen(port, '0.0.0.0', () => {
+    const address = server.address();
+    process.stdout.write(`persistflow listening on ${address.port} authority=${store.kind}\n`);
+  });
 }
 
-module.exports = { createServer };
+module.exports = { createServer, createProductionStore };

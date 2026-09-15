@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createServer } = require('../server');
+const os = require('node:os');
+const path = require('node:path');
+const { createServer, createProductionStore } = require('../server');
 
 async function withServer(fn) {
   const server = createServer();
@@ -20,7 +22,7 @@ test('serves PersistFlow identity and health JSON', async () => {
     assert.deepEqual(await root.json(), { service: 'persistflow', status: 'ok' });
     const health = await fetch(`${base}/healthz`);
     assert.equal(health.status, 200);
-    assert.deepEqual(await health.json(), { ok: true, service: 'persistflow' });
+    assert.deepEqual(await health.json(), { ok: true, service: 'persistflow', authority: 'memory', durable: false });
   });
 });
 
@@ -31,4 +33,12 @@ test('returns a JSON 404 for unknown routes', async () => {
     assert.match(response.headers.get('content-type') || '', /^application\/json/);
     assert.deepEqual(await response.json(), { error: 'not_found' });
   });
+});
+
+
+test('production store resolves outside the deployment tree by default', () => {
+  const fakeHome = path.join(os.tmpdir(), 'persistflow-home');
+  const store = createProductionStore({ env: {}, homedir: fakeHome });
+  assert.equal(store.kind, 'file');
+  assert.equal(store.directory, path.join(fakeHome, '.persistflow-data'));
 });
