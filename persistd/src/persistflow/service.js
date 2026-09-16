@@ -60,6 +60,23 @@ class PersistFlowService {
     });
   }
 
+  bridgeSync(runId, input = {}) {
+    const now = this.nowIso();
+    return this.store.update(runId, (state) => {
+      const expected = Number(input.expectedGeneration);
+      const generation = Number(input.generation);
+      if (Number(state.generation) !== expected) throw new Error('STALE_GENERATION');
+      if (generation !== expected + 1) throw new Error('INVALID_GENERATION');
+      return {
+        ...state, generation, status: 'ACTIVE', successor: null,
+        controllerHeartbeatAt: input.controllerHeartbeatAt || now,
+        progress: input.progress ?? state.progress ?? null,
+        nextSafeAction: input.nextSafeAction ?? state.nextSafeAction ?? null,
+        updatedAt: now,
+      };
+    });
+  }
+
   claim(runId, input = {}) {
     return this.store.claimSuccessor({
       runId,

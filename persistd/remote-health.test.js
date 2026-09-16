@@ -46,7 +46,7 @@ test('daemon wires remote health into every orchestrator tick', () => {
   const fs = require('node:fs');
   const source = fs.readFileSync(require.resolve('./src/daemon'), 'utf8');
   assert.match(source, /const remoteHealth = createRemoteHealth\(\{ browser \}\)/);
-  assert.match(source, /notifier,\s*remoteHealth,\s*rolloverMinutes/);
+  assert.match(source, /notifier,\s*remoteHealth,\s*remoteAuthority,\s*rolloverMinutes/);
 });
 const installerFs = require('node:fs');
 const installerPath = require('node:path').join(__dirname, '..', 'scripts', 'install.ps1');

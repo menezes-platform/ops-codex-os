@@ -1,11 +1,12 @@
 const http = require('node:http');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { MemoryAuthorityStore, FileAuthorityStore } = require('./authority-store');
 const { FileOAuthStore } = require('./oauth-store');
 const { PersistFlowService } = require('./service');
-const { createPersistFlowMcpNodeHandler } = require('./mcp-handler');
+const { createPersistFlowMcpNodeHandler, sameToken } = require('./mcp-handler');
 const { createOAuthHttpHandler, requestOrigin } = require('./oauth-server');
 
 function sendJson(res, statusCode, body) {
@@ -56,6 +57,16 @@ function resolveMcpTokenDigest({ env = process.env, fallbackPath = DEFAULT_MCP_D
   catch { return ''; }
 }
 
+function ownerBearerAuthorized(req, token, tokenDigest) {
+  const header = String(req.headers.authorization || '');
+  const prefix = 'Bearer ';
+  const actual = header.startsWith(prefix) ? header.slice(prefix.length) : '';
+  if (!actual) return false;
+  if (token && sameToken(actual, token)) return true;
+  const digest = crypto.createHash('sha256').update(actual, 'utf8').digest('hex');
+  return Boolean(tokenDigest && sameToken(digest, tokenDigest));
+}
+
 function createServer({
   store = new MemoryAuthorityStore(),
   clock = () => new Date(),
@@ -94,6 +105,12 @@ function createServer({
       const runMatch = /^\/v1\/runs\/([^/]+)$/.exec(url.pathname);
       if (req.method === 'GET' && runMatch) {
         const run = service.inspectRun(decodeURIComponent(runMatch[1]));
+        return sendJson(res, 200, { run });
+      }
+      const bridgeSync = /^\/v1\/runs\/([^/]+)\/bridge\/sync$/.exec(url.pathname);
+      if (req.method === 'POST' && bridgeSync) {
+        if (!ownerBearerAuthorized(req, mcpToken, mcpTokenDigest)) return sendJson(res, 401, { error: 'unauthorized' });
+        const run = service.bridgeSync(decodeURIComponent(bridgeSync[1]), await readJson(req));
         return sendJson(res, 200, { run });
       }
       const heartbeat = /^\/v1\/runs\/([^/]+)\/heartbeat$/.exec(url.pathname);

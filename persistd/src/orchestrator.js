@@ -8,6 +8,7 @@ const { claimGeneration } = require('./claim-generation');
 const { buildClaimRequestLine } = require('./claim-protocol');
 const { buildTerminalMessage, buildAttentionMessage } = require('./notifier');
 const { evaluateWatchdog } = require('./persistflow/watchdog');
+const { reconcileRemoteRun } = require('./persistflow/remote-bridge');
 
 function buildChatTitle(displayName, generation, totalGenerations) {
   const base = String(displayName || 'Persist').trim() || 'Persist';
@@ -263,7 +264,7 @@ async function finalizeDoneLifecycle({ controlPath, state, browser, now, generat
   return { action: 'FINALIZED', generation };
 }
 
-async function tick({ root, browser, notifier, remoteHealth = null, clock = () => new Date(), rolloverMinutes = 20, watchdogStallMs = 2 * 60_000, watchdogRecoveryMs = 4 * 60_000, includeSynthetic = false, runId = null }) {
+async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthority = null, clock = () => new Date(), rolloverMinutes = 20, watchdogStallMs = 2 * 60_000, watchdogRecoveryMs = 4 * 60_000, includeSynthetic = false, runId = null }) {
   const resolved = resolveRun(root, { includeSynthetic, includePendingDone: true, runId });
   if (!resolved) return { action: 'NO_INCOMPLETE_RUN' };
   const controlPath = resolved.CONTROL_PATH;
@@ -272,6 +273,34 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
     const now = clock();
     let state = readControl(controlPath);
     let generation = Number.parseInt(state.GENERATION || '1', 10);
+    const remoteRunId = state.REMOTE_RUN_ID && state.REMOTE_RUN_ID !== 'NONE' ? state.REMOTE_RUN_ID : null;
+    if (remoteAuthority && remoteRunId) {
+      let remoteRun;
+      try { remoteRun = await remoteAuthority.inspectRun(remoteRunId); }
+      catch { return { action: 'REMOTE_AUTHORITY_RETRY', generation }; }
+      const reconciled = reconcileRemoteRun(state, remoteRun);
+      state = reconciled.state;
+      writeControlAtomic(controlPath, state);
+      if (reconciled.relation === 'AHEAD') return { action: 'REMOTE_GENERATION_AHEAD', generation, remoteGeneration: remoteRun.generation };
+      if (reconciled.relation === 'BEHIND') {
+        const remoteGeneration = Number(remoteRun.generation);
+        const retryable = ['PENDING', 'FAILED'].includes(state.REMOTE_SYNC_STATUS) && remoteGeneration === generation - 1;
+        if (!retryable) return { action: 'REMOTE_GENERATION_BEHIND', generation, remoteGeneration };
+        try {
+          remoteRun = await remoteAuthority.syncGeneration(remoteRunId, {
+            expectedGeneration: remoteGeneration, generation,
+            controllerHeartbeatAt: state.CLAIM_RESUMED_AT && state.CLAIM_RESUMED_AT !== 'NONE' ? state.CLAIM_RESUMED_AT : now.toISOString(),
+            progress: state.CURRENT_STATE, nextSafeAction: state.NEXT_SAFE_ACTION,
+          });
+          state = { ...state, REMOTE_SYNC_STATUS: 'SENT', REMOTE_GENERATION: String(remoteRun.generation), REMOTE_UPDATED_AT: remoteRun.updatedAt || state.REMOTE_UPDATED_AT || 'NONE' };
+          writeControlAtomic(controlPath, state);
+        } catch {
+          state = { ...state, REMOTE_SYNC_STATUS: 'FAILED' };
+          writeControlAtomic(controlPath, state);
+          return { action: 'REMOTE_SYNC_RETRY', generation, remoteGeneration };
+        }
+      }
+    }
     const orphanCleanup = await retryOrphanTargetCleanup({ controlPath, state, browser, now });
     state = orphanCleanup.state;
     if (orphanCleanup.blocked) return { action: orphanCleanup.action, generation, retryAt: state.BROWSER_ORPHAN_NEXT_AT };
@@ -499,6 +528,25 @@ async function tick({ root, browser, notifier, remoteHealth = null, clock = () =
     }
     if (twoPhaseClaim && finalState.CLAIM_CONFIRM_STATUS !== 'SENT') {
       return { action: 'CLAIM_CONFIRM_RETRY', generation: nextGeneration };
+    }
+    if (remoteAuthority && remoteRunId) {
+      finalState = { ...finalState, REMOTE_SYNC_STATUS: 'PENDING' };
+      writeControlAtomic(controlPath, finalState);
+      try {
+        const remoteSynced = await remoteAuthority.syncGeneration(remoteRunId, {
+          expectedGeneration: generation,
+          generation: nextGeneration,
+          controllerHeartbeatAt: finalState.CLAIM_RESUMED_AT && finalState.CLAIM_RESUMED_AT !== 'NONE' ? finalState.CLAIM_RESUMED_AT : now.toISOString(),
+          progress: finalState.CURRENT_STATE,
+          nextSafeAction: finalState.NEXT_SAFE_ACTION,
+        });
+        finalState = { ...finalState, REMOTE_SYNC_STATUS: 'SENT', REMOTE_GENERATION: String(remoteSynced.generation), REMOTE_UPDATED_AT: remoteSynced.updatedAt || 'NONE' };
+        writeControlAtomic(controlPath, finalState);
+      } catch {
+        finalState = { ...finalState, REMOTE_SYNC_STATUS: 'FAILED' };
+        writeControlAtomic(controlPath, finalState);
+        return { action: 'ROLLED_OVER_REMOTE_SYNC_RETRY', generation: nextGeneration };
+      }
     }
     return { action: 'ROLLED_OVER', generation: nextGeneration };
   } finally {

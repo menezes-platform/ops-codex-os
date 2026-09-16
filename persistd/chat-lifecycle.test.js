@@ -1277,3 +1277,101 @@ test('archive failure becomes durable debt and retries on the next tick', async 
   assert.equal(final.BROWSER_ARCHIVE_STATUS, 'SENT');
   assert.equal(final.BROWSER_ARCHIVE_DEBT_SINCE, 'NONE');
 });
+
+test('remote authority heartbeat drives the local watchdog before rollover decisions', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-remote-heartbeat-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'local-run', REMOTE_RUN_ID: 'remote-run', GENERATION: '2', STATUS: 'ACTIVE',
+    PROJECT_ROOT: 'C:\\repo', STARTED_AT: '2026-09-16T11:59:00Z',
+    CONTROLLER_HEARTBEAT_AT: '2026-09-16T12:02:30Z', CURRENT_STATE: 'local old',
+  });
+  const remoteAuthority = {
+    async inspectRun(runId) {
+      assert.equal(runId, 'remote-run');
+      return { runId, generation: 2, status: 'ACTIVE', controllerHeartbeatAt: '2026-09-16T12:00:00Z',
+        progress: 'remote fresh', nextSafeAction: 'resume safely', updatedAt: '2026-09-16T12:00:01Z' };
+    },
+  };
+  const result = await orchestrator.tick({ root, browser: {}, notifier: {}, remoteAuthority,
+    clock: () => new Date('2026-09-16T12:03:00Z'), rolloverMinutes: 20,
+    watchdogStallMs: 2 * 60_000, watchdogRecoveryMs: 4 * 60_000 });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'SUSPECTED_STALL');
+  assert.equal(final.CONTROLLER_HEARTBEAT_AT, '2026-09-16T12:00:00Z');
+  assert.equal(final.CURRENT_STATE, 'remote fresh');
+  assert.equal(final.NEXT_SAFE_ACTION, 'resume safely');
+});
+
+test('remote generation ahead fails closed without creating a successor', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-remote-ahead-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'local-ahead', REMOTE_RUN_ID: 'remote-ahead', GENERATION: '2', STATUS: 'ACTIVE',
+    PROJECT_ROOT: 'C:\\repo', STARTED_AT: '2026-09-16T12:00:00Z',
+  });
+  let creates = 0;
+  const remoteAuthority = {
+    async inspectRun() { return { runId: 'remote-ahead', generation: 3, status: 'ACTIVE' }; },
+  };
+  const result = await orchestrator.tick({ root, browser: { async createSuccessor() { creates++; } }, notifier: {},
+    remoteAuthority, clock: () => new Date('2026-09-16T12:10:00Z'), rolloverMinutes: 0 });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'REMOTE_GENERATION_AHEAD');
+  assert.equal(creates, 0);
+  assert.equal(final.GENERATION, '2');
+  assert.equal(final.REMOTE_GENERATION, '3');
+});
+
+test('successful local rollover advances the mapped remote generation', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-remote-sync-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'local-sync', REMOTE_RUN_ID: 'remote-sync', GENERATION: '2', STATUS: 'CONTEXT_RISK',
+    PROJECT_ROOT: 'C:\\repo', STARTED_AT: '2026-09-16T12:00:00Z', CLAIMED_AT: '2026-09-16T12:00:00Z',
+    CHAT_ID: 'chat-g2', CURRENT_STATE: 'before rollover', NEXT_SAFE_ACTION: 'continue',
+  });
+  const syncCalls = [];
+  const remoteAuthority = {
+    async inspectRun() { return { runId: 'remote-sync', generation: 2, status: 'ACTIVE', controllerHeartbeatAt: '2026-09-16T11:50:00Z' }; },
+    async syncGeneration(runId, input) { syncCalls.push({ runId, input }); return { runId, generation: 3, status: 'ACTIVE' }; },
+  };
+  const browser = {
+    async createSuccessor({ state, nextGeneration, controlPath: target }) {
+      writeControlAtomic(target, { ...state, GENERATION: String(nextGeneration), STATUS: 'ACTIVE',
+        CLAIMED_AT: '2026-09-16T12:10:00Z', LEASE_OWNER: `G${nextGeneration}` });
+      return { chatId: 'chat-g3', taskSpaceId: 99, evidence: 'durable-claim' };
+    },
+    async archiveRunChat() { return { ok: true }; },
+    async pruneRunTabs() { return { ok: true, closed: 1, remaining: 1 }; },
+  };
+  const result = await orchestrator.tick({ root, browser, notifier: {}, remoteAuthority,
+    clock: () => new Date('2026-09-16T12:10:00Z'), rolloverMinutes: 0 });
+  assert.equal(result.action, 'ROLLED_OVER');
+  assert.equal(syncCalls.length, 1);
+  assert.equal(syncCalls[0].runId, 'remote-sync');
+  assert.equal(syncCalls[0].input.expectedGeneration, 2);
+  assert.equal(syncCalls[0].input.generation, 3);
+  assert.equal(readControl(controlPath).REMOTE_SYNC_STATUS, 'SENT');
+});
+
+test('remote sync debt retries without creating another successor', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-remote-sync-retry-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'local-retry', REMOTE_RUN_ID: 'remote-retry', GENERATION: '3', STATUS: 'ACTIVE',
+    PROJECT_ROOT: 'C:\\repo', STARTED_AT: '2026-09-16T12:00:00Z', CLAIMED_AT: '2026-09-16T12:09:00Z',
+    CLAIM_RESUMED_AT: '2026-09-16T12:09:30Z', REMOTE_SYNC_STATUS: 'FAILED', CHAT_ID: 'chat-g3',
+    CONTROLLER_HEARTBEAT_AT: '2026-09-16T12:09:30Z', CURRENT_STATE: 'g3 alive', NEXT_SAFE_ACTION: 'continue g3',
+  });
+  let creates = 0; let syncs = 0;
+  const remoteAuthority = {
+    async inspectRun() { return { runId: 'remote-retry', generation: 2, status: 'ACTIVE' }; },
+    async syncGeneration(runId, input) {
+      syncs++; assert.equal(runId, 'remote-retry'); assert.equal(input.expectedGeneration, 2); assert.equal(input.generation, 3);
+      return { runId, generation: 3, status: 'ACTIVE', updatedAt: '2026-09-16T12:10:00Z' };
+    },
+  };
+  const result = await orchestrator.tick({ root, browser: { async createSuccessor() { creates++; } }, notifier: {}, remoteAuthority,
+    clock: () => new Date('2026-09-16T12:10:00Z'), rolloverMinutes: 20 });
+  assert.equal(result.action, 'WATCHING');
+  assert.equal(syncs, 1);
+  assert.equal(creates, 0);
+  assert.equal(readControl(controlPath).REMOTE_SYNC_STATUS, 'SENT');
+});
