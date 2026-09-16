@@ -5,6 +5,7 @@ const path = require('node:path');
 const { MemoryAuthorityStore, FileAuthorityStore } = require('./authority-store');
 const { PersistFlowService } = require('./service');
 const { createPersistFlowMcpNodeHandler } = require('./mcp-handler');
+const { createOAuthHttpHandler } = require('./oauth-server');
 
 function sendJson(res, statusCode, body) {
   const payload = JSON.stringify(body);
@@ -53,12 +54,15 @@ function createServer({
   mcpToken = process.env.PERSISTFLOW_MCP_TOKEN || '',
   mcpTokenDigest = resolveMcpTokenDigest(),
   iconUrl = process.env.PERSISTFLOW_ICON_URL || '',
+  oauthStore = null,
 } = {}) {
   const service = new PersistFlowService({ store, clock });
   const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl });
+  const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore }) : null;
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://persistflow.local');
+      if (oauthHttpHandler && await oauthHttpHandler(req, res, url)) return;
       if (url.pathname === '/mcp') return mcpNodeHandler(req, res);
       if (req.method === 'GET' && url.pathname === '/persistflow.svg') {
         const body = fs.readFileSync(path.join(__dirname, '../../assets/persistflow.svg'));
