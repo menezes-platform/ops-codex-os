@@ -55,10 +55,11 @@ function createServer({
   mcpTokenDigest = resolveMcpTokenDigest(),
   iconUrl = process.env.PERSISTFLOW_ICON_URL || '',
   oauthStore = null,
+  ownerTokenDigest = '',
 } = {}) {
   const service = new PersistFlowService({ store, clock });
   const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl });
-  const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore }) : null;
+  const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore, ownerTokenDigest: ownerTokenDigest || mcpTokenDigest }) : null;
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://persistflow.local');

@@ -6,10 +6,10 @@ const path = require('node:path');
 const { createServer } = require('./src/persistflow/http-server');
 const { FileOAuthStore } = require('./src/persistflow/oauth-store');
 
-async function withServer(run) {
+async function withServer(run, { ownerTokenDigest = '' } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'persistflow-oauth-http-'));
   const oauthStore = new FileOAuthStore(dir);
-  const server = createServer({ oauthStore });
+  const server = createServer({ oauthStore, ownerTokenDigest });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const port = server.address().port;
   const origin = `http://127.0.0.1:${port}`;
@@ -67,4 +67,43 @@ test('dynamically registers a public OAuth client and persists exact redirect UR
     });
     assert.equal(bad.status, 400);
   });
+});
+test('authorization endpoint enforces PKCE/resource and owner approval', async () => {
+  const crypto = require('node:crypto');
+  const ownerSecret = 'owner-secret';
+  const ownerTokenDigest = crypto.createHash('sha256').update(ownerSecret).digest('hex');
+  await withServer(async ({ origin, oauthStore }) => {
+    const redirectUri = 'https://chatgpt.com/aip/oauth/callback';
+    const client = oauthStore.registerClient({ redirect_uris: [redirectUri], client_name: 'ChatGPT' });
+    const verifier = 'x'.repeat(64);
+    const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+    const query = new URLSearchParams({
+      response_type: 'code', client_id: client.client_id, redirect_uri: redirectUri,
+      code_challenge: challenge, code_challenge_method: 'S256', resource: origin + '/mcp',
+      scope: 'persistflow', state: 'state-123',
+    });
+
+    const page = await fetch(origin + '/oauth/authorize?' + query);
+    assert.equal(page.status, 200);
+    assert.match(page.headers.get('content-type'), /text\/html/);
+    assert.match(await page.text(), /Autorizar PersistFlow/);
+
+    const wrong = await fetch(origin + '/oauth/authorize', {
+      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ ...Object.fromEntries(query), owner_secret: 'wrong' }),
+      redirect: 'manual',
+    });
+    assert.equal(wrong.status, 401);
+
+    const approved = await fetch(origin + '/oauth/authorize', {
+      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ ...Object.fromEntries(query), owner_secret: ownerSecret }),
+      redirect: 'manual',
+    });
+    assert.equal(approved.status, 302);
+    const location = new URL(approved.headers.get('location'));
+    assert.equal(location.origin + location.pathname, redirectUri);
+    assert.equal(location.searchParams.get('state'), 'state-123');
+    assert.ok(location.searchParams.get('code').startsWith('pf_code_'));
+  }, { ownerTokenDigest });
 });
