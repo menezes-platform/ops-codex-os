@@ -3,7 +3,7 @@ function chooseStartMode(env = process.env) {
 }
 
 function startWeb() {
-  const { createServer, createProductionStore } = require('../../server');
+  const { createServer, createProductionStore } = require('./persistflow/http-server');
   const port = Number(process.env.PORT || 3000);
   const store = createProductionStore();
   const server = createServer({ store });
