@@ -101,6 +101,13 @@ Se nenhuma das 42 resolver materialmente a tarefa, o router pode consultar o res
 
 As 42 skills não precisam mais ser coordenadas manualmente pelo usuário: o `frontend-director` escolhe `Lead`, `Support` e `Review` conforme a necessidade e mantém o `reuse-first-router` como infraestrutura subordinada de descoberta.
 
+
+## PersistFlow
+
+`PersistFlow` is the chat-native durable execution layer evolved from `persistd`. A long task belongs to a durable `RUN_ID`; ChatGPT conversations are short-lived controller generations that hand off through fenced two-phase claims. The system keeps one authoritative chat per run, archives predecessors, retries cleanup debt, and restores successors from durable state instead of chat memory.
+
+The Hostinger deployment is a plain Node.js app (`server.js`, `npm start`) exposing only semantic run endpoints. Production authority is file-backed outside the deployment tree; see `docs/persistflow-hostinger.md`. The cost policy forbids automatic paid services or upgrades.
+
 ## Atualização
 
 Depois de alterar este repositório:

@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn, execFileSync } = require('node:child_process');
 const {
-  buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
+  buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildArchiveRunChatScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
 } = require('./ego-script');
 const { buildFindAssistantLineScript, buildSendMessageScript } = require('./conversation-script');
 const { ensureEdgeBrowser } = require('./edge-host');
@@ -127,6 +127,9 @@ function createEgoBrowserTransport(options = {}) {
     },
     async renameChats({ state, chats }) {
       return run(buildRenameChatsScript({ runId: state.RUN_ID, chats }));
+    },
+    async archiveRunChat({ state, chatId }) {
+      return run(buildArchiveRunChatScript({ runId: state.RUN_ID, chatId }));
     },
     async discoverRunChats({ state }) {
       return run(buildDiscoverRunChatsScript({ runId: state.RUN_ID }));
