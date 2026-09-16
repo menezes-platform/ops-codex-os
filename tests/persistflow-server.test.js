@@ -42,3 +42,13 @@ test('production store resolves outside the deployment tree by default', () => {
   assert.equal(store.kind, 'file');
   assert.equal(store.directory, path.join(fakeHome, '.persistflow-data'));
 });
+
+test('serves the PersistFlow icon as SVG', async () => {
+  await withServer(async (base) => {
+    const response = await fetch(`${base}/persistflow.svg`);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type') || '', /^image\/svg\+xml/);
+    const body = await response.text();
+    assert.match(body, /PersistFlow/);
+  });
+});

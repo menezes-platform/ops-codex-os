@@ -1,8 +1,10 @@
 const http = require('node:http');
+const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { MemoryAuthorityStore, FileAuthorityStore } = require('./authority-store');
 const { PersistFlowService } = require('./service');
+const { createPersistFlowMcpNodeHandler } = require('./mcp-handler');
 
 function sendJson(res, statusCode, body) {
   const payload = JSON.stringify(body);
@@ -23,7 +25,6 @@ async function readJson(req, maxBytes = 64 * 1024) {
   try { return JSON.parse(text); }
   catch { throw new Error('INVALID_JSON'); }
 }
-
 function errorStatus(error) {
   const code = error?.message || 'INTERNAL_ERROR';
   if (code === 'RUN_NOT_FOUND') return 404;
@@ -37,11 +38,24 @@ function createProductionStore({ env = process.env, homedir = os.homedir() } = {
   return new FileAuthorityStore(directory);
 }
 
-function createServer({ store = new MemoryAuthorityStore(), clock = () => new Date() } = {}) {
+function createServer({
+  store = new MemoryAuthorityStore(),
+  clock = () => new Date(),
+  mcpToken = process.env.PERSISTFLOW_MCP_TOKEN || '',
+  iconUrl = process.env.PERSISTFLOW_ICON_URL || '',
+} = {}) {
   const service = new PersistFlowService({ store, clock });
+  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, iconUrl });
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://persistflow.local');
+      if (url.pathname === '/mcp') return mcpNodeHandler(req, res);
+      if (req.method === 'GET' && url.pathname === '/persistflow.svg') {
+        const body = fs.readFileSync(path.join(__dirname, '../../assets/persistflow.svg'));
+        res.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8', 'content-length': body.length, 'cache-control': 'public, max-age=86400' });
+        res.end(body);
+        return;
+      }
       if (req.method === 'GET' && url.pathname === '/') {
         return sendJson(res, 200, { service: 'persistflow', status: 'ok' });
       }
