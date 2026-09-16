@@ -38,11 +38,20 @@ function createProductionStore({ env = process.env, homedir = os.homedir() } = {
   return new FileAuthorityStore(directory);
 }
 
+const DEFAULT_MCP_DIGEST_PATH = path.join(__dirname, '../../config/mcp-token.sha256');
+
+function resolveMcpTokenDigest({ env = process.env, fallbackPath = DEFAULT_MCP_DIGEST_PATH } = {}) {
+  const configured = String(env.PERSISTFLOW_MCP_TOKEN_SHA256 || '').trim();
+  if (configured) return configured;
+  try { return fs.readFileSync(fallbackPath, 'utf8').trim(); }
+  catch { return ''; }
+}
+
 function createServer({
   store = new MemoryAuthorityStore(),
   clock = () => new Date(),
   mcpToken = process.env.PERSISTFLOW_MCP_TOKEN || '',
-  mcpTokenDigest = process.env.PERSISTFLOW_MCP_TOKEN_SHA256 || '',
+  mcpTokenDigest = resolveMcpTokenDigest(),
   iconUrl = process.env.PERSISTFLOW_ICON_URL || '',
 } = {}) {
   const service = new PersistFlowService({ store, clock });
@@ -96,4 +105,4 @@ function createServer({
   });
 }
 
-module.exports = { createServer, createProductionStore };
+module.exports = { createServer, createProductionStore, resolveMcpTokenDigest };

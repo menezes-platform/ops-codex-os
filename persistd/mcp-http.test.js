@@ -105,3 +105,14 @@ test('MCP accepts a bearer token validated only by SHA-256 digest', async () => 
     await new Promise((resolve) => server.close(resolve));
   }
 });
+test('MCP digest resolver falls back to a versioned digest file', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { resolveMcpTokenDigest } = require('./src/persistflow/http-server');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'persistflow-mcp-digest-'));
+  const fallbackPath = path.join(directory, 'mcp-token.sha256');
+  fs.writeFileSync(fallbackPath, 'file-digest\n', 'utf8');
+  assert.equal(resolveMcpTokenDigest({ env: {}, fallbackPath }), 'file-digest');
+  assert.equal(resolveMcpTokenDigest({ env: { PERSISTFLOW_MCP_TOKEN_SHA256: 'env-digest' }, fallbackPath }), 'env-digest');
+});

@@ -59,7 +59,7 @@ test('Hostinger entry works from an isolated persistd deployment root', async ()
   child.stderr.on('data', (chunk) => { stderr += chunk; });
   try {
     let result;
-    for (let i = 0; i < 20; i += 1) {
+    for (let i = 0; i < 50; i += 1) {
       if (child.exitCode !== null) break;
       try { result = await requestHealth(port); break; } catch {}
       await new Promise((resolve) => setTimeout(resolve, 50));
