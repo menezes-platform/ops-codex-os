@@ -155,6 +155,32 @@ function createOAuthHttpHandler({ store, ownerTokenDigest = '' } = {}) {
       }
       return true;
     }
+    if (req.method === 'POST' && url.pathname === '/oauth/token') {
+      try {
+        const params = await readForm(req);
+        const grantType = String(params.get('grant_type') || '');
+        const clientId = String(params.get('client_id') || '');
+        const resource = String(params.get('resource') || '');
+        if (!clientId || !store.getClient(clientId) || resource !== `${origin}/mcp`) throw new Error('OAUTH_INVALID_GRANT');
+        let pair;
+        if (grantType === 'authorization_code') {
+          const grant = store.redeemAuthorizationCode({
+            code: params.get('code'), clientId, redirectUri: params.get('redirect_uri'),
+            codeVerifier: params.get('code_verifier'), resource,
+          });
+          pair = store.issueTokenPair({ clientId, resource, scope: grant.scope });
+        } else if (grantType === 'refresh_token') {
+          pair = store.rotateRefreshToken({ refreshToken: params.get('refresh_token'), clientId, resource });
+        } else {
+          sendJson(res, 400, { error: 'unsupported_grant_type' });
+          return true;
+        }
+        sendJson(res, 200, pair);
+      } catch (error) {
+        sendJson(res, 400, { error: 'invalid_grant', error_description: String(error.message || 'invalid grant') });
+      }
+      return true;
+    }
     if (req.method === 'POST' && url.pathname === '/oauth/register') {
       try {
         const body = await readJson(req);

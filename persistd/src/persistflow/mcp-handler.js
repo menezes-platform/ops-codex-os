@@ -16,7 +16,7 @@ function sameToken(actual, expected) {
   return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
 }
 
-function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl } = {}) {
+function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl, validateBearer, resourceMetadataUrl } = {}) {
   if (!service) throw new Error('PERSISTFLOW_SERVICE_REQUIRED');
   const handler = createMcpHandler((ctx) => {
     const resolvedIconUrl = iconUrl || (ctx.requestInfo ? new URL('/persistflow.svg', ctx.requestInfo.url).href : '');
@@ -75,7 +75,7 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl 
 
   const nodeHandler = toNodeHandler(handler);
   return async (req, res) => {
-    if (!token && !tokenDigest) {
+    if (!token && !tokenDigest && !validateBearer) {
       res.writeHead(503, { 'content-type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ error: 'mcp_not_configured' }));
       return;
@@ -84,11 +84,19 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl 
     const prefix = 'Bearer ';
     const actual = header.startsWith(prefix) ? header.slice(prefix.length) : '';
     const digest = crypto.createHash('sha256').update(actual, 'utf8').digest('hex');
-    const authorized = token ? sameToken(actual, token) : sameToken(digest, tokenDigest);
+    let authorized = token ? sameToken(actual, token) : sameToken(digest, tokenDigest);
+    if (!authorized && validateBearer && actual) {
+      try { authorized = Boolean(await validateBearer(actual, req)); }
+      catch { authorized = false; }
+    }
     if (!authorized) {
+      const metadata = typeof resourceMetadataUrl === 'function' ? resourceMetadataUrl(req) : resourceMetadataUrl;
+      const challenge = metadata
+        ? `Bearer realm="PersistFlow", resource_metadata="${metadata}"`
+        : 'Bearer realm="PersistFlow"';
       res.writeHead(401, {
         'content-type': 'application/json; charset=utf-8',
-        'www-authenticate': 'Bearer realm="PersistFlow"',
+        'www-authenticate': challenge,
       });
       res.end(JSON.stringify({ error: 'unauthorized' }));
       return;

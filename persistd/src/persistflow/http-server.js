@@ -3,9 +3,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { MemoryAuthorityStore, FileAuthorityStore } = require('./authority-store');
+const { FileOAuthStore } = require('./oauth-store');
 const { PersistFlowService } = require('./service');
 const { createPersistFlowMcpNodeHandler } = require('./mcp-handler');
-const { createOAuthHttpHandler } = require('./oauth-server');
+const { createOAuthHttpHandler, requestOrigin } = require('./oauth-server');
 
 function sendJson(res, statusCode, body) {
   const payload = JSON.stringify(body);
@@ -34,9 +35,16 @@ function errorStatus(error) {
   return 500;
 }
 
-function createProductionStore({ env = process.env, homedir = os.homedir() } = {}) {
-  const directory = env.PERSISTFLOW_DATA_DIR || path.join(homedir, '.persistflow-data');
-  return new FileAuthorityStore(directory);
+function productionDataDir({ env = process.env, homedir = os.homedir() } = {}) {
+  return env.PERSISTFLOW_DATA_DIR || path.join(homedir, '.persistflow-data');
+}
+
+function createProductionStore(options = {}) {
+  return new FileAuthorityStore(productionDataDir(options));
+}
+
+function createProductionOAuthStore(options = {}) {
+  return new FileOAuthStore(path.join(productionDataDir(options), 'oauth'));
 }
 
 const DEFAULT_MCP_DIGEST_PATH = path.join(__dirname, '../../config/mcp-token.sha256');
@@ -58,7 +66,9 @@ function createServer({
   ownerTokenDigest = '',
 } = {}) {
   const service = new PersistFlowService({ store, clock });
-  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl });
+  const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
+  const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;
+  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl });
   const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore, ownerTokenDigest: ownerTokenDigest || mcpTokenDigest }) : null;
   return http.createServer(async (req, res) => {
     try {
@@ -110,4 +120,4 @@ function createServer({
   });
 }
 
-module.exports = { createServer, createProductionStore, resolveMcpTokenDigest };
+module.exports = { createServer, createProductionStore, createProductionOAuthStore, resolveMcpTokenDigest };

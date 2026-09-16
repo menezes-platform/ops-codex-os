@@ -107,3 +107,71 @@ test('authorization endpoint enforces PKCE/resource and owner approval', async (
     assert.ok(location.searchParams.get('code').startsWith('pf_code_'));
   }, { ownerTokenDigest });
 });
+test('authorization code exchange authenticates MCP and refresh token rotates', async () => {
+  const crypto = require('node:crypto');
+  const ownerSecret = 'owner-secret';
+  const ownerTokenDigest = crypto.createHash('sha256').update(ownerSecret).digest('hex');
+  await withServer(async ({ origin, oauthStore }) => {
+    const redirectUri = 'https://chatgpt.com/aip/oauth/callback';
+    const clientReg = oauthStore.registerClient({ redirect_uris: [redirectUri], client_name: 'ChatGPT' });
+    const verifier = 'z'.repeat(64);
+    const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+    const auth = new URLSearchParams({
+      response_type: 'code', client_id: clientReg.client_id, redirect_uri: redirectUri,
+      code_challenge: challenge, code_challenge_method: 'S256', resource: origin + '/mcp',
+      scope: 'persistflow', state: 'token-state', owner_secret: ownerSecret,
+    });
+    const approved = await fetch(origin + '/oauth/authorize', {
+      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: auth, redirect: 'manual',
+    });
+    const code = new URL(approved.headers.get('location')).searchParams.get('code');
+
+    const wrong = await fetch(origin + '/oauth/token', {
+      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'authorization_code', code, client_id: clientReg.client_id, redirect_uri: redirectUri, code_verifier: 'wrong', resource: origin + '/mcp' }),
+    });
+    assert.equal(wrong.status, 400);
+
+    const exchanged = await fetch(origin + '/oauth/token', {
+      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'authorization_code', code, client_id: clientReg.client_id, redirect_uri: redirectUri, code_verifier: verifier, resource: origin + '/mcp' }),
+    });
+    assert.equal(exchanged.status, 200);
+    const pair = await exchanged.json();
+    assert.equal(pair.token_type, 'Bearer');
+    assert.ok(pair.access_token);
+    assert.ok(pair.refresh_token);
+    const unauth = await fetch(origin + '/mcp', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
+    });
+    assert.equal(unauth.status, 401);
+    assert.match(unauth.headers.get('www-authenticate') || '', /resource_metadata=/);
+
+    const { Client, StreamableHTTPClientTransport } = await import('@modelcontextprotocol/client');
+    const mcpClient = new Client({ name: 'oauth-test', version: '1.0.0' });
+    const transport = new StreamableHTTPClientTransport(new URL(origin + '/mcp'), {
+      requestInit: { headers: { Authorization: `Bearer ${pair.access_token}` } },
+    });
+    await mcpClient.connect(transport);
+    try {
+      const tools = await mcpClient.listTools();
+      assert.ok(tools.tools.some((tool) => tool.name === 'persist_run_start'));
+    } finally { await mcpClient.close(); }
+
+    const refreshed = await fetch(origin + '/oauth/token', {
+      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: pair.refresh_token, client_id: clientReg.client_id, resource: origin + '/mcp' }),
+    });
+    assert.equal(refreshed.status, 200);
+    const rotated = await refreshed.json();
+    assert.ok(rotated.refresh_token);
+    assert.notEqual(rotated.refresh_token, pair.refresh_token);
+
+    const replay = await fetch(origin + '/oauth/token', {
+      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: pair.refresh_token, client_id: clientReg.client_id, resource: origin + '/mcp' }),
+    });
+    assert.equal(replay.status, 400);
+  }, { ownerTokenDigest });
+});
