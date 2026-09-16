@@ -5,6 +5,6 @@
   "type": "commonjs",
   "scripts": {
     "test": "node --test",
-    "start": "node src/daemon.js"
+    "start": "node src/start-entrypoint.js"
   }
 }
