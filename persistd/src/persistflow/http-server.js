@@ -42,10 +42,11 @@ function createServer({
   store = new MemoryAuthorityStore(),
   clock = () => new Date(),
   mcpToken = process.env.PERSISTFLOW_MCP_TOKEN || '',
+  mcpTokenDigest = process.env.PERSISTFLOW_MCP_TOKEN_SHA256 || '',
   iconUrl = process.env.PERSISTFLOW_ICON_URL || '',
 } = {}) {
   const service = new PersistFlowService({ store, clock });
-  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, iconUrl });
+  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl });
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://persistflow.local');

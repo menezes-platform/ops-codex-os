@@ -77,3 +77,31 @@ test('MCP client can drive the minimal run lifecycle', async () => {
     }
   });
 });
+
+test('MCP accepts a bearer token validated only by SHA-256 digest', async () => {
+  const crypto = require('node:crypto');
+  const secret = 'digest-only-test-secret';
+  const digest = crypto.createHash('sha256').update(secret, 'utf8').digest('hex');
+  const server = createServer({
+    store: new MemoryAuthorityStore(),
+    mcpTokenDigest: digest,
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const { port } = server.address();
+    const { Client, StreamableHTTPClientTransport } = await import('@modelcontextprotocol/client');
+    const client = new Client({ name: 'digest-test', version: '1.0.0' });
+    const transport = new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`), {
+      requestInit: { headers: { Authorization: `Bearer ${secret}` } },
+    });
+    await client.connect(transport);
+    try {
+      const tools = await client.listTools();
+      assert.ok(tools.tools.some((tool) => tool.name === 'persist_run_inspect'));
+    } finally {
+      await client.close();
+    }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});

@@ -16,7 +16,7 @@ function sameToken(actual, expected) {
   return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
 }
 
-function createPersistFlowMcpNodeHandler({ service, token, iconUrl } = {}) {
+function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl } = {}) {
   if (!service) throw new Error('PERSISTFLOW_SERVICE_REQUIRED');
   const handler = createMcpHandler((ctx) => {
     const resolvedIconUrl = iconUrl || (ctx.requestInfo ? new URL('/persistflow.svg', ctx.requestInfo.url).href : '');
@@ -75,7 +75,7 @@ function createPersistFlowMcpNodeHandler({ service, token, iconUrl } = {}) {
 
   const nodeHandler = toNodeHandler(handler);
   return async (req, res) => {
-    if (!token) {
+    if (!token && !tokenDigest) {
       res.writeHead(503, { 'content-type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ error: 'mcp_not_configured' }));
       return;
@@ -83,7 +83,9 @@ function createPersistFlowMcpNodeHandler({ service, token, iconUrl } = {}) {
     const header = String(req.headers.authorization || '');
     const prefix = 'Bearer ';
     const actual = header.startsWith(prefix) ? header.slice(prefix.length) : '';
-    if (!sameToken(actual, token)) {
+    const digest = crypto.createHash('sha256').update(actual, 'utf8').digest('hex');
+    const authorized = token ? sameToken(actual, token) : sameToken(digest, tokenDigest);
+    if (!authorized) {
       res.writeHead(401, {
         'content-type': 'application/json; charset=utf-8',
         'www-authenticate': 'Bearer realm="PersistFlow"',
