@@ -60,7 +60,7 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 }
 
 $EgoWindowsDir = Join-Path $VendorDir "ego-lite-windows-hardened"
-$EgoWindowsUrl = "https://github.com/menezesx2k26-byte/ego-lite.git"
+$EgoWindowsUrl = "https://github.com/menezesx2k26-byte/tool-ego-lite.git"
 $EgoWindowsBranch = "feat/windows-host-state-hardening"
 $EgoWindowsCommit = "8ef136f5d263b374f4071ea664dd232b42e54929"
 if ((Get-Command git -ErrorAction SilentlyContinue) -and (Get-Command npm -ErrorAction SilentlyContinue)) {
