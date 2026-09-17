@@ -52,7 +52,7 @@ const installerFs = require('node:fs');
 const installerPath = require('node:path').join(__dirname, '..', 'scripts', 'install.ps1');
 test('installer pins the hardened Windows ego host and rewrites the ego-browser shim', { skip: !installerFs.existsSync(installerPath) }, () => {
   const source = installerFs.readFileSync(installerPath, 'utf8');
-  assert.match(source, /menezesx2k26-byte\/ego-lite\.git/);
+  assert.match(source, /menezes-platform\\/tool-ego-lite\\.git/);
   assert.match(source, /feat\/windows-host-state-hardening/);
   assert.match(source, /8ef136f5d263b374f4071ea664dd232b42e54929/);
   assert.match(source, /ego-lite-windows-hardened/);
