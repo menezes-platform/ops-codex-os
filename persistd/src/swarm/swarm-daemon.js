@@ -191,9 +191,12 @@ function loadRegistry(registryInput, options = {}) {
     };
   });
 
+  const base = Array.isArray(raw) ? {} : { ...raw };
   return {
+    ...base,
     version: raw.version || '1.0.0',
     workers: normalizedWorkers,
+    tasks: raw.tasks && typeof raw.tasks === 'object' ? raw.tasks : {},
   };
 }
 
@@ -300,6 +303,7 @@ function createSwarmDaemon(options = {}) {
     once = false,
     probeAdapters = {},
     supervisorTick = null,
+    dispatchers = {},
     fsModule = fs,
     clock = {
       now: Date.now.bind(Date),
@@ -355,6 +359,8 @@ function createSwarmDaemon(options = {}) {
         previousState,
         tickCount,
         timestamp: now,
+        dispatchers,
+        clock: () => new Date(now),
       });
     }
 
@@ -367,9 +373,21 @@ function createSwarmDaemon(options = {}) {
         workers: classifications,
         snapshots,
       };
+    } else {
+      nextState = {
+        ...nextState,
+        tickCount,
+        snapshots: nextState.snapshots || snapshots,
+        classifications: nextState.classifications || classifications,
+      };
     }
 
-    // 4. Atomically persist state
+    // 4. Persist mutable supervisor registry so leases/assignments survive the next tick.
+    if (typeof effectiveRegistryInput === 'string' && nextState.registry) {
+      persistStateAtomic(effectiveRegistryInput, nextState.registry, { fsModule });
+    }
+
+    // 5. Atomically persist observability state.
     if (effectiveStatePath) {
       persistStateAtomic(effectiveStatePath, nextState, { fsModule });
     }
