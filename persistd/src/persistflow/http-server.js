@@ -6,6 +6,7 @@ const path = require('node:path');
 const { MemoryAuthorityStore, FileAuthorityStore } = require('./authority-store');
 const { FileOAuthStore } = require('./oauth-store');
 const { PersistFlowService } = require('./service');
+const { createSandboxProviderFromEnv } = require('./sandbox-provider');
 const { createPersistFlowMcpNodeHandler, sameToken } = require('./mcp-handler');
 const { createOAuthHttpHandler, requestOrigin } = require('./oauth-server');
 
@@ -75,8 +76,9 @@ function createServer({
   iconUrl = process.env.PERSISTFLOW_ICON_URL || '',
   oauthStore = null,
   ownerTokenDigest = '',
+  sandboxProvider = createSandboxProviderFromEnv(),
 } = {}) {
-  const service = new PersistFlowService({ store, clock });
+  const service = new PersistFlowService({ store, clock, sandbox: sandboxProvider });
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
   const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;
   const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl });

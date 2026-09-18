@@ -20,9 +20,10 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
   if (!service) throw new Error('PERSISTFLOW_SERVICE_REQUIRED');
   const handler = createMcpHandler((ctx) => {
     const resolvedIconUrl = iconUrl || (ctx.requestInfo ? new URL('/persistflow.svg', ctx.requestInfo.url).href : '');
-    const info = { name: 'PersistFlow', version: '0.1.0' };
+    const info = { name: 'PersistFlow', version: '0.2.0' };
     if (resolvedIconUrl) info.icons = [{ src: resolvedIconUrl }];
     const server = new McpServer(info);
+
     server.registerTool('persist_run_start', {
       title: 'Start PersistFlow run',
       description: 'Create one durable PersistFlow run.',
@@ -48,6 +49,7 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
         progress: z.string().optional(),
       }),
     }, async ({ runId, ...input }) => jsonResult({ run: service.heartbeat(runId, input) }));
+
     server.registerTool('persist_run_checkpoint', {
       title: 'Checkpoint PersistFlow run',
       description: 'Persist the current generation checkpoint and next safe action.',
@@ -69,6 +71,79 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
         claimSecret: z.string().min(1),
       }),
     }, async ({ runId, ...input }) => jsonResult({ run: service.claim(runId, input) }));
+
+    server.registerTool('persist_sandbox_create', {
+      title: 'Create PersistFlow Sandbox workspace',
+      description: 'Create a bounded execution workspace for a durable PersistFlow run and checkpoint the workspace evidence.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        generation: z.number().int().positive(),
+        repo: z.string().min(1),
+        ref: z.string().min(1),
+        providerHint: z.enum(['github_actions', 'railway', 'codespaces', 'remote_worker']).optional(),
+        policyTier: z.enum(['trusted', 'standard', 'untrusted']).default('standard'),
+        ttlSeconds: z.number().int().positive().max(86400).optional(),
+        nextSafeAction: z.string().optional(),
+      }),
+    }, async ({ runId, ...input }) => jsonResult(await service.sandboxCreate(runId, input)));
+
+    server.registerTool('persist_sandbox_inspect', {
+      title: 'Inspect PersistFlow Sandbox workspace',
+      description: 'Read workspace state from the execution plane without changing PersistFlow authority.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        workspaceId: z.string().min(1),
+      }),
+      annotations: { readOnlyHint: true },
+    }, async ({ runId, workspaceId }) => jsonResult(await service.sandboxInspect(runId, workspaceId)));
+
+    server.registerTool('persist_sandbox_exec', {
+      title: 'Execute through PersistFlow Sandbox',
+      description: 'Submit one replay-safe semantic operation to the Sandbox and checkpoint the queued job.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        generation: z.number().int().positive(),
+        workspaceId: z.string().min(1),
+        operationId: z.string().min(1).max(128),
+        operation: z.enum(['exec', 'read', 'write', 'git.status', 'git.diff', 'browser.run', 'artifact.list']),
+        payload: z.record(z.string(), z.unknown()).default({}),
+        priority: z.number().int().optional(),
+        maxAttempts: z.number().int().positive().max(10).optional(),
+        nextSafeAction: z.string().optional(),
+      }),
+    }, async ({ runId, ...input }) => jsonResult(await service.sandboxExec(runId, input)));
+
+    server.registerTool('persist_sandbox_job', {
+      title: 'Inspect PersistFlow Sandbox job',
+      description: 'Read the current broker state for one sandbox job.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        jobId: z.string().min(1),
+      }),
+      annotations: { readOnlyHint: true },
+    }, async ({ runId, jobId }) => jsonResult(await service.sandboxJob(runId, jobId)));
+
+    server.registerTool('persist_sandbox_receipt', {
+      title: 'Reconcile PersistFlow Sandbox receipt',
+      description: 'Fetch the canonical sandbox receipt and persist it as evidence in the authoritative PersistFlow checkpoint.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        generation: z.number().int().positive(),
+        jobId: z.string().min(1),
+        nextSafeAction: z.string().optional(),
+      }),
+    }, async ({ runId, ...input }) => jsonResult(await service.sandboxReceipt(runId, input)));
+
+    server.registerTool('persist_sandbox_destroy', {
+      title: 'Destroy PersistFlow Sandbox workspace',
+      description: 'Destroy a sandbox workspace while preserving durable Git/receipt truth, then checkpoint the lifecycle evidence.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        generation: z.number().int().positive(),
+        workspaceId: z.string().min(1),
+        nextSafeAction: z.string().optional(),
+      }),
+    }, async ({ runId, ...input }) => jsonResult(await service.sandboxDestroy(runId, input)));
 
     return server;
   }, { responseMode: 'json' });

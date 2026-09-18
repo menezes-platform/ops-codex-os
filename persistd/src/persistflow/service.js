@@ -1,14 +1,26 @@
 const { createRunState, assertMutableGeneration } = require('./run-state');
 
 class PersistFlowService {
-  constructor({ store, clock = () => new Date() } = {}) {
+  constructor({ store, clock = () => new Date(), sandbox = null } = {}) {
     if (!store) throw new Error('AUTHORITY_STORE_REQUIRED');
     this.store = store;
     this.clock = clock;
+    this.sandbox = sandbox;
   }
 
   nowIso() {
     return this.clock().toISOString();
+  }
+
+  requireSandbox() {
+    if (!this.sandbox) throw new Error('SANDBOX_NOT_CONFIGURED');
+    return this.sandbox;
+  }
+
+  assertRunGeneration(runId, generation) {
+    const state = this.inspectRun(runId);
+    assertMutableGeneration(state, generation);
+    return state;
   }
 
   startRun(input = {}) {
@@ -27,6 +39,7 @@ class PersistFlowService {
     if (!state) throw new Error('RUN_NOT_FOUND');
     return state;
   }
+
   heartbeat(runId, input = {}) {
     const now = this.nowIso();
     return this.store.update(runId, (state) => {
@@ -58,6 +71,76 @@ class PersistFlowService {
         updatedAt: now,
       };
     });
+  }
+
+  async sandboxCreate(runId, input = {}) {
+    this.assertRunGeneration(runId, input.generation);
+    const workspace = await this.requireSandbox().create({
+      runId,
+      repo: input.repo,
+      ref: input.ref,
+      providerHint: input.providerHint,
+      policyTier: input.policyTier,
+      ttlSeconds: input.ttlSeconds,
+    });
+    const run = this.checkpoint(runId, {
+      generation: input.generation,
+      nextSafeAction: input.nextSafeAction,
+      evidence: { type: 'sandbox.workspace.created', workspace },
+    });
+    return { workspace, run };
+  }
+
+  async sandboxInspect(runId, workspaceId) {
+    this.inspectRun(runId);
+    const workspace = await this.requireSandbox().inspect(workspaceId);
+    return { workspace };
+  }
+
+  async sandboxExec(runId, input = {}) {
+    this.assertRunGeneration(runId, input.generation);
+    const job = await this.requireSandbox().exec({
+      workspaceId: input.workspaceId,
+      operationId: input.operationId,
+      operation: input.operation,
+      payload: input.payload,
+      priority: input.priority,
+      maxAttempts: input.maxAttempts,
+    });
+    const run = this.checkpoint(runId, {
+      generation: input.generation,
+      nextSafeAction: input.nextSafeAction,
+      evidence: { type: 'sandbox.job.queued', job },
+    });
+    return { job, run };
+  }
+
+  async sandboxJob(runId, jobId) {
+    this.inspectRun(runId);
+    const job = await this.requireSandbox().inspectJob(jobId);
+    return { job };
+  }
+
+  async sandboxReceipt(runId, input = {}) {
+    this.assertRunGeneration(runId, input.generation);
+    const receipt = await this.requireSandbox().receipt(input.jobId);
+    const run = this.checkpoint(runId, {
+      generation: input.generation,
+      nextSafeAction: input.nextSafeAction,
+      evidence: { type: 'sandbox.receipt', receipt },
+    });
+    return { receipt, run };
+  }
+
+  async sandboxDestroy(runId, input = {}) {
+    this.assertRunGeneration(runId, input.generation);
+    const workspace = await this.requireSandbox().destroy(input.workspaceId);
+    const run = this.checkpoint(runId, {
+      generation: input.generation,
+      nextSafeAction: input.nextSafeAction,
+      evidence: { type: 'sandbox.workspace.destroyed', workspace },
+    });
+    return { workspace, run };
   }
 
   bridgeSync(runId, input = {}) {

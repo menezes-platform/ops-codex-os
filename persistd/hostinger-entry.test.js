@@ -49,6 +49,10 @@ test('Hostinger entry works from an isolated persistd deployment root', async ()
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'persistflow-hostinger-'));
   const isolated = path.join(tempRoot, 'persistd');
   fs.cpSync(__dirname, isolated, { recursive: true });
+  // Hostinger installs runtime dependencies in the deployed application root.
+  // Mirror that contract in the isolated-root test instead of relying on the
+  // source repository's parent-directory module resolution.
+  fs.cpSync(path.join(__dirname, '..', 'node_modules'), path.join(isolated, 'node_modules'), { recursive: true });
   const port = 38126;
   const child = spawn(process.execPath, ['-e', "require('./src/hostinger-entry.js')"], {
     cwd: isolated,

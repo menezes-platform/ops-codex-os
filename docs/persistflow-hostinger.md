@@ -23,6 +23,20 @@ $HOME/.persistflow-data
 Set `PERSISTFLOW_DATA_DIR` to override it. The path must remain outside the deployed build tree.
 
 Do not store authority under `hbuilds/current`, `hbuilds/versions`, `nodejs`, or `public_html`: Hostinger replaces deployment-managed files on redeploy.
+## Sandbox execution plane
+
+PersistFlow connects to PersistFlow Sandbox as a bounded execution provider. Configure the Hostinger Node app with:
+
+```text
+PERSISTFLOW_SANDBOX_URL=https://<sandbox-host>
+PERSISTFLOW_SANDBOX_KEY_ID=<broker-key-id>
+PERSISTFLOW_SANDBOX_HMAC_SECRET=<broker-hmac-secret>
+```
+
+The HMAC secret stays server-side. ChatGPT calls the `persist_sandbox_*` MCP tools on PersistFlow; PersistFlow signs broker requests, the Sandbox executes them, and canonical Sandbox receipts are stored back as PersistFlow checkpoint evidence. PersistFlow remains the only run/generation authority.
+
+If all three variables are absent, the Sandbox provider is disabled. A partial configuration fails closed at startup instead of silently running unauthenticated.
+
 ## Verification
 
 After deployment:
