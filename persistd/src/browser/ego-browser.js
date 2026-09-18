@@ -4,7 +4,12 @@ const { spawn, execFileSync } = require('node:child_process');
 const {
   buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildArchiveRunChatScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
 } = require('./ego-script');
-const { buildFindAssistantLineScript, buildSendMessageScript } = require('./conversation-script');
+const {
+  buildFindAssistantLineScript,
+  buildSendMessageScript,
+  buildChatGPTProbeScript,
+  buildGenericChatGPTSendScript,
+} = require('./conversation-script');
 const { ensureEdgeBrowser } = require('./edge-host');
 
 function parseWindowsShim(text) {
@@ -152,6 +157,21 @@ function createEgoBrowserTransport(options = {}) {
     async cleanupRun({ state }) {
       return run(buildCleanupScript({ runId: state.RUN_ID }));
     },
+    async probeChatGPTWorker({ state, chatId, openIfMissing = false, runId } = {}) {
+      const effectiveRunId = state?.RUN_ID || runId || 'swarm';
+      return run(buildChatGPTProbeScript({ runId: effectiveRunId, chatId, openIfMissing }));
+    },
+    async sendChatGPTWorkerMessage({ state, chatId, message, verifyLine, taskMarker, waitForAssistantStart = true, runId } = {}) {
+      const effectiveRunId = state?.RUN_ID || runId || 'swarm';
+      return run(buildGenericChatGPTSendScript({
+        runId: effectiveRunId,
+        chatId,
+        message,
+        verifyLine,
+        taskMarker,
+        waitForAssistantStart,
+      }));
+    },
   };
 }
 
@@ -162,4 +182,6 @@ module.exports = {
   resolvePersistdBrowserEnv,
   runEgoScript,
   createEgoBrowserTransport,
+  buildChatGPTProbeScript,
+  buildGenericChatGPTSendScript,
 };
