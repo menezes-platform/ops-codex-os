@@ -371,6 +371,14 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
       if (remoteHealth?.preflight) {
         try { watchdogHealth = await remoteHealth.preflight(state); }
         catch { watchdogHealth = { ok: false, browser: 'UNHEALTHY', desktop: 'UNHEALTHY', repaired: false }; }
+        if (watchdogHealth?.browser === 'AUTH_REQUIRED') {
+          state = { ...state, STATUS: 'AUTH_REQUIRED', BLOCKED_REASON: 'AUTH_REQUIRED',
+            REMOTE_HEALTH_AT: now.toISOString(), REMOTE_BROWSER_HEALTH: 'AUTH_REQUIRED',
+            REMOTE_DESKTOP_HEALTH: watchdogHealth?.desktop || 'UNKNOWN',
+            REMOTE_HEALTH_REPAIRED: String(Boolean(watchdogHealth?.repaired)) };
+          writeControlAtomic(controlPath, state);
+          return { action: 'AUTH_REQUIRED', generation };
+        }
         if (watchdogHealth?.browser !== 'HEALTHY') {
           state = { ...state, STATUS: 'WAITING_BROWSER', BLOCKED_REASON: 'BROWSER_UNHEALTHY' };
           writeControlAtomic(controlPath, state);
@@ -398,6 +406,11 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
       }
       state = { ...state, REMOTE_HEALTH_AT: now.toISOString(), REMOTE_BROWSER_HEALTH: health?.browser || 'UNKNOWN',
         REMOTE_DESKTOP_HEALTH: health?.desktop || 'UNKNOWN', REMOTE_HEALTH_REPAIRED: String(Boolean(health?.repaired)) };
+      if (health?.browser === 'AUTH_REQUIRED') {
+        state = { ...state, STATUS: 'AUTH_REQUIRED', BLOCKED_REASON: 'AUTH_REQUIRED' };
+        writeControlAtomic(controlPath, state);
+        return { action: 'AUTH_REQUIRED', generation };
+      }
       if (!health?.ok) {
         state = { ...state, STATUS: 'WAITING_TOOL', BLOCKED_REASON: 'REMOTE_CONTROL_UNHEALTHY' };
         writeControlAtomic(controlPath, state);
