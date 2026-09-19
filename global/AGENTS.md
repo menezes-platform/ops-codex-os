@@ -75,6 +75,16 @@ These are persistent cross-project operating rules for Codex.
 - Never store secrets or credentials in durable context.
 - Use Apache Maka (`https://github.com/apache/maka`) as an architectural reference for durable execution records, recovery, and separation of saved history from model context when relevant; do not make it a dependency unless a project explicitly requires it.
 
+## Mandatory account-memory ingestion
+- Before finalizing every substantive chat or task, decide whether the interaction produced stable cross-project user context that should survive the conversation.
+- If it produced a durable user fact, preference, constraint, correction, cross-project context item, or recurring lesson, update the smallest relevant file in `menezesx2k26-byte/Memory` without waiting for the user to ask again.
+- Treat this as a completion gate: a substantive task is not fully finalized until the memory-ingestion decision has been made and any required write has either been verified or explicitly reported as blocked.
+- Do not persist transcripts, transient task state, speculation, low-value trivia, or secrets.
+- Before writing sensitive personal context, verify through GitHub that the Memory repository is still private.
+- Route project-specific state to the project repository and globally applicable agent behavior to this canonical agent-OS repository instead of duplicating everything in account memory.
+- When fresh user information corrects stored memory, update/supersede the stale fact rather than preserving contradictory versions.
+- If the Memory repository is inaccessible, do not silently skip the gate; report the blocked persistence explicitly.
+
 ## LLM application pattern routing
 - For tasks that design, review, or implement LLM-powered applications, agents, RAG systems, multimodal apps, voice agents, always-on agents, generative UI, or multi-agent workflows, invoke `$llm-app-pattern-library` when available.
 - Use `https://github.com/Shubhamsaboo/awesome-llm-apps` as a reference library for relevant patterns and examples, not as an architectural authority or dependency source.
