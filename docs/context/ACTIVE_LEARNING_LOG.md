@@ -31,3 +31,27 @@ Correção durável:
 - Não assumir persistência de variáveis entre chamadas de Code Mode.
 
 Resultado validado: a segunda tentativa buscou SHAs/conteúdo e aplicou as três atualizações no mesmo fluxo com sucesso.
+
+## 2026-09-19 — Codex thin-controller / quota burn
+
+Context: a thread root de orquestração do TikTok LIVE Dungeon chegou a 98% da janela de 5h porque cada `wait_agent` reabria dezenas/centenas de milhares de tokens de contexto, mesmo com a maior parte cacheada.
+
+Falhas observadas e correções duráveis:
+
+- O detector inicial de `runId` falhou em argumentos de tool call com JSON escapado. Correção: varredura recursiva dos payloads e normalização de aspas escapadas.
+- Uma cauda fixa de 2 MiB do JSONL podia perder telemetria quando havia registros gigantes posteriores. Correção: leitura adaptativa 2→4→8… MiB, até achar uso + rate-limit, com teto de 32 MiB.
+- O último `token_count` pode conter uso de tokens e omitir `rate_limits`. Correção: combinar o último registro de uso com o último registro anterior que ainda tenha rate-limit válido.
+- Um filtro de processo baseado apenas em `CommandLine` matou o próprio PowerShell, porque o texto do comando continha o nome do supervisor. Correção: exigir `Name == node.exe` e assinatura do supervisor.
+- O wrapper usado para gravar scripts que continham backticks de PowerShell gerou erro de parsing antes da escrita. Correção: evitar template literals aninhados e usar `Environment.NewLine`.
+- `codex archive <thread>` recusou a sessão ainda carregada no app. Correção: não tocar em SQLite/rollout manualmente; manter a sessão como predecessor inerte e usar o protocolo suportado quando a superfície do app-server estiver disponível.
+- O `hooks.json` local continha seis referências a `~/.agents/hooks/run.py`, arquivo inexistente. Correção: remover somente entradas comprovadamente quebradas e restaurar bridges diretos do Token Optimizer.
+
+Guardrail permanente:
+- Pais gerenciados não podem usar `wait_agent`; `PreToolUse` nega a chamada.
+- `SubagentStop` externaliza o retorno completo em evento durável e envia ao pai apenas um ponteiro pequeno.
+- Rollover preventivo usa Git + Persistflow/eventos, nunca replay do transcript predecessor.
+- Supervisor só lança sucessor de runs duráveis e, em EMERGENCY, espera o reset da cota antes de iniciar nova sessão.
+
+Complemento de validação:
+- O lockfile declarava `@modelcontextprotocol/client` como devDependency, mas `package.json` não; `npm ci` deixou três testes MCP sem o cliente. Correção: alinhar o manifesto à versão já pinada no lock, sem introduzir versão nova.
+- O teste de startup do Hostinger falhou uma vez dentro da suíte por não responder no orçamento de ~1s, mas passou duas vezes isolado (~350–450 ms). Correção operacional: repetir o teste isolado antes de atribuir esse timing flake ao código alterado.

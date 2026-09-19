@@ -71,6 +71,8 @@ At `ROLLOVER` or `EMERGENCY`, `persistd` records the guard result and promotes a
 
 The controller must preserve `QUOTA_GUARD_PRESERVE_QUALITY_GATES: true`. No quota state may skip required independent review, safety/security validation, production/release gates, or irreversible-action checks.
 
+For Codex-backed orchestration, prefer the installed thin-controller event path over model polling. Full subagent returns belong in the external event ledger; the parent receives only an event pointer. Preventive rollover must start a fresh working context from Git + durable controller/project state, never by replaying the predecessor transcript.
+
 ## Generation and Lease Rule
 
 The active controller generation is the highest **durably claimed** generation.

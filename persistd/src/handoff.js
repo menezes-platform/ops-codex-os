@@ -6,6 +6,12 @@ function value(state, key, fallback = 'NONE') {
   return v == null || v === '' ? fallback : v;
 }
 
+function clip(valueToClip, max = 700) {
+  const text = String(valueToClip == null ? '' : valueToClip).trim();
+  if (text.length <= max) return text;
+  return text.slice(0, max - 1) + '…';
+}
+
 function buildSuccessorMessage(state, nextGeneration) {
   const runId = value(state, 'RUN_ID');
   const nonce = value(state, 'CLAIM_NONCE');
@@ -13,37 +19,38 @@ function buildSuccessorMessage(state, nextGeneration) {
   const requestLine = buildClaimRequestLine(runId, nextGeneration, nonce);
   const confirmationLine = buildClaimConfirmationLine(runId, nextGeneration, nonce);
   const batonV2 = buildBatonV2(state, nextGeneration);
+  const compactBaton = {
+    ...batonV2,
+    objective: clip(batonV2.objective, 320) || null,
+    state: {
+      current: null,
+      nextSafeAction: clip(batonV2.state?.nextSafeAction, 700) || null,
+      ambiguousOperations: [],
+      cleanupDebt: [],
+    },
+  };
+  const controlPath = value(state, 'CONTROL_PATH', `~/.agents/continuations/${runId}/CONTROL.md`);
   return [
     'PERSISTENT CONVERSATION CONTROLLER TAKEOVER',
     `RUN_ID: ${runId}`,
     `GENERATION: ${nextGeneration}`,
     `CLAIM_NONCE: ${nonce}`,
-    `BATON_V2_JSON: ${JSON.stringify(batonV2)}`,
-    '',
-    'This takeover is controlled by local persistd durable state; browser text alone is never authority.',
-    'First read the installed controller skill, references/remote-control-contract.md, and CONTROL.md using Remote Desktop Commander read-only file access.',
-    'After durable confirmation, enforce the remote-control capability gate: use Remote Desktop Commander for machine access/recovery, Browser Bridge / Playwright for authorized browser DOM work, and Dev-Orquestra Windows Interactive Control for native Windows UI.',
-    'For every local or interactive mutation, use the highest applicable healthy structured control layer; raw coordinates/input are fallback-only and require fresh post-action verification.',
-    `Project: ${value(state, 'PROJECT_ROOT')}`,
-    `Task: ${value(state, 'TASK_ID')}`,
+    `BATON_V2_JSON: ${JSON.stringify(compactBaton)}`,
+    `CONTROL_PATH: ${controlPath}`,
+    `PROJECT_HANDOFF: ${value(state, 'PROJECT_HANDOFF')}`,
     `Display name: ${value(state, 'DISPLAY_NAME')}`,
-    `Branch / HEAD: ${value(state, 'BRANCH')} / ${value(state, 'HEAD')}`,
-    `Authoritative handoff: ${value(state, 'PROJECT_HANDOFF')}`,
-    `Controller baton: ${value(state, 'CONTROL_PATH', `~/.agents/continuations/${runId}/CONTROL.md`)}`,
-    `Current state: ${value(state, 'CURRENT_STATE')}`,
-    `Exact next action: ${value(state, 'NEXT_SAFE_ACTION')}`,
     '',
-    `You are candidate generation G${nextGeneration}. Do not mutate the project yet.`,
-    'After reading the controller files, reply with exactly these two lines and nothing else:',
+    'Durable state is authoritative. Do not read or reconstruct from the predecessor transcript.',
+    'Read the installed controller skill, references/remote-control-contract.md, CONTROL.md, Git state, and only the handoff sections needed for the next action.',
+    'After claim confirmation enforce the capability gate: Remote Desktop Commander for machine state, Browser Bridge / Playwright for authorized browser DOM work, and Windows Interactive Control for native UI. Always use the highest applicable healthy structured control layer.',
+    `You are candidate G${nextGeneration}; do not mutate before durable confirmation.`,
+    'Reply with exactly:',
     wakeLine,
     requestLine,
-    `Then wait for ${confirmationLine} before reconstructing project state or doing project work.`,
-    'Persistd will verify the exact request including nonce and write the durable promotion locally.',
-    'After confirmation, reconstruct project state from Git/project handoff and do not redo verified work.',
-    'Reversible, scope-preserving, low-risk actions with a logically determined best option are authorized without asking the user.',
-    'Stop only for auth/MFA, destructive or irreversible work lacking authority, material ambiguity, scope expansion, or three materially different failed safe attempts.',
-    'When updating CONTROL.md later, preserve DISPLAY_NAME, CHAT_HISTORY_JSON, CHAT_TITLE_STATUS, BROWSER_CLEANUP_STATUS, BROWSER_PRUNE_STATUS, CLAIM_CONFIRM_STATUS, and CLAIM_CONFIRM_CHAT_ID unless persistd owns that transition.',
-    'When verified DoD is reached, write STATUS: DONE; persistd owns terminal notification and deduplication.',
+    `Wait for ${confirmationLine}.`,
+    'After confirmation, reconstruct project state from Git plus durable controller/project evidence; never replay the predecessor transcript or redo verified work. Never use model polling for worker completion; rely on durable events/checkpoints.',
+    'When updating CONTROL.md, preserve DISPLAY_NAME, CHAT_HISTORY_JSON, CHAT_TITLE_STATUS, BROWSER_CLEANUP_STATUS, BROWSER_PRUNE_STATUS, CLAIM_CONFIRM_STATUS, and CLAIM_CONFIRM_CHAT_ID unless persistd owns the transition.',
+    'Preserve required review, security, release, and irreversible-action gates. STATUS: DONE only after verified DoD.',
   ].join('\n');
 }
 

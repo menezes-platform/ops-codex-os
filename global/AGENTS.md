@@ -52,6 +52,8 @@ These are persistent cross-project operating rules for Codex.
 - For large/long-running/multi-agent work, the quota/context circuit breaker is mandatory when telemetry is available; invoke the deterministic guard before new heavy fan-out and after materially expensive turns.
 - Treat quota burn rate as a hard signal, not just absolute usage. Preventive rollover must happen before exhaustion when the guard reaches `ROLLOVER` or `EMERGENCY`.
 - At `PRESSURE` or worse, the control-plane model must not perform polling loops, ingest raw worker transcripts by default, or open additional heavy agents beyond the guard's allowance.
+- When the thin-controller hooks are active, a parent that dispatches subagents must never call `wait_agent`. End the turn after dispatch; `SubagentStop` persists the full worker result outside model context and queues only a compact event pointer back to the parent.
+- Treat predecessor transcripts as cold history during rollover. Successors reconstruct from Git, the latest durable Persistflow/project checkpoint, and only the event records needed for the next decision.
 - Quota conservation changes routing and context shape, never required quality gates.
 - Use OpenViking (`https://github.com/volcengine/OpenViking`) as an architectural reference for hierarchical/tiered context loading and observable retrieval when relevant; do not introduce it as a dependency without evaluating license, privacy, operational cost, and project fit.
 

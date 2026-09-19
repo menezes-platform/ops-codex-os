@@ -120,6 +120,12 @@ Before dispatching parallel agents, verify that the work is genuinely independen
 
 Give each agent the narrowest sufficient brief and relevant files. Do not broadcast the entire project context by default.
 
+When the Codex thin-controller hooks are installed, worker completion is event-driven:
+- dispatch bounded workers and end the parent turn instead of calling `wait_agent`;
+- `SubagentStop` writes the complete worker return to the durable event store and queues only a small pointer;
+- read only the event(s) needed for the next decision;
+- at `ROLLOVER` or `EMERGENCY`, checkpoint durable state and retire the bloated session rather than carrying its transcript into the successor.
+
 ## Durable compression
 When context becomes large or a session may end:
 - preserve verified state, decisions, blockers, validation results, and next safe step in durable repo context;

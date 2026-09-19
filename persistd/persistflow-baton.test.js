@@ -46,3 +46,19 @@ test('Baton v2 carries durable task state, autonomy and minimal tools', () => {
   assert.equal(JSON.parse(line.slice('BATON_V2_JSON: '.length)).version, 2);
   assert.match(message, /CLAIM_NONCE: nonce-8/);
 });
+
+test('successor handoff is bounded even when predecessor state is huge', () => {
+  const message = buildSuccessorMessage({
+    RUN_ID: 'huge-run',
+    CLAIM_NONCE: 'nonce-huge',
+    CURRENT_STATE: 'x'.repeat(50000),
+    NEXT_SAFE_ACTION: 'continue focused verification',
+    PROJECT_ROOT: 'C:/demo',
+    PROJECT_HANDOFF: 'C:/demo/HANDOFF.md',
+    BRANCH: 'feat/demo',
+    HEAD: 'abc123',
+  }, 9);
+  assert.ok(message.length < 3000);
+  assert.equal(message.includes('x'.repeat(100)), false);
+  assert.match(message, /Do not read or reconstruct from the predecessor transcript/);
+});
