@@ -1278,6 +1278,58 @@ test('archive failure becomes durable debt and retries on the next tick', async 
   assert.equal(final.BROWSER_ARCHIVE_DEBT_SINCE, 'NONE');
 });
 
+test('archive auth boundary stays durable and retryable with backoff', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-archive-auth-retry-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'archive-auth', GENERATION: '2', STATUS: 'ACTIVE', DISPLAY_NAME: 'Archive',
+    STARTED_AT: '2026-09-01T12:00:00Z', CLAIMED_AT: '2026-09-01T12:59:00Z',
+    CHAT_ID: 'chat-new', BROWSER_ARCHIVE_STATUS: 'PENDING', BROWSER_ARCHIVE_CHAT_ID: 'chat-old',
+    BROWSER_ARCHIVE_DEBT_SINCE: 'NONE', PROJECT_ROOT: 'C:\\repo',
+  });
+  let calls = 0;
+  const result = await orchestrator.tick({ root, browser: {
+    async archiveRunChat() { calls++; return { ok: false, status: 'AUTH_REQUIRED' }; },
+  }, notifier: {}, rolloverMinutes: 20, clock: () => new Date('2026-09-01T13:00:00Z') });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'WATCHING');
+  assert.equal(calls, 1);
+  assert.equal(final.BROWSER_ARCHIVE_STATUS, 'RETRY_SCHEDULED');
+  assert.equal(final.BROWSER_ARCHIVE_ATTEMPTS, '1');
+  assert.equal(final.BROWSER_ARCHIVE_LAST_ERROR, 'AUTH_REQUIRED');
+  assert.equal(final.BROWSER_ARCHIVE_NEXT_AT, '2026-09-01T13:05:00.000Z');
+  assert.equal(final.BROWSER_ARCHIVE_DEBT_SINCE, '2026-09-01T13:00:00.000Z');
+});
+
+test('WAITING_TOOL enables preservation and sweeps managed stale targets without auth', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-preservation-sweep-'));
+  const controlPath = makeRun(root, {
+    RUN_ID: 'preserve-run', GENERATION: '6', STATUS: 'WAITING_TOOL', DISPLAY_NAME: 'Preserve',
+    STARTED_AT: '2026-09-01T12:00:00Z', CLAIMED_AT: '2026-09-01T12:59:00Z',
+    CHAT_ID: 'chat-6', CHAT_HISTORY_JSON: JSON.stringify([{ index: 1, chatId: 'chat-5' }, { index: 2, chatId: 'chat-6' }]),
+    PROJECT_ROOT: 'C:\\repo',
+  });
+  const seen = [];
+  const result = await orchestrator.tick({ root, browser: {
+    async pruneManagedTargets(payload) { seen.push(payload); return { ok: true, closed: 2, considered: 2 }; },
+  }, notifier: {}, rolloverMinutes: 20, clock: () => new Date('2026-09-01T13:00:00Z') });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'WATCHING');
+  assert.equal(final.PRESERVATION_MODE, 'ACTIVE');
+  assert.equal(final.PRESERVATION_REASON, 'status:WAITING_TOOL');
+  assert.equal(final.PRESERVATION_SWEEP_STATUS, 'SENT');
+  assert.equal(final.PRESERVATION_SWEEP_CLOSED, '2');
+  assert.deepEqual(seen[0].staleChatIds, ['chat-5']);
+});
+
+test('archive browser script detects auth instead of reporting false success', () => {
+  const egoScript = require('./src/browser/ego-script');
+  const script = egoScript.buildArchiveRunChatScript({ runId: 'archive-auth-ui', chatId: 'chat-old' });
+  assert.match(script, /AUTH_REQUIRED/);
+  assert.match(script, /ARCHIVE_CHAT_ID_MISMATCH/);
+  assert.match(script, /verified: true/);
+  const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+  assert.doesNotThrow(() => new AsyncFunction(script));
+});
 test('remote authority heartbeat drives the local watchdog before rollover decisions', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-remote-heartbeat-'));
   const controlPath = makeRun(root, {

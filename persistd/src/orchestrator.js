@@ -140,20 +140,78 @@ async function retryActivePrune({ controlPath, state, browser, now }) {
 }
 
 
+function applyPreservationMode(state, now = new Date()) {
+  const quotaLevel = String(state.QUOTA_GUARD_LEVEL || 'NORMAL');
+  const status = String(state.STATUS || '');
+  const statusPreservation = ['WAITING_TOOL', 'WAITING_BROWSER', 'AUTH_REQUIRED', 'CONTEXT_RISK', 'ROLLOVER_INCOMPLETE', 'RECOVERY_REQUIRED'].includes(status);
+  const quotaPreservation = ['PRESSURE', 'ROLLOVER', 'EMERGENCY'].includes(quotaLevel);
+  const active = statusPreservation || quotaPreservation;
+  const mode = active ? 'ACTIVE' : 'NORMAL';
+  const reason = statusPreservation ? `status:${status}` : (quotaPreservation ? `quota:${quotaLevel}` : 'NONE');
+  if (state.PRESERVATION_MODE === mode && state.PRESERVATION_REASON === reason) return state;
+  return {
+    ...state,
+    PRESERVATION_MODE: mode,
+    PRESERVATION_REASON: reason,
+    PRESERVATION_AT: active
+      ? ((state.PRESERVATION_MODE === 'ACTIVE' && state.PRESERVATION_AT && state.PRESERVATION_AT !== 'NONE') ? state.PRESERVATION_AT : now.toISOString())
+      : 'NONE',
+  };
+}
+
+async function retryPreservationSweep({ controlPath, state, browser, now }) {
+  if (!browser?.pruneManagedTargets) return state;
+  const retryAt = Date.parse(state.PRESERVATION_SWEEP_NEXT_AT || '');
+  if (Number.isFinite(retryAt) && retryAt > now.getTime()) return state;
+  const staleChatIds = [...new Set([
+    ...parseChatHistory(state).map((item) => item?.chatId),
+    state.BROWSER_ARCHIVE_CHAT_ID,
+  ].filter((chatId) => chatId && chatId !== 'NONE' && chatId !== state.CHAT_ID))];
+  let result;
+  try { result = await browser.pruneManagedTargets({ state, keepChatId: state.CHAT_ID, staleChatIds }); }
+  catch (error) { result = { ok: false, closed: 0, considered: 0, error: error?.message || String(error) }; }
+  const ok = result?.ok === true;
+  const intervalMs = state.PRESERVATION_MODE === 'ACTIVE' ? 2 * 60_000 : 10 * 60_000;
+  const updated = {
+    ...state,
+    PRESERVATION_SWEEP_STATUS: ok ? 'SENT' : 'RETRY_SCHEDULED',
+    PRESERVATION_SWEEP_AT: now.toISOString(),
+    PRESERVATION_SWEEP_CLOSED: String(Number(result?.closed || 0)),
+    PRESERVATION_SWEEP_CONSIDERED: String(Number(result?.considered || 0)),
+    PRESERVATION_SWEEP_LAST_ERROR: ok ? 'NONE' : String(result?.error || (result?.errors || []).join('|') || 'SWEEP_FAILED'),
+    PRESERVATION_SWEEP_NEXT_AT: new Date(now.getTime() + (ok ? intervalMs : 2 * 60_000)).toISOString(),
+  };
+  writeControlAtomic(controlPath, updated);
+  return updated;
+}
 async function retryPredecessorArchive({ controlPath, state, browser, now }) {
-  const pending = ['PENDING', 'FAILED'].includes(state.BROWSER_ARCHIVE_STATUS);
+  const pending = ['PENDING', 'FAILED', 'RETRY_SCHEDULED'].includes(state.BROWSER_ARCHIVE_STATUS);
   const chatId = state.BROWSER_ARCHIVE_CHAT_ID;
   if (!pending || !chatId || chatId === 'NONE' || !browser?.archiveRunChat) return state;
+  const retryAt = Date.parse(state.BROWSER_ARCHIVE_NEXT_AT || '');
+  if (state.BROWSER_ARCHIVE_STATUS === 'RETRY_SCHEDULED' && Number.isFinite(retryAt) && now.getTime() < retryAt) return state;
   let updated;
   try {
     const result = await browser.archiveRunChat({ state, chatId });
     if (result?.ok) {
-      updated = { ...state, BROWSER_ARCHIVE_STATUS: 'SENT', BROWSER_ARCHIVED_AT: now.toISOString(), BROWSER_ARCHIVE_DEBT_SINCE: 'NONE' };
+      updated = { ...state, BROWSER_ARCHIVE_STATUS: 'SENT', BROWSER_ARCHIVED_AT: now.toISOString(),
+        BROWSER_ARCHIVE_DEBT_SINCE: 'NONE', BROWSER_ARCHIVE_ATTEMPTS: '0', BROWSER_ARCHIVE_NEXT_AT: 'NONE', BROWSER_ARCHIVE_LAST_ERROR: 'NONE' };
     } else {
-      updated = { ...state, BROWSER_ARCHIVE_STATUS: 'FAILED', BROWSER_ARCHIVE_DEBT_SINCE: (state.BROWSER_ARCHIVE_DEBT_SINCE && state.BROWSER_ARCHIVE_DEBT_SINCE !== 'NONE') ? state.BROWSER_ARCHIVE_DEBT_SINCE : now.toISOString() };
+      const attempts = Number.parseInt(state.BROWSER_ARCHIVE_ATTEMPTS || '0', 10) + 1;
+      const reason = String(result?.status || result?.error || 'ARCHIVE_UNVERIFIED');
+      const baseDelayMs = reason === 'AUTH_REQUIRED' ? 5 * 60_000 : 2 * 60_000;
+      updated = { ...state, BROWSER_ARCHIVE_STATUS: 'RETRY_SCHEDULED', BROWSER_ARCHIVE_ATTEMPTS: String(attempts),
+        BROWSER_ARCHIVE_NEXT_AT: new Date(now.getTime() + Math.min(30 * 60_000, baseDelayMs * (2 ** Math.min(attempts - 1, 3)))).toISOString(),
+        BROWSER_ARCHIVE_LAST_ERROR: reason,
+        BROWSER_ARCHIVE_DEBT_SINCE: (state.BROWSER_ARCHIVE_DEBT_SINCE && state.BROWSER_ARCHIVE_DEBT_SINCE !== 'NONE') ? state.BROWSER_ARCHIVE_DEBT_SINCE : now.toISOString() };
     }
-  } catch {
-    updated = { ...state, BROWSER_ARCHIVE_STATUS: 'FAILED', BROWSER_ARCHIVE_DEBT_SINCE: (state.BROWSER_ARCHIVE_DEBT_SINCE && state.BROWSER_ARCHIVE_DEBT_SINCE !== 'NONE') ? state.BROWSER_ARCHIVE_DEBT_SINCE : now.toISOString() };
+  } catch (error) {
+    const attempts = Number.parseInt(state.BROWSER_ARCHIVE_ATTEMPTS || '0', 10) + 1;
+    const reason = error?.message ? String(error.message) : String(error);
+    updated = { ...state, BROWSER_ARCHIVE_STATUS: 'RETRY_SCHEDULED', BROWSER_ARCHIVE_ATTEMPTS: String(attempts),
+      BROWSER_ARCHIVE_NEXT_AT: new Date(now.getTime() + Math.min(30 * 60_000, 2 * 60_000 * (2 ** Math.min(attempts - 1, 3)))).toISOString(),
+      BROWSER_ARCHIVE_LAST_ERROR: reason,
+      BROWSER_ARCHIVE_DEBT_SINCE: (state.BROWSER_ARCHIVE_DEBT_SINCE && state.BROWSER_ARCHIVE_DEBT_SINCE !== 'NONE') ? state.BROWSER_ARCHIVE_DEBT_SINCE : now.toISOString() };
   }
   writeControlAtomic(controlPath, updated);
   return updated;
@@ -278,6 +336,11 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
       state = guarded.state;
       writeControlAtomic(controlPath, state);
     }
+    const preservationState = applyPreservationMode(state, now);
+    if (preservationState !== state) {
+      state = preservationState;
+      writeControlAtomic(controlPath, state);
+    }
     let generation = Number.parseInt(state.GENERATION || '1', 10);
     const remoteRunId = state.REMOTE_RUN_ID && state.REMOTE_RUN_ID !== 'NONE' ? state.REMOTE_RUN_ID : null;
     if (remoteAuthority && remoteRunId) {
@@ -316,6 +379,7 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
       return { action: 'BLOCKED', generation };
     }
     if (state.STATUS !== 'DONE') await cleanupRunScratchQuietly({ browser, state });
+    if (state.STATUS !== 'DONE') state = await retryPreservationSweep({ controlPath, state, browser, now });
     if (state.CLAIM_CONFIRM_STATUS === 'RATE_LIMITED') {
       const until = Date.parse(state.RATE_LIMIT_UNTIL || '');
       if (Number.isFinite(until) && now.getTime() < until) {
@@ -378,18 +442,18 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
         try { watchdogHealth = await remoteHealth.preflight(state); }
         catch { watchdogHealth = { ok: false, browser: 'UNHEALTHY', desktop: 'UNHEALTHY', repaired: false }; }
         if (watchdogHealth?.browser !== 'HEALTHY') {
-          state = { ...state, STATUS: 'WAITING_BROWSER', BLOCKED_REASON: 'BROWSER_UNHEALTHY' };
+          state = applyPreservationMode({ ...state, STATUS: 'WAITING_BROWSER', BLOCKED_REASON: 'BROWSER_UNHEALTHY' }, now);
           writeControlAtomic(controlPath, state);
           return { action: 'WAITING_BROWSER', generation };
         }
         if (!watchdogHealth?.ok) {
-          state = { ...state, STATUS: 'WAITING_TOOL', BLOCKED_REASON: 'REMOTE_CONTROL_UNHEALTHY' };
+          state = applyPreservationMode({ ...state, STATUS: 'WAITING_TOOL', BLOCKED_REASON: 'REMOTE_CONTROL_UNHEALTHY' }, now);
           writeControlAtomic(controlPath, state);
           return { action: 'REMOTE_CONTROL_RETRY', generation };
         }
       }
 
-      state = { ...state, STATUS: initialWatchdog.status, BLOCKED_REASON: 'NONE' };
+      state = applyPreservationMode({ ...state, STATUS: initialWatchdog.status, BLOCKED_REASON: 'NONE' }, now);
       writeControlAtomic(controlPath, state);
       if (initialWatchdog.status === 'SUSPECTED_STALL') return { action: 'SUSPECTED_STALL', generation };
     }
@@ -405,11 +469,12 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
       state = { ...state, REMOTE_HEALTH_AT: now.toISOString(), REMOTE_BROWSER_HEALTH: health?.browser || 'UNKNOWN',
         REMOTE_DESKTOP_HEALTH: health?.desktop || 'UNKNOWN', REMOTE_HEALTH_REPAIRED: String(Boolean(health?.repaired)) };
       if (!health?.ok) {
-        state = { ...state, STATUS: 'WAITING_TOOL', BLOCKED_REASON: 'REMOTE_CONTROL_UNHEALTHY' };
+        state = applyPreservationMode({ ...state, STATUS: 'WAITING_TOOL', BLOCKED_REASON: 'REMOTE_CONTROL_UNHEALTHY' }, now);
         writeControlAtomic(controlPath, state);
         return { action: 'REMOTE_CONTROL_RETRY', generation };
       }
-      if (state.BLOCKED_REASON === 'REMOTE_CONTROL_UNHEALTHY') state = { ...state, BLOCKED_REASON: 'NONE' };
+      if (state.BLOCKED_REASON === 'REMOTE_CONTROL_UNHEALTHY') state = { ...state, BLOCKED_REASON: 'NONE', STATUS: state.STATUS === 'WAITING_TOOL' ? 'ACTIVE' : state.STATUS };
+      state = applyPreservationMode(state, now);
       writeControlAtomic(controlPath, state);
     }
 
@@ -447,7 +512,7 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
     if (outcome?.status === 'AUTH_REQUIRED') {
       const current = readControl(controlPath);
       if (Number.parseInt(current.GENERATION || '0', 10) === generation) {
-        writeControlAtomic(controlPath, { ...current, STATUS: 'AUTH_REQUIRED', LEASE_OWNER: `G${generation}` });
+        writeControlAtomic(controlPath, applyPreservationMode({ ...current, STATUS: 'AUTH_REQUIRED', LEASE_OWNER: `G${generation}` }, now));
       }
       if (notifier?.attention) {
         let authState = readControl(controlPath);
@@ -510,7 +575,8 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
       CHAT_TITLE_STATUS: 'PENDING', BROWSER_CLEANUP_STATUS: 'PENDING',
       BROWSER_ARCHIVE_STATUS: predecessorChatId ? 'PENDING' : 'SKIPPED',
       BROWSER_ARCHIVE_CHAT_ID: predecessorChatId || 'NONE',
-      BROWSER_ARCHIVE_DEBT_SINCE: 'NONE',
+      BROWSER_ARCHIVE_DEBT_SINCE: 'NONE', BROWSER_ARCHIVE_ATTEMPTS: '0',
+      BROWSER_ARCHIVE_NEXT_AT: 'NONE', BROWSER_ARCHIVE_LAST_ERROR: 'NONE',
       BROWSER_PRUNE_STATUS: outcome?.chatId ? 'PENDING' : 'SKIPPED',
       BROWSER_PRUNE_CHAT_ID: outcome?.chatId || 'NONE',
       CLAIM_CONFIRM_STATUS: twoPhaseClaim ? 'PENDING' : 'SKIPPED',
