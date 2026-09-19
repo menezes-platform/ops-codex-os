@@ -49,6 +49,10 @@ These are persistent cross-project operating rules for Codex.
 - Route to the smallest applicable skill set instead of accumulating every available instruction or reference in the prompt.
 - Stop exploration when sufficient evidence exists to implement and validate a project-compatible solution.
 - Do not save tokens by guessing, skipping required validation, or ignoring material uncertainty.
+- For large/long-running/multi-agent work, the quota/context circuit breaker is mandatory when telemetry is available; invoke the deterministic guard before new heavy fan-out and after materially expensive turns.
+- Treat quota burn rate as a hard signal, not just absolute usage. Preventive rollover must happen before exhaustion when the guard reaches `ROLLOVER` or `EMERGENCY`.
+- At `PRESSURE` or worse, the control-plane model must not perform polling loops, ingest raw worker transcripts by default, or open additional heavy agents beyond the guard's allowance.
+- Quota conservation changes routing and context shape, never required quality gates.
 - Use OpenViking (`https://github.com/volcengine/OpenViking`) as an architectural reference for hierarchical/tiered context loading and observable retrieval when relevant; do not introduce it as a dependency without evaluating license, privacy, operational cost, and project fit.
 
 ## Verification budget

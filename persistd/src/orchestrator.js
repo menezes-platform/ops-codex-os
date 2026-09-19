@@ -9,6 +9,7 @@ const { buildClaimRequestLine } = require('./claim-protocol');
 const { buildTerminalMessage, buildAttentionMessage } = require('./notifier');
 const { evaluateWatchdog } = require('./persistflow/watchdog');
 const { reconcileRemoteRun } = require('./persistflow/remote-bridge');
+const { applyQuotaGuardToState } = require('./quota-guard');
 
 function buildChatTitle(displayName, generation, totalGenerations) {
   const base = String(displayName || 'Persist').trim() || 'Persist';
@@ -272,6 +273,11 @@ async function tick({ root, browser, notifier, remoteHealth = null, remoteAuthor
   try {
     const now = clock();
     let state = readControl(controlPath);
+    const guarded = applyQuotaGuardToState(state, now);
+    if (guarded.changed) {
+      state = guarded.state;
+      writeControlAtomic(controlPath, state);
+    }
     let generation = Number.parseInt(state.GENERATION || '1', 10);
     const remoteRunId = state.REMOTE_RUN_ID && state.REMOTE_RUN_ID !== 'NONE' ? state.REMOTE_RUN_ID : null;
     if (remoteAuthority && remoteRunId) {

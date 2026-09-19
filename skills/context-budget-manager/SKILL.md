@@ -12,6 +12,22 @@ Treat context as a scarce working set. Load the smallest amount of information t
 
 Optimization must never override correctness, explicit user requirements, safety, or necessary verification.
 
+## Mandatory quota/context circuit breaker
+For large, long-running, repository-heavy, multi-agent, or reference-heavy work, context budgeting is a runtime gate, not optional advice.
+
+When the platform exposes quota/context telemetry, sample it before new heavy fan-out and after materially expensive turns. Use the deterministic quota guard implemented in `persistd/src/quota-guard.js` or an equivalent caller using the same thresholds.
+
+Policy bands:
+- `NORMAL`: quota < 50% and context < 45%.
+- `CONSERVE`: quota >= 50% or context >= 45%; use targeted reads, summarized worker returns, and durable evidence reuse.
+- `PRESSURE`: quota >= 65%, context >= 60%, or burn >= 1 percentage point/minute while quota >= 50%; block model-based polling and allow at most one new heavy agent.
+- `ROLLOVER`: quota >= 75%, context >= 72%, or burn >= 2 percentage points/minute while quota >= 40%; checkpoint durable state, start preventive rollover, and start no new heavy agents.
+- `EMERGENCY`: quota >= 85%, context >= 85%, or burn >= 4 percentage points/minute while quota >= 35%; checkpoint first and stop new heavy model work until a successor or independent quota lane owns the remaining work.
+
+Burn rate is a first-class trigger. A rapidly rising quota must escalate even if the absolute percentage still looks moderate.
+
+These bands reduce duplicated context and fan-out; they never relax production, safety, security, independent-review, release, or irreversible-action gates.
+
 ## Context hierarchy
 Prefer information in this order when it can answer the current question:
 1. Current task and explicit user requirements.
