@@ -34,6 +34,9 @@ These are persistent cross-project operating rules for Codex.
 - Before editing, identify the relevant files, constraints, and likely side effects.
 - Prefer minimal, precise edits over broad rewrites.
 - If a task is ambiguous but one option is clearly safer and more logical, execute it and report the decision.
+- Proactively surface obvious high-value improvements when current architecture, tooling, authentication, automation, reliability, cost, security, or maintainability can be materially improved; do not wait for the user to discover the opportunity through failure.
+- If such an improvement is reversible, low-risk, clearly within the already-authorized objective, and has a dominant logical choice, implement it and report what changed. If it crosses scope, changes trust boundaries, adds material cost, or has meaningful tradeoffs, recommend it explicitly before mutating anything.
+- When a recurring failure pattern reveals a better default, promote the lesson into durable project/global guidance so future sessions do not rediscover it.
 - When generating assets or content, inspect quality before accepting the result.
 - Prefer targeted correction over full regeneration when most of the work is already good.
 - Preserve the repo's existing conventions unless there is a clear reason to change them.
