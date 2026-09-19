@@ -15,3 +15,19 @@ Falhas observadas e correções duráveis:
 - `ssh -T` do OpenSSH do Windows não é autoridade para Git neste host. O teste autoritativo é o fluxo real do Git: `git ls-remote` para leitura e `git push --dry-run` para escrita.
 
 Resultado validado: chave ED25519 registrada como deploy key de escrita, leitura SSH funcionando e dry-run de criação de branch remoto retornando exit code 0.
+
+## 2026-09-19 — functions.exec isolate scope
+
+Context: ao aplicar a nova regra obrigatória de ingestão da memória, uma execução JavaScript tentou reutilizar a variável `ga` criada em uma chamada anterior de `functions.exec`.
+
+Falha observada:
+- `ReferenceError: ga is not defined`.
+
+Causa:
+- Cada chamada de `functions.exec` roda em um isolate novo; variáveis locais não persistem entre invocações.
+
+Correção durável:
+- Quando uma mutação depende de dados buscados por outra ferramenta, buscar os dados e executar as escritas dependentes dentro da mesma chamada de `functions.exec`, ou reconsultar explicitamente o estado necessário.
+- Não assumir persistência de variáveis entre chamadas de Code Mode.
+
+Resultado validado: a segunda tentativa buscou SHAs/conteúdo e aplicou as três atualizações no mesmo fluxo com sucesso.
