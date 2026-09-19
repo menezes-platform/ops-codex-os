@@ -31,3 +31,26 @@ Correção durável:
 - Não assumir persistência de variáveis entre chamadas de Code Mode.
 
 Resultado validado: a segunda tentativa buscou SHAs/conteúdo e aplicou as três atualizações no mesmo fluxo com sucesso.
+
+
+## 2026-09-19 — PersistFlow Sandbox status audit authority
+
+Context: auditoria remota do estado do `ops-persistflow-sandbox` na EC2.
+
+Falhas observadas:
+- Repeti o antipadrão já conhecido de PowerShell aninhado; o shell externo expandiu variáveis e quebrou a consulta.
+- Rodei `npm run verify` sem fixar o diretório do repo; o comando executou no perfil do usuário.
+- Considerei inicialmente o checkout local verde antes de validar a autoridade remota; o `origin` local era o fork pessoal e o PR canônico estava em `menezes-platform/ops-persistflow-sandbox`.
+- `gh run list --workflow deploy-hostinger.yml` retornou 404 porque o workflow não existe no default branch.
+- Criei um arquivo de learning paralelo antes de descobrir `docs/context/ACTIVE_LEARNING_LOG.md`, contrariando o princípio reuse-first.
+- O primeiro push do log foi rejeitado porque `origin/main` avançou durante a auditoria.
+
+Correções duráveis:
+- Se `start_process` já usa PowerShell, não prefixar com outro `powershell -Command`.
+- Fixar repo em toda operação: `git -C <repo>`, `npm --prefix <repo>` ou working directory explícito.
+- Antes de usar resultados locais como evidência de release, verificar `git remote -v`, SHA do PR canônico e organização/repositório autoritativos.
+- Para workflows presentes apenas em feature branches, consultar runs por branch/run ID em vez de resolver pelo filename no default branch.
+- Antes de criar qualquer novo log/memória operacional, procurar estruturas existentes no repo.
+- Antes de push em branch compartilhada, fazer fetch e rebase/inspecionar divergência; nunca force-push para reconciliar documentação.
+
+Resultado: auditoria separou corretamente saúde local do fork de saúde do CI canônico e identificou o blocker real `EACCES /owned-work`.
