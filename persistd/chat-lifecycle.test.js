@@ -72,7 +72,7 @@ test('retries transient Windows atomic replace errors but not real failures', ()
   assert.throws(() => replaceFileWithRetry('tmp', 'CONTROL.md', { rename: () => { throw fatal; }, sleep: () => {} }), /disk/);
 });
 
-test('falls back to verified in-place CONTROL write when Windows persistently blocks replace', () => {
+test('preserves existing CONTROL when Windows persistently blocks atomic replace', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-control-fallback-'));
   const controlPath = path.join(root, 'CONTROL.md');
   fs.writeFileSync(controlPath, 'RUN_ID: old\nSTATUS: ACTIVE\n');
@@ -81,13 +81,12 @@ test('falls back to verified in-place CONTROL write when Windows persistently bl
     renameAttempts++;
     const error = new Error('destination held open'); error.code = 'EPERM'; throw error;
   };
-  writeControlAtomic(controlPath, { RUN_ID: 'new', STATUS: 'ACTIVE', GENERATION: '2' }, {
+  assert.throws(() => writeControlAtomic(controlPath, { RUN_ID: 'new', STATUS: 'ACTIVE', GENERATION: '2' }, {
     rename: lockedRename, sleep: () => {}, retries: 1, baseDelayMs: 1,
-  });
+  }), /CONTROL_REPLACE_BLOCKED/);
   assert.equal(renameAttempts, 2);
-  assert.equal(readControl(controlPath).RUN_ID, 'new');
-  assert.equal(readControl(controlPath).GENERATION, '2');
-  assert.deepEqual(fs.readdirSync(root).filter((name) => name.endsWith('.tmp')), []);
+  assert.equal(readControl(controlPath).RUN_ID, 'old');
+  assert.ok(fs.readdirSync(root).some((name) => name.includes('.pending-')));
 });
 
 test('recovers a stale persistd lock only when its owner process is dead', () => {
