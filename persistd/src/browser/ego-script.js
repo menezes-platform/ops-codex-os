@@ -5,6 +5,7 @@ const { buildComposerResolveScript } = require('./composer-script');
 function buildSuccessorScript({ runId, message, nextGeneration }) {
   const taskName = `persist:${runId}`;
   const marker = `CLAIM ${runId} G${nextGeneration}`;
+  const requestLine = String(message).split(/\r?\n/).find((line) => line.startsWith('CLAIM_REQUEST ')) || marker;
   const commanderSetup = buildCommanderSetupScript();
   const composerResolver = buildComposerResolveScript({ timeoutMs: 30000 });
   return `
@@ -53,8 +54,12 @@ if (authRequired) {
   const batonMessage = page.locator('[data-message-author-role="user"]').filter({ hasText: 'PERSISTENT CONVERSATION CONTROLLER TAKEOVER' }).last()
   const batonVisible = await batonMessage.waitFor({ state: 'visible', timeout: 15000 })
   if (!batonVisible) throw new Error('Submitted baton not visible')
-  const claimMessage = page.locator('[data-message-author-role="assistant"]').filter({ hasText: ${js(marker)} }).last()
-  const claimSeen = Boolean(await claimMessage.waitFor({ state: 'visible', timeout: 90000 }))
+  const requestSeen = Boolean(await page.waitForFunction((expectedLine) => {
+    const hasExactLine = (el) => String(el.innerText || el.textContent || '').split(/\\r?\\n/).map((item) => item.trim()).includes(expectedLine)
+    const assistants = [...document.querySelectorAll('[data-markdown-text-style="assistant-message"], [data-message-author-role="assistant"]')]
+    if (assistants.some(hasExactLine)) return true
+    return [...document.querySelectorAll('div')].some((el) => /^(ChatGPT said:|ChatGPT disse:|Assistant said:)/i.test(String(el.innerText || el.textContent || '').trim()) && hasExactLine(el))
+  }, ${js(requestLine)}, { timeout: 120000 }))
   const finalUrl = await page.url()
   const match = /\\/c\\/([^/?#]+)/.exec(finalUrl)
   persistdResult = {
@@ -62,9 +67,10 @@ if (authRequired) {
     taskSpaceId: task.id,
     targetId: successorTargetId,
     chatId: match ? match[1] : null,
-    claimSeen,
+    claimSeen: requestSeen,
+    requestLine: requestSeen ? ${js(requestLine)} : null,
     url: finalUrl,
-    evidence: claimSeen ? 'baton-visible+claim-marker-visible' : 'baton-visible'
+    evidence: requestSeen ? 'baton-visible+claim-request-visible' : 'baton-visible'
   }
 }
 } catch (error) {
