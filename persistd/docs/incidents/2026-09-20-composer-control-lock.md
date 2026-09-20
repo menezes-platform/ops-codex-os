@@ -66,7 +66,9 @@ A verified in-place overwrite is not an acceptable fallback for controller autho
 
 Deployed runtime validation on the controller host:
 
-- full `npm test`: 144 tests passed, 0 failed;
+- full deployed-runtime `npm test`: 144 tests passed, 0 failed;
+- clean canonical worktree validation requires `npm ci` at both the repository root and `persistd/` because the root provides server packages while `persistd/` declares the MCP client dev dependency; running only one install produced expected module-not-found false negatives;
+- after installing both declared dependency sets, canonical branch `npm test`: 140 tests passed, 0 failed;
 - G27 remained `ACTIVE` with `LEASE_OWNER: G27`;
 - `REMOTE_BROWSER_HEALTH: HEALTHY`;
 - `REMOTE_DESKTOP_HEALTH: HEALTHY`;
