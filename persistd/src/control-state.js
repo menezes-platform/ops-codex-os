@@ -37,25 +37,6 @@ function replaceFileWithRetry(tmp, filePath, {
   }
 }
 
-function writeFileInPlaceVerified(filePath, content) {
-  const bytes = Buffer.from(content, 'utf8');
-  const fd = fs.openSync(filePath, 'r+');
-  try {
-    let offset = 0;
-    while (offset < bytes.length) {
-      const written = fs.writeSync(fd, bytes, offset, bytes.length - offset, offset);
-      if (written <= 0) throw new Error('CONTROL_INPLACE_WRITE_STALLED');
-      offset += written;
-    }
-    fs.ftruncateSync(fd, bytes.length);
-    fs.fsyncSync(fd);
-  } finally {
-    fs.closeSync(fd);
-  }
-  const verified = fs.readFileSync(filePath);
-  if (!verified.equals(bytes)) throw new Error('CONTROL_INPLACE_VERIFY_FAILED');
-}
-
 function writeControlAtomic(filePath, state, options = {}) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   const content = serializeControl(state);
@@ -66,10 +47,17 @@ function writeControlAtomic(filePath, state, options = {}) {
     return;
   } catch (error) {
     const transient = ['EPERM', 'EBUSY', 'EACCES'].includes(error?.code);
-    if (!transient) throw error;
+    if (!transient) {
+      try { fs.unlinkSync(tmp); } catch {}
+      throw error;
+    }
+    const pending = `${filePath}.pending-${process.pid}-${Date.now()}`;
+    try { fs.renameSync(tmp, pending); } catch {}
+    const blocked = new Error(`CONTROL_REPLACE_BLOCKED:${error.code || 'UNKNOWN'}`);
+    blocked.cause = error;
+    blocked.pendingPath = fs.existsSync(pending) ? pending : (fs.existsSync(tmp) ? tmp : null);
+    throw blocked;
   }
-  writeFileInPlaceVerified(filePath, content);
-  fs.unlinkSync(tmp);
 }
 
-module.exports = { parseControl, serializeControl, readControl, replaceFileWithRetry, writeFileInPlaceVerified, writeControlAtomic };
+module.exports = { parseControl, serializeControl, readControl, replaceFileWithRetry, writeControlAtomic };
