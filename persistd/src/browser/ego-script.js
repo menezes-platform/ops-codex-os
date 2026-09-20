@@ -1,10 +1,12 @@
 function js(value) { return JSON.stringify(value); }
 const { buildCommanderSetupScript } = require('./commander-script');
+const { buildComposerResolveScript } = require('./composer-script');
 
 function buildSuccessorScript({ runId, message, nextGeneration }) {
   const taskName = `persist:${runId}`;
   const marker = `CLAIM ${runId} G${nextGeneration}`;
   const commanderSetup = buildCommanderSetupScript();
+  const composerResolver = buildComposerResolveScript({ timeoutMs: 30000 });
   return `
 let task = null
 let successorTargetId = null
@@ -38,14 +40,8 @@ if (authRequired) {
   if ((await newChatLink.count()) > 0) await newChatLink.first().click()
   else if ((await newChatButton.count()) > 0) await newChatButton.first().click()
 
-  let composer = page.locator('#prompt-textarea')
-  let ready = await composer.waitFor({ state: 'visible', timeout: 15000 })
-  if (!ready) {
-    const semanticComposer = page.getByRole('textbox', { name: /converse com o chatgpt|message chatgpt|ask chatgpt|pergunte ao chatgpt/i })
-    if ((await semanticComposer.count()) > 0) composer = semanticComposer.first()
-    ready = await composer.waitFor({ state: 'visible', timeout: 5000 })
-  }
-  if (!ready) throw new Error('ChatGPT composer not ready')
+  ${composerResolver}
+  if (!composerReady) throw new Error('ChatGPT composer not ready|' + JSON.stringify(composerDiagnostics))
 
   ${commanderSetup}
 
@@ -92,12 +88,12 @@ function buildTerminalScript({ runId, chatId, message }) {
   const taskName = `persist:${runId}`;
   const url = `https://chatgpt.com/c/${chatId}`;
   const instruction = `The durable /persist controller has verified DONE. Reply to the user with this completion notice and no further work:\n\n${message}`;
+  const composerResolver = buildComposerResolveScript({ timeoutMs: 30000 });
   return `
 const task = await taskSpaces.useOrCreate(${js(taskName)})
 await browser.openOrReuseTab(${js(url)}, { wait: true, timeout: 20000 })
-const composer = page.locator('#prompt-textarea')
-const ready = await composer.waitFor({ state: 'visible', timeout: 15000 })
-if (!ready) throw new Error('Terminal notification composer not ready')
+${composerResolver}
+if (!composerReady) throw new Error('Terminal notification composer not ready|' + JSON.stringify(composerDiagnostics))
 const assistants = page.locator('[data-message-author-role="assistant"]')
 const before = await assistants.count()
 await composer.fill(${js(instruction)})

@@ -1,5 +1,6 @@
 function js(value) { return JSON.stringify(value); }
 const { buildCommanderSetupScript } = require('./commander-script');
+const { buildComposerResolveScript } = require('./composer-script');
 
 function buildFindAssistantLineScript({ runId, chatId, line }) {
   const taskName = `persist:${runId}`;
@@ -35,13 +36,13 @@ function buildSendMessageScript({ runId, chatId, message, verifyLine, attachComm
   const taskName = `persist:${runId}`;
   const url = `https://chatgpt.com/c/${chatId}`;
   const commanderSetup = attachCommander ? buildCommanderSetupScript() : '';
+  const composerResolver = buildComposerResolveScript({ timeoutMs: 30000 });
   const assistantStart = buildAssistantStartScript(waitForAssistantStart);
   return `
 await taskSpaces.useOrCreate(${js(taskName)})
 await browser.openOrReuseTab(${js(url)}, { wait: true, timeout: 20000 })
-const composer = page.locator('#prompt-textarea')
-const ready = await composer.waitFor({ state: 'visible', timeout: 15000 })
-if (!ready) throw new Error('Message composer not ready')
+${composerResolver}
+if (!composerReady) throw new Error('Message composer not ready|' + JSON.stringify(composerDiagnostics))
 const preflightText = String(await page.locator('body').evaluate((el) => el.innerText || '')).toLowerCase()
 const preflightRateLimited = preflightText.includes('too many requests') || preflightText.includes('muitas solicita') || preflightText.includes('excesso de solicitações') || preflightText.includes('excesso de solicita') || preflightText.includes('solicitações rápido demais') || preflightText.includes('solicitacoes rapido demais')
 if (preflightRateLimited) {
