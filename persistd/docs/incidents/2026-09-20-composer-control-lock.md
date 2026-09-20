@@ -77,3 +77,24 @@ Deployed runtime validation on the controller host:
 - after controlled RDC/controller reactivation, the new daemon process loaded the patched `C:\ProgramData\Persistd\app\src\daemon.js` runtime and the health state remained green.
 
 No TikTok LIVE Dungeon project code was changed during this infrastructure repair.
+
+## Follow-up: nonce-bound claim proof and commanderless deadlock
+
+After the initial composer/CONTROL repair, the live TikTok LIVE Dungeon controller reached the next real rollover and exposed a second continuity defect.
+
+The browser transport treated the generic first line `CLAIM <RUN_ID> G<N+1>` as enough evidence that the successor had answered, then the orchestrator reopened the conversation and attempted to verify the exact nonce-bound `CLAIM_REQUEST`. This split verification created a hydration/navigation race and could surface `CLAIM_REQUEST_NOT_VERIFIED` even though successor creation itself had otherwise succeeded.
+
+The deployed TikTok runtime also had an opt-in `ALLOW_COMMANDERLESS_SUCCESSOR: true` mode that was not present in the canonical main branch. Its baton still told the successor to read machine-local controller files before requesting the claim even though Commander was deliberately not attached. That was a protocol contradiction: the successor was instructed to satisfy a precondition it had no transport to satisfy. The installed runtime was corrected so a commanderless successor may request the nonce-bound claim from the self-contained baton only; persistd still independently validates durable predecessor generation, status, `NEXT_GENERATION`, and nonce before promotion, so browser text never becomes authority.
+
+The canonical fix in this branch removes the split proof window universally: `createSuccessor` now waits for the exact nonce-bound `CLAIM_REQUEST` line in the current hydrated conversation and returns it as `outcome.requestLine`. The orchestrator's existing exact verification remains as a fallback, but a successful normal path no longer depends on reopening the conversation.
+
+Live proof after the deployed repair:
+
+- G27 was rearmed from the prior three-attempt `BLOCKED` state only after a full 147/147 deployed-runtime test pass.
+- a fresh nonce `46999963-2a6b-41f0-827f-648364dd9379` was generated for G27 -> G28;
+- the durable controller promoted to `GENERATION: 28`, `STATUS: ACTIVE`, `LEASE_OWNER: G28`;
+- `CLAIM_CONFIRM_STATUS: SENT` and `CLAIM_RESUMED_AT` were recorded;
+- the daemon log recorded `ROLLED_OVER` followed by `WATCHING`;
+- heartbeat continued advancing and the live continuation directory remained at zero `CONTROL.md.pending-*` files.
+
+This is the acceptance criterion for the continuity repair: a real post-fix generation handoff completed through nonce-bound request verification, durable local promotion, confirmation, and observed successor resume without manual claim injection.
