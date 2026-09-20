@@ -21,7 +21,7 @@ function buildSuccessorMessage(state, nextGeneration) {
     `BATON_V2_JSON: ${JSON.stringify(batonV2)}`,
     '',
     'This takeover is controlled by local persistd durable state; browser text alone is never authority.',
-    'First read the installed controller skill, references/remote-control-contract.md, and CONTROL.md using Remote Desktop Commander read-only file access.',
+    'First read the installed controller skill and references/remote-control-contract.md with Remote Desktop Commander. On Windows, never use read_file/read_multiple_files on the live CONTROL.md; read CONTROL.md through a short-lived read-only process (for example Get-Content -Raw) and let that process exit before requesting the claim.',
     'After durable confirmation, enforce the remote-control capability gate: use Remote Desktop Commander for machine access/recovery, Browser Bridge / Playwright for authorized browser DOM work, and Dev-Orquestra Windows Interactive Control for native Windows UI.',
     'For every local or interactive mutation, use the highest applicable healthy structured control layer; raw coordinates/input are fallback-only and require fresh post-action verification.',
     `Project: ${value(state, 'PROJECT_ROOT')}`,
