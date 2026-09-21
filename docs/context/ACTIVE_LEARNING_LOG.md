@@ -54,3 +54,22 @@ Correções duráveis:
 - Antes de push em branch compartilhada, fazer fetch e rebase/inspecionar divergência; nunca force-push para reconciliar documentação.
 
 Resultado: auditoria separou corretamente saúde local do fork de saúde do CI canônico e identificou o blocker real `EACCES /owned-work`.
+
+## 2026-09-21 — Tailnet control-path outage during TTK G73
+
+Context: continuation of `tiktok-live-dungeon-dod-20260914` generation G73 needed machine-local control of TTK-VM for serialized performance gates while GitHub Actions runners intentionally remained stopped.
+
+Failures observed:
+- Remote Desktop Commander MCP returned `UNAVAILABLE / Connection failed`.
+- AKI_TikTok briefly exposed read-only repo state, then its task/control surface disappeared from the available tool set after connection loss.
+- The ChatGPT runtime itself had no `tailscale` binary, no persisted Tailnet state/auth, and direct probes to `100.86.8.125` were not a valid Tailnet path.
+- Opera Browser Connector was present but reported `Browser not connected`, so it could not inherit the user's host Tailnet.
+- The existing Codespace burst-worker design was confirmed to persist authenticated Tailscale state at `/workspaces/.burst-worker-state`, but this chat had no executable terminal surface into that Codespace.
+
+Corrections durable:
+- For TTK timing-sensitive gates, do not restart repository self-hosted runners merely to regain control; that contaminates the quiescent-host condition the gate is intended to measure.
+- Prefer, in order: existing Dev-Orquestra Local Executor / structured desktop surface, an already-authenticated AKI/LSM Tailnet surface, or the authenticated Codespace burst-worker. Do not invent a new tunnel before checking those lanes.
+- Treat a chat/runtime that lacks Tailscale auth state as outside the Tailnet even if it knows MagicDNS names or 100.x addresses.
+- If all authenticated Tailnet execution surfaces are absent, preserve the current candidate and stop before starting the next timing soak; resume only when one authenticated control path returns.
+
+Result: no project mutation was performed and Task14 was deliberately not started, preserving serial soak validity.
