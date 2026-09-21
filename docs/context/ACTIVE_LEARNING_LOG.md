@@ -73,3 +73,20 @@ Corrections durable:
 - If all authenticated Tailnet execution surfaces are absent, preserve the current candidate and stop before starting the next timing soak; resume only when one authenticated control path returns.
 
 Result: no project mutation was performed and Task14 was deliberately not started, preserving serial soak validity.
+
+
+## 2026-09-21 — Desktop recovery bridge invariant
+
+Context: continuation G78 of `tiktok-live-dungeon-dod-20260914` needed to restore machine access while the timing-sensitive Task13 host remained intentionally quiescent.
+
+Failure observed:
+- The controller attempted to create a fresh generic Tailscale API/OAuth connection when recovering machine access.
+- This was the wrong control path for this fleet: Desktop recovery is anchored on the existing MeshCentral bridge.
+
+Durable correction:
+- For this environment, Desktop recovery always starts through the existing MeshCentral console/fleet bridge; do not replace it with a new Tailscale API/OAuth connection.
+- Preserve the existing MeshCentral/Tailnet topology and use already-authenticated recovery surfaces behind it.
+- Do not restart the repository self-hosted runner merely to restore controller access during timing-sensitive gates.
+- If an external browser cannot reach the tailnet-only MeshCentral endpoint, treat that as lack of Tailnet reachability in that browser, not as proof that MeshCentral itself is down.
+
+Result: the incorrect Tailscale connection path was abandoned; the TTK candidate remained untouched and the quiescent-host condition was preserved.
