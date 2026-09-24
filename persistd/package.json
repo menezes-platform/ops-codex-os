@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "test": "node --test",
-    "start": "node src/start-entrypoint.js"
+    "start": "node src/start-entrypoint.js",
+    "fleet:agent": "node src/fleet/node-agent.js"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",
