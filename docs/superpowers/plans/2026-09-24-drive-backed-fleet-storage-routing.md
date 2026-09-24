@@ -63,6 +63,7 @@
 - `persistd/src/persistflow/http-server.js` — authenticated heartbeat and Drive-token endpoints.
 - `persistd/src/persistflow/mcp-handler.js` — fleet status/route/catalog MCP tools.
 - `persistd/src/persistflow/baton-v2.js` — project latest selected node into successor baton.
+- `persistd/src/persistflow/remote-bridge.js` — copy the remote run's latest route into local CONTROL projection.
 - `persistd/src/start-entrypoint.js` — construct production fleet/storage dependencies.
 - `persistd/package.json` — add fleet-agent and storage bootstrap scripts; no new runtime package dependency.
 
@@ -299,8 +300,8 @@ git commit -m "feat: define persistflow fleet contracts"
   - `normalizeHeartbeat(value)` from Task 1.
   - env JSON `PERSISTFLOW_FLEET_NODE_SECRETS_JSON` shaped as `{"desktop-primary":"...","ec2-primary":"..."}`.
 - Produces:
-  - `signNodeRequest({ nodeId, secret, timestamp, body }) -> hex`
-  - `verifyNodeRequest({ nodeId, timestamp, signature, rawBody, secrets, nowMs, maxSkewMs }) -> boolean`
+  - `signNodeRequest({ nodeId, secret, timestamp, method, path, body }) -> hex`
+  - `verifyNodeRequest({ nodeId, timestamp, signature, method, path, rawBody, secrets, nowMs, maxSkewMs }) -> boolean`
   - `FileFleetStore(directory).putHeartbeat(nodeId, heartbeat)`
   - `FileFleetStore(directory).snapshot({ nowMs, staleAfterMs })`
 
@@ -319,15 +320,24 @@ test('node request signature is body-bound and time-bound', () => {
   const body = JSON.stringify({ observedAt: '2026-09-24T17:00:00.000Z' });
   const timestamp = '2026-09-24T17:00:00.000Z';
   const secret = 'node-secret';
-  const signature = signNodeRequest({ nodeId: 'ec2-primary', secret, timestamp, body });
+  const signature = signNodeRequest({
+    nodeId: 'ec2-primary',
+    secret,
+    timestamp,
+    method: 'POST',
+    path: '/v1/fleet/nodes/ec2-primary/heartbeat',
+    body,
+  });
   assert.equal(verifyNodeRequest({
-    nodeId: 'ec2-primary', timestamp, signature, rawBody: body,
-    secrets: { 'ec2-primary': secret },
+    nodeId: 'ec2-primary', timestamp, signature,
+    method: 'POST', path: '/v1/fleet/nodes/ec2-primary/heartbeat',
+    rawBody: body, secrets: { 'ec2-primary': secret },
     nowMs: () => Date.parse(timestamp),
   }), true);
   assert.equal(verifyNodeRequest({
-    nodeId: 'ec2-primary', timestamp, signature, rawBody: body + 'x',
-    secrets: { 'ec2-primary': secret },
+    nodeId: 'ec2-primary', timestamp, signature,
+    method: 'POST', path: '/v1/fleet/nodes/ec2-primary/heartbeat',
+    rawBody: body + 'x', secrets: { 'ec2-primary': secret },
     nowMs: () => Date.parse(timestamp),
   }), false);
 });
@@ -365,13 +375,13 @@ Create `persistd/src/fleet/auth.js`:
 ```js
 const crypto = require('node:crypto');
 
-function canonicalNodeRequest({ nodeId, timestamp, body }) {
-  return [String(nodeId), String(timestamp), String(body || '')].join('\n');
+function canonicalNodeRequest({ nodeId, timestamp, method, path, body }) {
+  return [String(nodeId), String(timestamp), String(method).toUpperCase(), String(path), String(body || '')].join('\n');
 }
 
-function signNodeRequest({ nodeId, secret, timestamp, body }) {
+function signNodeRequest({ nodeId, secret, timestamp, method, path, body }) {
   return crypto.createHmac('sha256', String(secret))
-    .update(canonicalNodeRequest({ nodeId, timestamp, body }), 'utf8')
+    .update(canonicalNodeRequest({ nodeId, timestamp, method, path, body }), 'utf8')
     .digest('hex');
 }
 
@@ -381,14 +391,14 @@ function safeEqualHex(a, b) {
 }
 
 function verifyNodeRequest({
-  nodeId, timestamp, signature, rawBody, secrets,
+  nodeId, timestamp, signature, method, path, rawBody, secrets,
   nowMs = Date.now, maxSkewMs = 5 * 60 * 1000,
 }) {
   const secret = secrets?.[nodeId];
   if (!secret || !timestamp || !signature) return false;
   const parsed = Date.parse(timestamp);
   if (!Number.isFinite(parsed) || Math.abs(Number(nowMs()) - parsed) > maxSkewMs) return false;
-  const expected = signNodeRequest({ nodeId, secret, timestamp, body: rawBody });
+  const expected = signNodeRequest({ nodeId, secret, timestamp, method, path, body: rawBody });
   return safeEqualHex(expected, signature);
 }
 
@@ -597,7 +607,7 @@ crypto.createHash('sha256')
 
 - [ ] **Step 4: Implement signed heartbeat POST**
 
-Build the raw JSON string once, sign that exact string with Task 2 `signNodeRequest`, and send it unchanged. Do not call `JSON.stringify` a second time after signing.
+Build the raw JSON string once, sign that exact string with Task 2 `signNodeRequest` including `method: 'POST'` and the exact heartbeat request path, and send it unchanged. Do not call `JSON.stringify` a second time after signing.
 
 - [ ] **Step 5: Add service installers**
 
@@ -694,7 +704,7 @@ Cache the access token until 60 seconds before expiry. Never return client secre
 
 - [ ] **Step 4: Add node-authenticated token endpoint**
 
-The response body must be exactly:
+The response body must contain only:
 
 ```json
 {
@@ -704,6 +714,8 @@ The response body must be exactly:
   "rootId": "<configured-root-id>"
 }
 ```
+
+Sign this request with Task 2 using `method: 'POST'`, the exact `/v1/fleet/nodes/:nodeId/drive-token` path, and the exact raw body so a heartbeat signature cannot be replayed against the token endpoint.
 
 The route must reject unregistered nodes even if a correct-looking HMAC secret exists in env.
 
@@ -865,9 +877,11 @@ Object metadata sent to Drive must include:
 }
 ```
 
-Before upload, call `searchByHash`. If one or more verified-size matches exist, pick the lexicographically smallest file ID as canonical and return without uploading.
+Before upload, call `searchByHash` restricted to `gdb_record=object`. If one or more verified-size matches exist, pick the lexicographically smallest file ID as canonical and skip blob upload.
 
-After a new upload, query by hash again. If multiple matches now exist, return the smallest ID and record the remaining IDs as duplicate cleanup candidates; do not delete them in the write path.
+After resolving the canonical blob, ensure a companion `<sha256>.manifest.json` exists under the same root with `gdb_record=manifest` and `gdb_sha256=<sha256>`. The manifest contains the full non-secret metadata plus canonical blob file ID, hash, size, and creation timestamp. A blob is not reported as fully durable until both blob and manifest are confirmed.
+
+After a new upload, query by hash again. If multiple blob matches now exist, return the smallest ID and record the remaining IDs as duplicate cleanup candidates; do not delete them in the write path.
 
 - [ ] **Step 5: Implement cache index atomically**
 
@@ -913,7 +927,7 @@ Apply only files within the configured Drive root/object namespace and only file
 - `manifests`
 - `quarantine`
 
-It prints only folder IDs and writes them to `$PERSISTFLOW_DATA_DIR/drive-store.json` with mode `0600`. It never prints OAuth credentials.
+It creates exactly one dedicated `Gabriel Object Store` root folder and writes its ID to `$PERSISTFLOW_DATA_DIR/drive-store.json` with mode `0600`. Object blobs and their JSON manifests are direct children of this root and are distinguished by `gdb_record=object|manifest` appProperties. It never prints OAuth credentials.
 
 - [ ] **Step 9: Add package scripts**
 
@@ -1010,6 +1024,7 @@ Candidate rows sent forward must include only:
 For each candidate generate one score question:
 
 ```js
+const safeId = candidate.id.replace(/[^a-zA-Z0-9_]/g, '_');
 questions['candidate__' + safeId] = {
   type: 'score',
   instructions: 'How suitable is this already-eligible node for the task, considering task semantics, resource headroom, artifact locality, interaction needs, and coordination cost?',
@@ -1086,7 +1101,9 @@ git commit -m "feat: route fleet work with typesafe scoring"
 - Modify: `persistd/src/persistflow/service.js`
 - Modify: `persistd/src/persistflow/mcp-handler.js`
 - Modify: `persistd/src/persistflow/baton-v2.js`
+- Modify: `persistd/src/persistflow/remote-bridge.js`
 - Modify: `persistd/persistflow-baton.test.js`
+- Modify: `persistd/bridge-sync.test.js`
 - Modify: `persistd/persistflow-fleet-integration.test.js`
 
 **Interfaces:**
@@ -1109,7 +1126,15 @@ assert.equal(run.latestCheckpoint.evidence.taskId, 'task-123');
 
 - [ ] **Step 2: Write failing Baton test**
 
-Given state with:
+First extend `reconcileRemoteRun` so an equal-generation remote run with `latestRoute` writes:
+
+```js
+LATEST_ROUTE_JSON: JSON.stringify(remoteRun.latestRoute)
+```
+
+into the returned local state. Add a bridge-sync unit case proving an older local `LATEST_ROUTE_JSON` is replaced only by the current equal-generation remote run.
+
+Then, given reconciled state with:
 
 ```js
 LATEST_ROUTE_JSON: JSON.stringify({ nodeId: 'ec2-primary', taskId: 'task-123' })
@@ -1176,9 +1201,11 @@ server.registerTool('persist_fleet_route', {
 }, async ({ runId, ...input }) => jsonResult(await service.routeTask(runId, input)));
 ```
 
-- [ ] **Step 6: Project selected node into Baton v2**
+- [ ] **Step 6: Project the remote route into local control state and Baton v2**
 
-Parse `state.LATEST_ROUTE_JSON` and return:
+In `remote-bridge.js`, when generations are equal, serialize `remoteRun.latestRoute` into `LATEST_ROUTE_JSON`. Do not project a route from an `AHEAD` or `BEHIND` relation because that state is not yet the active local generation.
+
+In `baton-v2.js`, parse `state.LATEST_ROUTE_JSON` and return:
 
 ```js
 machine: {
@@ -1201,7 +1228,7 @@ Expected: PASS.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add persistd/src/persistflow/service.js persistd/src/persistflow/mcp-handler.js persistd/src/persistflow/baton-v2.js persistd/persistflow-baton.test.js persistd/persistflow-fleet-integration.test.js
+git add persistd/src/persistflow/service.js persistd/src/persistflow/mcp-handler.js persistd/src/persistflow/baton-v2.js persistd/src/persistflow/remote-bridge.js persistd/persistflow-baton.test.js persistd/bridge-sync.test.js persistd/persistflow-fleet-integration.test.js
 git commit -m "feat: persist fleet route decisions"
 ```
 
