@@ -6,7 +6,7 @@ const { MemoryFleetStore } = require('./src/fleet/store');
 const { loadFleetConfig } = require('./src/fleet/contracts');
 const { signNodeRequest } = require('./src/fleet/auth');
 
-async function withFleetServer(fn) {
+async function withFleetServer(fn, overrides = {}) {
   const fleetStore = new MemoryFleetStore();
   const fleetConfig = loadFleetConfig({ nodes: [
     { id: 'ec2-primary', platform: 'win32', capabilities: ['node'], concurrencyLimit: 2 },
@@ -15,6 +15,7 @@ async function withFleetServer(fn) {
     store: new MemoryAuthorityStore(), fleetStore, fleetConfig,
     fleetNodeSecrets: { 'ec2-primary': 'fleet-secret' }, mcpToken: 'owner',
     clock: () => new Date('2026-09-24T17:00:10.000Z'),
+    ...overrides,
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   try { await fn(`http://127.0.0.1:${server.address().port}`); }
@@ -106,4 +107,60 @@ test('production fleet helpers load registry and keep node secrets in env only',
     env: { PERSISTFLOW_FLEET_NODE_SECRETS_JSON: JSON.stringify({ n1: 'secret' }) },
   }), { n1: 'secret' });
   assert.equal(JSON.stringify(config).includes('secret'), false);
+});
+
+test('registered node can obtain short-lived Drive access without refresh credentials', async () => {
+  const driveAuth = {
+    async getAccess() {
+      return {
+        accessToken: 'short-lived',
+        expiresAt: '2026-09-24T18:00:00.000Z',
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        rootId: 'root-1',
+      };
+    },
+  };
+  await withFleetServer(async (base) => {
+    const requestPath = '/v1/fleet/nodes/ec2-primary/drive-token';
+    const timestamp = '2026-09-24T17:00:10.000Z';
+    const body = '{}';
+    const signature = signNodeRequest({
+      nodeId: 'ec2-primary', secret: 'fleet-secret', timestamp,
+      method: 'POST', path: requestPath, body,
+    });
+    const response = await fetch(base + requestPath, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json', 'x-persistflow-node-id': 'ec2-primary',
+        'x-persistflow-node-timestamp': timestamp, 'x-persistflow-node-signature': signature,
+      },
+      body,
+    });
+    assert.equal(response.status, 200);
+    const payload = await response.json();
+    assert.equal(payload.accessToken, 'short-lived');
+    assert.equal(JSON.stringify(payload).includes('refresh'), false);
+  }, { driveAuth });
+});
+
+test('Drive access endpoint reports unavailable auth as 503 without deleting or exposing state', async () => {
+  await withFleetServer(async (base) => {
+    const requestPath = '/v1/fleet/nodes/ec2-primary/drive-token';
+    const timestamp = '2026-09-24T17:00:10.000Z';
+    const body = '{}';
+    const signature = signNodeRequest({
+      nodeId: 'ec2-primary', secret: 'fleet-secret', timestamp,
+      method: 'POST', path: requestPath, body,
+    });
+    const response = await fetch(base + requestPath, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json', 'x-persistflow-node-id': 'ec2-primary',
+        'x-persistflow-node-timestamp': timestamp, 'x-persistflow-node-signature': signature,
+      },
+      body,
+    });
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: 'drive_auth_unavailable' });
+  }, { driveAuth: null });
 });

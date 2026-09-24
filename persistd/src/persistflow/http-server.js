@@ -12,6 +12,7 @@ const { createOAuthHttpHandler, requestOrigin } = require('./oauth-server');
 const { FileFleetStore } = require('../fleet/store');
 const { loadFleetConfig } = require('../fleet/contracts');
 const { verifyNodeRequest, parseNodeSecrets } = require('../fleet/auth');
+const { createDriveTokenProviderFromEnv } = require('../storage/drive-auth');
 
 function sendJson(res, statusCode, body) {
   const payload = JSON.stringify(body);
@@ -39,6 +40,7 @@ async function readJson(req, maxBytes = 64 * 1024) {
 function errorStatus(error) {
   const code = error?.message || 'INTERNAL_ERROR';
   if (code === 'RUN_NOT_FOUND') return 404;
+  if (code === 'DRIVE_AUTH_UNAVAILABLE') return 503;
   if (['RUN_ALREADY_EXISTS', 'STALE_GENERATION', 'CLAIM_NOT_PENDING', 'CLAIM_TARGET_MISMATCH', 'CLAIM_NONCE_MISMATCH'].includes(code)) return 409;
   if (['RUN_ID_REQUIRED', 'INVALID_GENERATION', 'CLAIM_SECRET_REQUIRED', 'INVALID_JSON', 'BODY_TOO_LARGE', 'INVALID_RUN_UPDATE'].includes(code)) return 400;
   return 500;
@@ -101,6 +103,7 @@ function createServer({
   fleetStore = null,
   fleetConfig = { nodes: [] },
   fleetNodeSecrets = {},
+  driveAuth = createDriveTokenProviderFromEnv(),
 } = {}) {
   const service = new PersistFlowService({
     store,
@@ -108,6 +111,7 @@ function createServer({
     sandbox: sandboxProvider,
     fleetStore,
     fleetConfig,
+    driveAuth,
   });
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
   const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;
@@ -154,6 +158,31 @@ function createServer({
         if (!authorized) return sendJson(res, 401, { error: 'unauthorized' });
         const heartbeat = service.fleetHeartbeat(nodeId, value);
         return sendJson(res, 200, heartbeat);
+      }
+      const driveToken = /^\/v1\/fleet\/nodes\/([^/]+)\/drive-token$/.exec(url.pathname);
+      if (req.method === 'POST' && driveToken) {
+        const nodeId = decodeURIComponent(driveToken[1]);
+        const headerNodeId = String(req.headers['x-persistflow-node-id'] || '');
+        const timestamp = String(req.headers['x-persistflow-node-timestamp'] || '');
+        const signature = String(req.headers['x-persistflow-node-signature'] || '');
+        const registered = Array.isArray(fleetConfig?.nodes)
+          && fleetConfig.nodes.some((node) => node.id === nodeId);
+        const { raw } = await readJsonWithRaw(req);
+        const authorized = registered
+          && headerNodeId === nodeId
+          && verifyNodeRequest({
+            nodeId,
+            timestamp,
+            signature,
+            method: req.method,
+            path: url.pathname,
+            rawBody: raw,
+            secrets: fleetNodeSecrets,
+            nowMs: () => clock().getTime(),
+          });
+        if (!authorized) return sendJson(res, 401, { error: 'unauthorized' });
+        const access = await service.issueDriveAccess(nodeId);
+        return sendJson(res, 200, access);
       }
       if (req.method === 'POST' && url.pathname === '/v1/runs') {
         const run = service.startRun(await readJson(req));

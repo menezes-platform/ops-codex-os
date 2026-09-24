@@ -39,6 +39,14 @@ class PersistFlowService {
     return this.fleetStore.snapshot({ nowMs: this.clock().getTime(), staleAfterMs: 90_000 });
   }
 
+  async issueDriveAccess(nodeId) {
+    const registered = Array.isArray(this.fleetConfig?.nodes)
+      && this.fleetConfig.nodes.some((node) => node.id === nodeId);
+    if (!registered) throw new Error('FLEET_NODE_NOT_REGISTERED');
+    if (!this.driveAuth) throw new Error('DRIVE_AUTH_UNAVAILABLE');
+    return this.driveAuth.getAccess();
+  }
+
   assertRunGeneration(runId, generation) {
     const state = this.inspectRun(runId);
     assertMutableGeneration(state, generation);
