@@ -55,7 +55,8 @@
 - `persistd/src/storage/object-store.js` — SHA-256 content-addressed object semantics.
 - `persistd/src/storage/cache-manager.js` — local verified object cache, pinning, and LRU eviction.
 - `persistd/src/storage/catalog-sync.js` — Drive changes cursor and replay-safe local catalog.
-- `persistd/scripts/bootstrap-drive-store.js` — one-time dedicated root/folder bootstrap.
+- `persistd/scripts/authorize-drive.js` — one-time localhost OAuth consent flow that obtains the offline refresh token without committing it.
+- `persistd/scripts/bootstrap-drive-store.js` — one-time dedicated root-folder bootstrap.
 
 ### Existing integration points
 
@@ -749,6 +750,8 @@ git commit -m "feat: broker short-lived drive access"
   - `searchByHash(sha256)`
   - `createFolder(name, parentId)`
   - `downloadToFile(fileId, tempPath)`
+  - `createJsonFile({ name, parentId, appProperties, value })`
+  - `updateAppProperties(fileId, patch)`
   - `startResumableUpload({ name, parentId, appProperties, size, mimeType })`
   - `uploadFileResumable({ filePath, sessionUrl, startOffset })`
   - `getStartPageToken()`
@@ -786,7 +789,11 @@ Request only required fields:
 files(id,name,size,mimeType,appProperties,modifiedTime),nextPageToken
 ```
 
-- [ ] **Step 4: Implement resumable upload in 8 MiB chunks**
+- [ ] **Step 4: Implement small JSON metadata writes and appProperty updates**
+
+Implement `createJsonFile` with Drive multipart upload for bounded manifest JSON and `updateAppProperties` with `PATCH /drive/v3/files/:fileId`. Neither helper accepts arbitrary OAuth configuration; both use the injected token provider.
+
+- [ ] **Step 5: Implement resumable upload in 8 MiB chunks**
 
 Use `8 * 1024 * 1024`, which is a multiple of Drive's 256 KiB resumable chunk requirement.
 
@@ -799,11 +806,11 @@ Content-Range: bytes <start>-<end>/<total>
 
 Treat `308` as incomplete and parse the response `Range`. Treat `200` or `201` as complete. On network failure, send an empty `PUT` with `Content-Range: bytes */<total>` to learn the accepted offset before retrying.
 
-- [ ] **Step 5: Implement streaming download**
+- [ ] **Step 6: Implement streaming download**
 
 Download to `<target>.partial-<uuid>`; do not write directly to a canonical cache path. The caller owns hash verification and final rename.
 
-- [ ] **Step 6: Run focused tests**
+- [ ] **Step 7: Run focused tests**
 
 ```bash
 cd persistd
@@ -812,7 +819,7 @@ node --test drive-client.test.js
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add persistd/src/storage/drive-client.js persistd/drive-client.test.js
@@ -829,6 +836,7 @@ git commit -m "feat: add resilient drive api client"
 - Create: `persistd/src/storage/catalog-sync.js`
 - Create: `persistd/object-store-cache.test.js`
 - Create: `persistd/catalog-sync.test.js`
+- Create: `persistd/scripts/authorize-drive.js`
 - Create: `persistd/scripts/bootstrap-drive-store.js`
 - Modify: `persistd/package.json`
 
@@ -847,7 +855,7 @@ git commit -m "feat: add resilient drive api client"
 
 Required cases:
 - two calls to `put` with identical bytes return the same canonical SHA reference;
-- a downloaded object's wrong SHA deletes the partial file and throws `OBJECT_HASH_MISMATCH`;
+- a downloaded object's wrong SHA deletes the partial file, retries once, and after a second mismatch calls `updateAppProperties(fileId, { gdb_quarantine: 'hash_mismatch' })` before throwing `OBJECT_HASH_MISMATCH`;
 - eviction skips pinned entries;
 - eviction removes oldest unpinned entries until target free space is reached;
 - if free space remains insufficient, `evictFor` throws `INSUFFICIENT_LOCAL_CAPACITY`.
@@ -879,7 +887,7 @@ Object metadata sent to Drive must include:
 
 Before upload, call `searchByHash` restricted to `gdb_record=object`. If one or more verified-size matches exist, pick the lexicographically smallest file ID as canonical and skip blob upload.
 
-After resolving the canonical blob, ensure a companion `<sha256>.manifest.json` exists under the same root with `gdb_record=manifest` and `gdb_sha256=<sha256>`. The manifest contains the full non-secret metadata plus canonical blob file ID, hash, size, and creation timestamp. A blob is not reported as fully durable until both blob and manifest are confirmed.
+After resolving the canonical blob, ensure a companion `<sha256>.manifest.json` exists under the same root with `gdb_record=manifest` and `gdb_sha256=<sha256>`. Write it with Task 6 `createJsonFile`. The manifest contains the full non-secret metadata plus canonical blob file ID, hash, size, and creation timestamp. A blob is not reported as fully durable until both blob and manifest are confirmed.
 
 After a new upload, query by hash again. If multiple blob matches now exist, return the smallest ID and record the remaining IDs as duplicate cleanup candidates; do not delete them in the write path.
 
@@ -919,7 +927,13 @@ Persist cursor at `<cacheRoot>/catalog-state.json`. Initial bootstrap calls `get
 
 Apply only files within the configured Drive root/object namespace and only files with valid `gdb_sha256`.
 
-- [ ] **Step 8: Implement one-time root bootstrap**
+- [ ] **Step 8: Implement one-time OAuth consent helper**
+
+`authorize-drive.js` starts a localhost callback server on `127.0.0.1`, generates a Google OAuth authorization URL with `access_type=offline`, `prompt=consent`, and scope `https://www.googleapis.com/auth/drive.file`, waits for the callback code, exchanges it at `https://oauth2.googleapis.com/token`, and writes only the returned refresh token to `$PERSISTFLOW_DATA_DIR/google-drive-refresh-token` with mode `0600`.
+
+The helper may print the consent URL but must never print the authorization code, client secret, access token, or refresh token. An interactive Google consent screen is an explicit authentication boundary and must not be bypassed.
+
+- [ ] **Step 9: Implement one-time root bootstrap**
 
 `bootstrap-drive-store.js` creates:
 - `Gabriel Object Store`
@@ -929,13 +943,14 @@ Apply only files within the configured Drive root/object namespace and only file
 
 It creates exactly one dedicated `Gabriel Object Store` root folder and writes its ID to `$PERSISTFLOW_DATA_DIR/drive-store.json` with mode `0600`. Object blobs and their JSON manifests are direct children of this root and are distinguished by `gdb_record=object|manifest` appProperties. It never prints OAuth credentials.
 
-- [ ] **Step 9: Add package scripts**
+- [ ] **Step 10: Add package scripts**
 
 ```json
+"drive:authorize": "node scripts/authorize-drive.js",
 "drive:bootstrap": "node scripts/bootstrap-drive-store.js"
 ```
 
-- [ ] **Step 10: Run tests**
+- [ ] **Step 11: Run tests**
 
 ```bash
 cd persistd
@@ -944,10 +959,10 @@ node --test drive-client.test.js object-store-cache.test.js catalog-sync.test.js
 
 Expected: PASS.
 
-- [ ] **Step 11: Commit**
+- [ ] **Step 12: Commit**
 
 ```bash
-git add persistd/src/storage/object-store.js persistd/src/storage/cache-manager.js persistd/src/storage/catalog-sync.js persistd/object-store-cache.test.js persistd/catalog-sync.test.js persistd/scripts/bootstrap-drive-store.js persistd/package.json
+git add persistd/src/storage/object-store.js persistd/src/storage/cache-manager.js persistd/src/storage/catalog-sync.js persistd/object-store-cache.test.js persistd/catalog-sync.test.js persistd/scripts/authorize-drive.js persistd/scripts/bootstrap-drive-store.js persistd/package.json
 git commit -m "feat: add drive object store and local cache"
 ```
 
@@ -1341,14 +1356,15 @@ Use test-local sentinel values such as `SHOULD_NOT_LEAK_REFRESH`.
 
 Document exact order:
 1. configure Google OAuth app with `drive.file`;
-2. store OAuth values only on PersistFlow host;
-3. run `npm run drive:bootstrap` once;
-4. configure per-node fleet secret;
-5. install node agent;
-6. verify `persist_fleet_status`;
-7. dry-route a bounded task;
-8. verify Drive put/get using a disposable test file;
-9. only then enable `PERSISTFLOW_FLEET_ROUTER_ENABLED=1`.
+2. store client ID/client secret only on the authorization/PersistFlow host;
+3. run `npm run drive:authorize` and complete the one-time Google consent screen;
+4. place the resulting refresh token in the PersistFlow secret environment and run `npm run drive:bootstrap` once;
+5. configure per-node fleet secret;
+6. install node agent;
+7. verify `persist_fleet_status`;
+8. dry-route a bounded task;
+9. verify Drive put/get using a disposable test file;
+10. only then enable `PERSISTFLOW_FLEET_ROUTER_ENABLED=1`.
 
 Document rollback: set feature flag to `0`; existing PersistFlow behavior continues and Drive objects remain untouched.
 
