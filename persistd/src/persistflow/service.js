@@ -1,11 +1,23 @@
 const { createRunState, assertMutableGeneration } = require('./run-state');
 
 class PersistFlowService {
-  constructor({ store, clock = () => new Date(), sandbox = null } = {}) {
+  constructor({
+    store,
+    clock = () => new Date(),
+    sandbox = null,
+    fleetStore = null,
+    fleetConfig = { nodes: [] },
+    fleetRouter = null,
+    driveAuth = null,
+  } = {}) {
     if (!store) throw new Error('AUTHORITY_STORE_REQUIRED');
     this.store = store;
     this.clock = clock;
     this.sandbox = sandbox;
+    this.fleetStore = fleetStore;
+    this.fleetConfig = fleetConfig;
+    this.fleetRouter = fleetRouter;
+    this.driveAuth = driveAuth;
   }
 
   nowIso() {
@@ -15,6 +27,16 @@ class PersistFlowService {
   requireSandbox() {
     if (!this.sandbox) throw new Error('SANDBOX_NOT_CONFIGURED');
     return this.sandbox;
+  }
+
+  fleetHeartbeat(nodeId, heartbeat) {
+    if (!this.fleetStore) throw new Error('FLEET_NOT_CONFIGURED');
+    return this.fleetStore.putHeartbeat(nodeId, heartbeat);
+  }
+
+  fleetStatus() {
+    if (!this.fleetStore) throw new Error('FLEET_NOT_CONFIGURED');
+    return this.fleetStore.snapshot({ nowMs: this.clock().getTime(), staleAfterMs: 90_000 });
   }
 
   assertRunGeneration(runId, generation) {

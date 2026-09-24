@@ -72,6 +72,13 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
       }),
     }, async ({ runId, ...input }) => jsonResult({ run: service.claim(runId, input) }));
 
+    server.registerTool('persist_fleet_status', {
+      title: 'Inspect PersistFlow fleet',
+      description: 'Read registered fleet health and freshness without mutating machines.',
+      inputSchema: z.object({}),
+      annotations: { readOnlyHint: true },
+    }, async () => jsonResult({ fleet: service.fleetStatus() }));
+
     server.registerTool('persist_sandbox_create', {
       title: 'Create PersistFlow Sandbox workspace',
       description: 'Create a bounded execution workspace for a durable PersistFlow run and checkpoint the workspace evidence.',
