@@ -18,3 +18,9 @@ For future Windows remote inventory:
 2. retrieve environment-variable **names only**, never values;
 3. inspect config paths explicitly rather than dumping raw command lines;
 4. use a temporary script for multi-step logic.
+
+## Follow-up failure
+A second attempt still invoked an inner `powershell -Command` while already running under Desktop Commander's PowerShell shell. The outer shell expanded `$_` before the inner shell saw it, producing errors such as `.Name is not recognized` and `.TaskName is not recognized`.
+
+## Final correction
+Do not nest PowerShell for ordinary inventory calls in Remote Desktop Commander. Send the cmdlet pipeline directly to the existing PowerShell shell. This preserved `$_` correctly and the inventory succeeded.
