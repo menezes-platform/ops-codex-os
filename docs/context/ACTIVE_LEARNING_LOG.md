@@ -90,3 +90,5 @@ Durable correction:
 - If an external browser cannot reach the tailnet-only MeshCentral endpoint, treat that as lack of Tailnet reachability in that browser, not as proof that MeshCentral itself is down.
 
 Result: the incorrect Tailscale connection path was abandoned; the TTK candidate remained untouched and the quiescent-host condition was preserved.
+
+- 2026-09-24 — Remote file writes do not create missing parent directories. Before writing a new module tree, create the directory explicitly; otherwise ENOENT aborts the first write. Observed while starting Drive/Fleet Task 1.
