@@ -1425,7 +1425,7 @@ git commit -m "docs: operationalize drive-backed fleet routing"
 
 ### Placeholder scan
 
-No `TBD`, `TODO`, “implement later”, unspecified error-handling step, or undefined neighboring interface is required by this plan. All deferred work is explicitly outside scope rather than left as a placeholder.
+No placeholder markers, deferred implementation notes, unspecified error-handling steps, or undefined neighboring interfaces remain. All deferred work is explicitly outside scope.
 
 ### Type/interface consistency
 
