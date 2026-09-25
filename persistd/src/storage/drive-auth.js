@@ -1,5 +1,48 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+
 const DRIVE_FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+
+function dataDir(env = process.env, homedir = os.homedir()) {
+  return env.PERSISTFLOW_DATA_DIR || path.join(homedir, '.persistflow-data');
+}
+
+function readOptionalText(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf8').trim();
+  } catch (error) {
+    if (error?.code === 'ENOENT') return '';
+    throw error;
+  }
+}
+
+function readOptionalRootId(filePath) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return String(parsed?.rootId || '').trim();
+  } catch (error) {
+    if (error?.code === 'ENOENT') return '';
+    if (error instanceof SyntaxError) throw new Error('DRIVE_STORE_CONFIG_INVALID');
+    throw error;
+  }
+}
+
+function resolveDriveAuthMaterial(env = process.env, {
+  homedir = os.homedir(),
+  rootIdOverride = '',
+} = {}) {
+  const dir = dataDir(env, homedir);
+  return {
+    clientId: String(env.GOOGLE_DRIVE_CLIENT_ID || '').trim(),
+    clientSecret: String(env.GOOGLE_DRIVE_CLIENT_SECRET || '').trim(),
+    refreshToken: String(env.GOOGLE_DRIVE_REFRESH_TOKEN || '').trim()
+      || readOptionalText(path.join(dir, 'google-drive-refresh-token')),
+    rootId: String(rootIdOverride || env.GABRIEL_DRIVE_ROOT_ID || '').trim()
+      || readOptionalRootId(path.join(dir, 'drive-store.json')),
+  };
+}
 
 class DriveTokenProvider {
   constructor({
@@ -50,10 +93,7 @@ class DriveTokenProvider {
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body,
     });
-    if (!response.ok) {
-      const error = new Error('DRIVE_TOKEN_HTTP_' + response.status);
-      throw error;
-    }
+    if (!response.ok) throw new Error('DRIVE_TOKEN_HTTP_' + response.status);
     const payload = await response.json();
     const accessToken = String(payload.access_token || '');
     const expiresIn = Number(payload.expires_in);
@@ -73,19 +113,19 @@ class DriveTokenProvider {
 }
 
 function createDriveTokenProviderFromEnv(env = process.env, options = {}) {
-  const clientId = String(env.GOOGLE_DRIVE_CLIENT_ID || '').trim();
-  const clientSecret = String(env.GOOGLE_DRIVE_CLIENT_SECRET || '').trim();
-  const refreshToken = String(env.GOOGLE_DRIVE_REFRESH_TOKEN || '').trim();
-  const rootId = String(env.GABRIEL_DRIVE_ROOT_ID || '').trim();
-  const present = [clientId, clientSecret, refreshToken, rootId].filter(Boolean).length;
+  const { homedir, rootIdOverride, ...providerOptions } = options;
+  const material = resolveDriveAuthMaterial(env, { homedir, rootIdOverride });
+  const present = Object.values(material).filter(Boolean).length;
   if (present === 0) return null;
   if (present !== 4) throw new Error('DRIVE_AUTH_CONFIG_INCOMPLETE');
-  return new DriveTokenProvider({ clientId, clientSecret, refreshToken, rootId, ...options });
+  return new DriveTokenProvider({ ...material, ...providerOptions });
 }
 
 module.exports = {
   DriveTokenProvider,
   createDriveTokenProviderFromEnv,
+  resolveDriveAuthMaterial,
+  dataDir,
   DRIVE_FILE_SCOPE,
   TOKEN_URL,
 };
