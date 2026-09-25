@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
 const os = require('node:os');
+const { readOAuthClientMaterial } = require('../src/storage/drive-auth');
 
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -10,6 +11,17 @@ const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
 function dataDir(env = process.env) {
   return env.PERSISTFLOW_DATA_DIR || path.join(os.homedir(), '.persistflow-data');
+}
+
+function oauthClientMaterial(env = process.env) {
+  const dir = dataDir(env);
+  const oauthFile = env.GOOGLE_DRIVE_OAUTH_CLIENT_FILE
+    || path.join(dir, 'google-drive-oauth-client.json');
+  const fileMaterial = readOAuthClientMaterial(oauthFile);
+  return {
+    clientId: String(env.GOOGLE_DRIVE_CLIENT_ID || '').trim() || fileMaterial.clientId,
+    clientSecret: String(env.GOOGLE_DRIVE_CLIENT_SECRET || '').trim() || fileMaterial.clientSecret,
+  };
 }
 
 function buildAuthorizationUrl({ clientId, redirectUri, state }) {
@@ -54,8 +66,7 @@ async function exchangeCode({ clientId, clientSecret, code, redirectUri, fetchIm
 }
 
 async function authorize({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
-  const clientId = String(env.GOOGLE_DRIVE_CLIENT_ID || '').trim();
-  const clientSecret = String(env.GOOGLE_DRIVE_CLIENT_SECRET || '').trim();
+  const { clientId, clientSecret } = oauthClientMaterial(env);
   if (!clientId || !clientSecret) throw new Error('DRIVE_OAUTH_CLIENT_CONFIG_REQUIRED');
 
   const state = crypto.randomBytes(24).toString('hex');
@@ -102,4 +113,11 @@ if (require.main === module) {
   });
 }
 
-module.exports = { buildAuthorizationUrl, writeRefreshToken, exchangeCode, authorize, dataDir };
+module.exports = {
+  buildAuthorizationUrl,
+  writeRefreshToken,
+  exchangeCode,
+  oauthClientMaterial,
+  authorize,
+  dataDir,
+};
