@@ -7,7 +7,7 @@ const { pipeline } = require('node:stream/promises');
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
 const CHUNK_BYTES = 8 * 1024 * 1024;
-const FILE_FIELDS = 'id,name,size,mimeType,appProperties,modifiedTime';
+const FILE_FIELDS = 'id,name,size,mimeType,appProperties,modifiedTime,md5Checksum';
 
 function escapeQueryValue(value) {
   return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");

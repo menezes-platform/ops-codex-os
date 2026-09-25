@@ -2,3 +2,8 @@
 Thumbs.db
 .worktrees/
 node_modules/
+
+.persistflow-data/
+persistd/.persistflow-data/
+**/google-drive-refresh-token
+**/fleet-agent.env

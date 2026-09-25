@@ -69,7 +69,9 @@ async function collectHeartbeat({
     .split(',').map((value) => value.trim()).filter(Boolean),
   runtimeVersion = process.env.npm_package_version || '2.0.0',
   now = () => new Date(),
+  ensureCacheRoot = (root) => fs.promises.mkdir(root, { recursive: true }),
 } = {}) {
+  await ensureCacheRoot(cacheRoot);
   const disk = await statfs(cacheRoot);
   const bsize = Number(disk.bsize);
   const totals = memory();

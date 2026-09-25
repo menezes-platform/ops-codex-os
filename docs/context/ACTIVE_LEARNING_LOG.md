@@ -94,3 +94,7 @@ Result: the incorrect Tailscale connection path was abandoned; the TTK candidate
 - 2026-09-24 — Remote file writes do not create missing parent directories. Before writing a new module tree, create the directory explicitly; otherwise ENOENT aborts the first write. Observed while starting Drive/Fleet Task 1.
 
 - 2026-09-24 — Keep persistent-service installation as a versioned artifact during implementation; do not combine installer-file creation with activation attempts in one remote tool call. Static installer tests are sufficient until an explicit rollout step.
+
+- 2026-09-24 â€” Readiness tests for spawned services must use a wall-clock deadline with retry, not a small fixed retry count. As the PersistFlow suite grew, Hostinger startup remained healthy in isolation but exceeded the old 1.0s/2.5s polling budgets under parallel test load. A 10s readiness deadline tests liveness without turning scheduler contention into a false product regression.
+
+- 2026-09-24 â€” A lockfile is not a substitute for declaring test dependencies in package.json. The root lock contained @modelcontextprotocol/client while the root package manifest omitted it; a clean npm install correctly pruned the package and exposed the broken root test contract. Declare every direct test/runtime dependency in the matching package manifest.

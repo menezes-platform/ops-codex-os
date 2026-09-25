@@ -21,12 +21,42 @@ function redactCandidate(candidate) {
   };
 }
 
-function boundedTask(intent) {
+function collectSecretValues(env = {}, apiKey = '', extras = []) {
+  const values = [
+    apiKey,
+    env.GOOGLE_DRIVE_CLIENT_SECRET,
+    env.GOOGLE_DRIVE_REFRESH_TOKEN,
+    env.PERSISTFLOW_FLEET_NODE_SECRET,
+    ...extras,
+  ];
+  try {
+    const parsed = JSON.parse(String(env.PERSISTFLOW_FLEET_NODE_SECRETS_JSON || '{}'));
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      values.push(...Object.values(parsed));
+    }
+  } catch {}
+  return [...new Set(values
+    .filter((value) => typeof value === 'string' && value.length >= 6)
+    .map(String))];
+}
+
+function redactText(value, secrets = []) {
+  let output = String(value ?? '');
+  for (const secret of secrets) {
+    output = output.split(secret).join('[REDACTED]');
+  }
+  output = output
+    .replace(/\b(?:sk|ghp|github_pat|xox[baprs])-[-A-Za-z0-9_]{12,}\b/g, '[REDACTED]')
+    .replace(/Bearer\s+[A-Za-z0-9._~+\/-]{12,}/gi, 'Bearer [REDACTED]');
+  return output;
+}
+
+function boundedTask(intent, redactValues = []) {
   return {
-    taskId: intent.taskId,
-    summary: String(intent.summary || '').slice(0, 2000),
-    repo: intent.repo || null,
-    ref: intent.ref || null,
+    taskId: redactText(intent.taskId, redactValues),
+    summary: redactText(String(intent.summary || '').slice(0, 2000), redactValues),
+    repo: intent.repo ? redactText(intent.repo, redactValues) : null,
+    ref: intent.ref ? redactText(intent.ref, redactValues) : null,
     requiredCapabilities: [...(intent.requiredCapabilities || [])],
     preferredCapabilities: [...(intent.preferredCapabilities || [])],
     estimatedScratchBytes: Number(intent.estimatedScratchBytes || 0),
@@ -43,11 +73,20 @@ class TypeSafeFleetRouter {
     endpoint = process.env.TYPESAFE_ENDPOINT || DEFAULT_ENDPOINT,
     model = process.env.TYPESAFE_MODEL || DEFAULT_MODEL,
     fetchImpl = globalThis.fetch,
+    env = process.env,
+    redactValues = [],
   } = {}) {
-    this.apiKey = String(apiKey || '').trim();
+    const resolvedApiKey = String(apiKey || '').trim();
+    Object.defineProperties(this, {
+      apiKey: { value: resolvedApiKey, enumerable: false },
+      fetchImpl: { value: fetchImpl, enumerable: false },
+      redactValues: {
+        value: collectSecretValues(env, resolvedApiKey, redactValues),
+        enumerable: false,
+      },
+    });
     this.endpoint = String(endpoint);
     this.model = String(model);
-    this.fetchImpl = fetchImpl;
   }
 
   async score({ intent, candidates }) {
@@ -79,7 +118,7 @@ class TypeSafeFleetRouter {
       },
       body: JSON.stringify({
         state: {
-          task: boundedTask(intent),
+          task: boundedTask(intent, this.redactValues),
           candidates: candidates.map(redactCandidate),
         },
         model: this.model,
@@ -106,4 +145,11 @@ class TypeSafeFleetRouter {
   }
 }
 
-module.exports = { TypeSafeFleetRouter, safeQuestionId, redactCandidate, boundedTask };
+module.exports = {
+  TypeSafeFleetRouter,
+  safeQuestionId,
+  redactCandidate,
+  boundedTask,
+  collectSecretValues,
+  redactText,
+};

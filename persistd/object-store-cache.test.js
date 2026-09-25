@@ -17,6 +17,7 @@ function tempFile(contents) {
 test('DriveObjectStore is idempotent by SHA and creates one companion manifest', async () => {
   const filePath = tempFile('hello-drive');
   const sha = crypto.createHash('sha256').update('hello-drive').digest('hex');
+  const md5 = crypto.createHash('md5').update('hello-drive').digest('hex');
   const calls = [];
   const files = [];
   const client = {
@@ -27,7 +28,12 @@ test('DriveObjectStore is idempotent by SHA and creates one companion manifest',
     },
     async startResumableUpload(input) { calls.push(['start', input]); return 'session'; },
     async uploadFileResumable() {
-      const file = { id: 'blob-b', size: '11', appProperties: { gdb_sha256: sha, gdb_record: 'object' } };
+      const file = {
+        id: 'blob-b',
+        size: '11',
+        md5Checksum: md5,
+        appProperties: { gdb_sha256: sha, gdb_record: 'object' },
+      };
       files.push(file); return file;
     },
     async createJsonFile(input) {
@@ -136,4 +142,35 @@ test('hashFile reports SHA-256 and exact byte size', async () => {
   const result = await hashFile(filePath);
   assert.equal(result.size, 3);
   assert.equal(result.sha256, crypto.createHash('sha256').update('abc').digest('hex'));
+  assert.equal(result.md5, crypto.createHash('md5').update('abc').digest('hex'));
+});
+
+test('DriveObjectStore quarantines a post-upload checksum mismatch and keeps local source', async () => {
+  const filePath = tempFile('checksum-source');
+  const sha = crypto.createHash('sha256').update('checksum-source').digest('hex');
+  const quarantined = [];
+  let uploaded = false;
+  const client = {
+    async searchByHash(hash, { record } = {}) {
+      if (record === 'manifest') return [];
+      if (!uploaded) return [];
+      return [{
+        id: 'corrupt-blob',
+        size: String(Buffer.byteLength('checksum-source')),
+        md5Checksum: '0'.repeat(32),
+        appProperties: { gdb_sha256: hash, gdb_record: 'object' },
+      }];
+    },
+    async startResumableUpload() { return 'session'; },
+    async uploadFileResumable() { uploaded = true; return { id: 'corrupt-blob' }; },
+    async updateAppProperties(id, patch) { quarantined.push({ id, patch }); },
+  };
+  const store = new DriveObjectStore({ client, rootId: 'root' });
+  await assert.rejects(() => store.put(filePath, {}), /OBJECT_UPLOAD_CHECKSUM_MISMATCH/);
+  assert.equal(fs.existsSync(filePath), true);
+  assert.deepEqual(quarantined, [{
+    id: 'corrupt-blob',
+    patch: { gdb_quarantine: 'upload_checksum_mismatch' },
+  }]);
+  assert.equal(sha.length, 64);
 });

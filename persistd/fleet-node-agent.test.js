@@ -6,6 +6,7 @@ const { collectHeartbeat, postHeartbeat } = require('./src/fleet/node-agent');
 test('collectHeartbeat forwards injected machine metrics and deduplicates cache hashes', async () => {
   const beat = await collectHeartbeat({
     cacheRoot: 'X:/cache',
+    ensureCacheRoot: async () => {},
     statfs: async () => ({ bsize: 10, bavail: 12, blocks: 50 }),
     memory: () => ({ freeMemoryBytes: 20, totalMemoryBytes: 64 }),
     cpuSampler: async () => 12.5,
@@ -85,4 +86,25 @@ test('cache inventory advertises at most 256 most-recent hashes', async () => {
   assert.equal(inventory.cachedObjectHashes.length, 256);
   assert.equal(inventory.cacheBytes, 300);
   assert.equal(inventory.cachedObjectHashes[0], (299).toString(16).padStart(64, '0'));
+});
+
+test('collectHeartbeat ensures cache root exists before statfs', async () => {
+  const events = [];
+  await collectHeartbeat({
+    cacheRoot: 'virtual-cache',
+    ensureCacheRoot: async (root) => { events.push('mkdir:' + root); },
+    statfs: async () => {
+      events.push('statfs');
+      return { bsize: 1, bavail: 100, blocks: 200 };
+    },
+    memory: () => ({ freeMemoryBytes: 10, totalMemoryBytes: 20 }),
+    cpuSampler: async () => 1,
+    hostname: () => 'NODE',
+    activeJobs: () => 0,
+    cacheInventory: async () => ({ cacheBytes: 0, cachedObjectHashes: [] }),
+    capabilities: [],
+    runtimeVersion: '1',
+    now: () => new Date('2026-09-24T17:00:00Z'),
+  });
+  assert.deepEqual(events.slice(0, 2), ['mkdir:virtual-cache', 'statfs']);
 });
