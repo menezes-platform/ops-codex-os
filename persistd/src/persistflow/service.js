@@ -1,11 +1,25 @@
 const { createRunState, assertMutableGeneration } = require('./run-state');
 
 class PersistFlowService {
-  constructor({ store, clock = () => new Date(), sandbox = null } = {}) {
+  constructor({
+    store,
+    clock = () => new Date(),
+    sandbox = null,
+    fleetStore = null,
+    fleetConfig = { nodes: [] },
+    fleetRouter = null,
+    driveAuth = null,
+    objectStore = null,
+  } = {}) {
     if (!store) throw new Error('AUTHORITY_STORE_REQUIRED');
     this.store = store;
     this.clock = clock;
     this.sandbox = sandbox;
+    this.fleetStore = fleetStore;
+    this.fleetConfig = fleetConfig;
+    this.fleetRouter = fleetRouter;
+    this.driveAuth = driveAuth;
+    this.objectStore = objectStore;
   }
 
   nowIso() {
@@ -17,10 +31,91 @@ class PersistFlowService {
     return this.sandbox;
   }
 
+  fleetHeartbeat(nodeId, heartbeat) {
+    if (!this.fleetStore) throw new Error('FLEET_NOT_CONFIGURED');
+    return this.fleetStore.putHeartbeat(nodeId, heartbeat);
+  }
+
+  fleetStatus() {
+    if (!this.fleetStore) throw new Error('FLEET_NOT_CONFIGURED');
+    return this.fleetStore.snapshot({ nowMs: this.clock().getTime(), staleAfterMs: 90_000 });
+  }
+
+  async issueDriveAccess(nodeId) {
+    const registered = Array.isArray(this.fleetConfig?.nodes)
+      && this.fleetConfig.nodes.some((node) => node.id === nodeId);
+    if (!registered) throw new Error('FLEET_NODE_NOT_REGISTERED');
+    if (!this.driveAuth) throw new Error('DRIVE_AUTH_UNAVAILABLE');
+    return this.driveAuth.getAccess();
+  }
+
+  async objectCatalogLookup(ref) {
+    if (!this.objectStore) throw new Error('OBJECT_STORE_NOT_CONFIGURED');
+    const file = await this.objectStore.resolve(ref);
+    const appProperties = {};
+    for (const [key, value] of Object.entries(file?.appProperties || {})) {
+      if (key.startsWith('gdb_')) appProperties[key] = String(value);
+    }
+    return {
+      ref: String(ref),
+      fileId: String(file.id || ''),
+      name: file.name ? String(file.name) : null,
+      size: file.size == null ? null : Number(file.size),
+      mimeType: file.mimeType ? String(file.mimeType) : null,
+      modifiedTime: file.modifiedTime ? String(file.modifiedTime) : null,
+      appProperties,
+    };
+  }
+
+  cacheStatus() {
+    const fleet = this.fleetStatus();
+    return {
+      nodes: fleet.nodes.map((row) => ({
+        nodeId: row.nodeId,
+        fresh: row.fresh,
+        cacheBytes: Number(row.heartbeat?.cacheBytes || 0),
+        cachedObjectCount: Array.isArray(row.heartbeat?.cachedObjectHashes)
+          ? row.heartbeat.cachedObjectHashes.length
+          : 0,
+      })),
+    };
+  }
+
   assertRunGeneration(runId, generation) {
     const state = this.inspectRun(runId);
     assertMutableGeneration(state, generation);
     return state;
+  }
+
+  async routeTask(runId, input = {}) {
+    this.assertRunGeneration(runId, input.generation);
+    if (!this.fleetRouter) throw new Error('FLEET_ROUTER_NOT_CONFIGURED');
+    const decision = await this.fleetRouter.route(input.intent || {});
+    const now = this.nowIso();
+    const run = this.store.update(runId, (state) => {
+      assertMutableGeneration(state, input.generation);
+      const checkpoint = {
+        at: now,
+        generation: Number(input.generation),
+        nextSafeAction: state.nextSafeAction ?? null,
+        evidence: {
+          type: 'fleet.route',
+          taskId: decision.taskId,
+          nodeId: decision.nodeId,
+          decisionSource: decision.decisionSource,
+          eligibleNodeIds: decision.eligibleNodeIds,
+          evaluatedAt: decision.evaluatedAt,
+        },
+      };
+      return {
+        ...state,
+        latestRoute: decision,
+        checkpoints: [...(state.checkpoints || []), checkpoint],
+        latestCheckpoint: checkpoint,
+        updatedAt: now,
+      };
+    });
+    return { decision, run };
   }
 
   startRun(input = {}) {

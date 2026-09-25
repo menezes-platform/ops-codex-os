@@ -22,7 +22,12 @@ test('bridge sync requires owner bearer and advances exactly one generation', as
   await withServer(async (base) => {
     let response = await fetch(`${base}/v1/runs`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ runId: 'bridge-run', generation: 2, goal: 'continue' }),
+      body: JSON.stringify({
+        runId: 'bridge-run',
+        generation: 2,
+        goal: 'continue',
+        latestRoute: { taskId: 'task-1', nodeId: 'ec2-primary', decisionSource: 'typesafe' },
+      }),
     });
     assert.equal(response.status, 201);
 
@@ -48,6 +53,7 @@ test('bridge sync requires owner bearer and advances exactly one generation', as
     assert.equal(payload.run.status, 'ACTIVE');
     assert.equal(payload.run.progress, 'g3 alive');
     assert.equal(payload.run.nextSafeAction, 'continue g3');
+    assert.equal(payload.run.latestRoute.nodeId, 'ec2-primary');
 
     response = await fetch(`${base}/v1/runs/bridge-run/bridge/sync`, {
       method: 'POST',

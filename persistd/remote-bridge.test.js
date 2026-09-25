@@ -43,3 +43,27 @@ test('remote generation behind is reported without regressing local generation',
   assert.equal(result.state.CHAT_ID, 'chat-g3');
   assert.equal(result.state.REMOTE_GENERATION, '2');
 });
+
+test('equal remote generation projects latest route into local control state', () => {
+  const local = {
+    RUN_ID: 'local', GENERATION: '2',
+    LATEST_ROUTE_JSON: JSON.stringify({ taskId: 'old', nodeId: 'desktop-primary' }),
+  };
+  const remote = {
+    runId: 'remote', generation: 2,
+    latestRoute: { taskId: 'new', nodeId: 'ec2-primary', decisionSource: 'typesafe' },
+  };
+  const result = reconcileRemoteRun(local, remote);
+  assert.equal(result.relation, 'EQUAL');
+  assert.deepEqual(JSON.parse(result.state.LATEST_ROUTE_JSON), remote.latestRoute);
+});
+
+test('ahead remote generation does not overwrite local active route projection', () => {
+  const oldRoute = JSON.stringify({ taskId: 'old', nodeId: 'desktop-primary' });
+  const result = reconcileRemoteRun(
+    { RUN_ID: 'local', GENERATION: '2', LATEST_ROUTE_JSON: oldRoute },
+    { runId: 'remote', generation: 3, latestRoute: { taskId: 'new', nodeId: 'ec2-primary' } },
+  );
+  assert.equal(result.relation, 'AHEAD');
+  assert.equal(result.state.LATEST_ROUTE_JSON, oldRoute);
+});

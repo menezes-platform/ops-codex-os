@@ -9,6 +9,12 @@ const { PersistFlowService } = require('./service');
 const { createSandboxProviderFromEnv } = require('./sandbox-provider');
 const { createPersistFlowMcpNodeHandler, sameToken } = require('./mcp-handler');
 const { createOAuthHttpHandler, requestOrigin } = require('./oauth-server');
+const { FileFleetStore } = require('../fleet/store');
+const { loadFleetConfig } = require('../fleet/contracts');
+const { verifyNodeRequest, parseNodeSecrets } = require('../fleet/auth');
+const { createDriveTokenProviderFromEnv } = require('../storage/drive-auth');
+const { DriveClient } = require('../storage/drive-client');
+const { DriveObjectStore } = require('../storage/object-store');
 
 function sendJson(res, statusCode, body) {
   const payload = JSON.stringify(body);
@@ -19,19 +25,24 @@ function sendJson(res, statusCode, body) {
   res.end(payload);
 }
 
-async function readJson(req, maxBytes = 64 * 1024) {
-  let text = '';
+async function readJsonWithRaw(req, maxBytes = 64 * 1024) {
+  let raw = '';
   for await (const chunk of req) {
-    text += chunk;
-    if (Buffer.byteLength(text) > maxBytes) throw new Error('BODY_TOO_LARGE');
+    raw += chunk;
+    if (Buffer.byteLength(raw) > maxBytes) throw new Error('BODY_TOO_LARGE');
   }
-  if (!text) return {};
-  try { return JSON.parse(text); }
+  if (!raw) return { raw: '', value: {} };
+  try { return { raw, value: JSON.parse(raw) }; }
   catch { throw new Error('INVALID_JSON'); }
+}
+
+async function readJson(req, maxBytes = 64 * 1024) {
+  return (await readJsonWithRaw(req, maxBytes)).value;
 }
 function errorStatus(error) {
   const code = error?.message || 'INTERNAL_ERROR';
   if (code === 'RUN_NOT_FOUND') return 404;
+  if (code === 'DRIVE_AUTH_UNAVAILABLE') return 503;
   if (['RUN_ALREADY_EXISTS', 'STALE_GENERATION', 'CLAIM_NOT_PENDING', 'CLAIM_TARGET_MISMATCH', 'CLAIM_NONCE_MISMATCH'].includes(code)) return 409;
   if (['RUN_ID_REQUIRED', 'INVALID_GENERATION', 'CLAIM_SECRET_REQUIRED', 'INVALID_JSON', 'BODY_TOO_LARGE', 'INVALID_RUN_UPDATE'].includes(code)) return 400;
   return 500;
@@ -47,6 +58,20 @@ function createProductionStore(options = {}) {
 
 function createProductionOAuthStore(options = {}) {
   return new FileOAuthStore(path.join(productionDataDir(options), 'oauth'));
+}
+
+function createProductionFleetStore(options = {}) {
+  return new FileFleetStore(path.join(productionDataDir(options), 'fleet'));
+}
+
+const DEFAULT_FLEET_CONFIG_PATH = path.join(__dirname, '../../config/fleet.json');
+
+function loadProductionFleetConfig({ configPath = DEFAULT_FLEET_CONFIG_PATH } = {}) {
+  return loadFleetConfig(JSON.parse(fs.readFileSync(configPath, 'utf8')));
+}
+
+function productionFleetNodeSecrets({ env = process.env } = {}) {
+  return parseNodeSecrets(env.PERSISTFLOW_FLEET_NODE_SECRETS_JSON || '');
 }
 
 const DEFAULT_MCP_DIGEST_PATH = path.join(__dirname, '../../config/mcp-token.sha256');
@@ -77,8 +102,28 @@ function createServer({
   oauthStore = null,
   ownerTokenDigest = '',
   sandboxProvider = createSandboxProviderFromEnv(),
+  fleetStore = null,
+  fleetConfig = { nodes: [] },
+  fleetNodeSecrets = {},
+  fleetRouter = null,
+  driveAuth = createDriveTokenProviderFromEnv(),
+  objectStore = undefined,
 } = {}) {
-  const service = new PersistFlowService({ store, clock, sandbox: sandboxProvider });
+  let resolvedObjectStore = objectStore;
+  if (resolvedObjectStore === undefined && driveAuth?.rootId) {
+    const client = new DriveClient({ tokenProvider: () => driveAuth.getAccess() });
+    resolvedObjectStore = new DriveObjectStore({ client, rootId: driveAuth.rootId });
+  }
+  const service = new PersistFlowService({
+    store,
+    clock,
+    sandbox: sandboxProvider,
+    fleetStore,
+    fleetConfig,
+    fleetRouter,
+    driveAuth,
+    objectStore: resolvedObjectStore || null,
+  });
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
   const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;
   const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl });
@@ -99,6 +144,56 @@ function createServer({
       }
       if (req.method === 'GET' && url.pathname === '/healthz') {
         return sendJson(res, 200, { ok: true, service: 'persistflow', authority: store.kind, durable: store.kind !== 'memory' });
+      }
+      const fleetHeartbeat = /^\/v1\/fleet\/nodes\/([^/]+)\/heartbeat$/.exec(url.pathname);
+      if (req.method === 'POST' && fleetHeartbeat) {
+        const nodeId = decodeURIComponent(fleetHeartbeat[1]);
+        const headerNodeId = String(req.headers['x-persistflow-node-id'] || '');
+        const timestamp = String(req.headers['x-persistflow-node-timestamp'] || '');
+        const signature = String(req.headers['x-persistflow-node-signature'] || '');
+        const registered = Array.isArray(fleetConfig?.nodes)
+          && fleetConfig.nodes.some((node) => node.id === nodeId);
+        const { raw, value } = await readJsonWithRaw(req);
+        const authorized = registered
+          && headerNodeId === nodeId
+          && verifyNodeRequest({
+            nodeId,
+            timestamp,
+            signature,
+            method: req.method,
+            path: url.pathname,
+            rawBody: raw,
+            secrets: fleetNodeSecrets,
+            nowMs: () => clock().getTime(),
+          });
+        if (!authorized) return sendJson(res, 401, { error: 'unauthorized' });
+        const heartbeat = service.fleetHeartbeat(nodeId, value);
+        return sendJson(res, 200, heartbeat);
+      }
+      const driveToken = /^\/v1\/fleet\/nodes\/([^/]+)\/drive-token$/.exec(url.pathname);
+      if (req.method === 'POST' && driveToken) {
+        const nodeId = decodeURIComponent(driveToken[1]);
+        const headerNodeId = String(req.headers['x-persistflow-node-id'] || '');
+        const timestamp = String(req.headers['x-persistflow-node-timestamp'] || '');
+        const signature = String(req.headers['x-persistflow-node-signature'] || '');
+        const registered = Array.isArray(fleetConfig?.nodes)
+          && fleetConfig.nodes.some((node) => node.id === nodeId);
+        const { raw } = await readJsonWithRaw(req);
+        const authorized = registered
+          && headerNodeId === nodeId
+          && verifyNodeRequest({
+            nodeId,
+            timestamp,
+            signature,
+            method: req.method,
+            path: url.pathname,
+            rawBody: raw,
+            secrets: fleetNodeSecrets,
+            nowMs: () => clock().getTime(),
+          });
+        if (!authorized) return sendJson(res, 401, { error: 'unauthorized' });
+        const access = await service.issueDriveAccess(nodeId);
+        return sendJson(res, 200, access);
       }
       if (req.method === 'POST' && url.pathname === '/v1/runs') {
         const run = service.startRun(await readJson(req));
@@ -139,4 +234,12 @@ function createServer({
   });
 }
 
-module.exports = { createServer, createProductionStore, createProductionOAuthStore, resolveMcpTokenDigest };
+module.exports = {
+  createServer,
+  createProductionStore,
+  createProductionOAuthStore,
+  createProductionFleetStore,
+  loadProductionFleetConfig,
+  productionFleetNodeSecrets,
+  resolveMcpTokenDigest,
+};

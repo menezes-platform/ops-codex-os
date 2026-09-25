@@ -1,0 +1,10 @@
+{
+  "nodes": [
+    { "id": "desktop-primary", "platform": "win32", "arch": "x64", "capabilities": ["git", "node", "python", "interactive-ui", "browser"], "affinities": ["interactive", "desktop"], "concurrencyLimit": 1, "drained": false },
+    { "id": "ec2-primary", "platform": "win32", "arch": "x64", "capabilities": ["git", "node", "python", "remote-worker"], "affinities": ["background", "tests"], "concurrencyLimit": 2, "drained": false },
+    { "id": "aws-vm", "platform": "linux", "arch": "x64", "capabilities": ["git", "node", "python", "remote-worker"], "affinities": ["background"], "concurrencyLimit": 1, "drained": false },
+    { "id": "persistflow", "platform": "linux", "arch": "x64", "capabilities": ["persistflow"], "affinities": ["control-plane"], "concurrencyLimit": 1, "drained": true },
+    { "id": "tsim-vm", "platform": "linux", "arch": "x64", "capabilities": ["git", "node", "python", "remote-worker"], "affinities": ["simulation"], "concurrencyLimit": 1, "drained": false },
+    { "id": "tiktok-live-aws", "platform": "win32", "arch": "x64", "capabilities": ["git", "node", "python", "remote-worker"], "affinities": ["tiktok-live"], "concurrencyLimit": 1, "drained": false }
+  ]
+}

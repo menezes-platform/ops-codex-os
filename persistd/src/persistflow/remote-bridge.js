@@ -26,6 +26,9 @@ function reconcileRemoteRun(localState = {}, remoteRun = {}) {
       CONTROLLER_HEARTBEAT_AT: remoteRun.controllerHeartbeatAt || base.CONTROLLER_HEARTBEAT_AT,
       CURRENT_STATE: remoteRun.progress ?? base.CURRENT_STATE,
       NEXT_SAFE_ACTION: remoteRun.nextSafeAction ?? checkpointNext ?? base.NEXT_SAFE_ACTION,
+      LATEST_ROUTE_JSON: remoteRun.latestRoute
+        ? JSON.stringify(remoteRun.latestRoute)
+        : base.LATEST_ROUTE_JSON,
     },
   };
 }
