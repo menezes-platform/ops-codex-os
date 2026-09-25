@@ -46,3 +46,13 @@ test('Baton v2 carries durable task state, autonomy and minimal tools', () => {
   assert.equal(JSON.parse(line.slice('BATON_V2_JSON: '.length)).version, 2);
   assert.match(message, /CLAIM_NONCE: nonce-8/);
 });
+
+test('Baton v2 carries selected fleet node without replacing Commander device id', () => {
+  const state = {
+    RUN_ID: 'demo', DEVICE_ID: 'commander-device',
+    LATEST_ROUTE_JSON: JSON.stringify({ taskId: 'task-123', nodeId: 'ec2-primary' }),
+  };
+  const baton = buildBatonV2(state, 2);
+  assert.equal(baton.machine.deviceId, 'commander-device');
+  assert.equal(baton.machine.nodeId, 'ec2-primary');
+});

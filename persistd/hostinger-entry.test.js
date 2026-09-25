@@ -16,6 +16,16 @@ function requestHealth(port) {
   });
 }
 
+async function waitForHealth(child, port, timeoutMs = 10_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null) return null;
+    try { return await requestHealth(port); } catch {}
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  return null;
+}
+
 test('Hostinger entry starts listening when loaded with require()', async () => {
   const port = 38125;
   const cwd = path.join(__dirname);
@@ -28,13 +38,8 @@ test('Hostinger entry starts listening when loaded with require()', async () => 
   let stderr = '';
   child.stderr.on('data', (chunk) => { stderr += chunk; });
   try {
-    let result;
-    for (let i = 0; i < 20; i += 1) {
-      if (child.exitCode !== null) break;
-      try { result = await requestHealth(port); break; } catch {}
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-    assert.ok(result, `entry did not listen; stderr=${stderr}`);
+    const result = await waitForHealth(child, port);
+    assert.ok(result, `entry did not listen within readiness deadline; stderr=${stderr}`);
     assert.equal(result.status, 200);
     assert.equal(JSON.parse(result.body).service, 'persistflow');
   } finally {
@@ -62,13 +67,8 @@ test('Hostinger entry works from an isolated persistd deployment root', async ()
   let stderr = '';
   child.stderr.on('data', (chunk) => { stderr += chunk; });
   try {
-    let result;
-    for (let i = 0; i < 50; i += 1) {
-      if (child.exitCode !== null) break;
-      try { result = await requestHealth(port); break; } catch {}
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-    assert.ok(result, `isolated entry did not listen; stderr=${stderr}`);
+    const result = await waitForHealth(child, port);
+    assert.ok(result, `isolated entry did not listen within readiness deadline; stderr=${stderr}`);
     assert.equal(result.status, 200);
     assert.equal(JSON.parse(result.body).service, 'persistflow');
   } finally {

@@ -1,6 +1,6 @@
 # Implementation Plan: Drive-backed Fleet Storage and Routing
 
-**Branch**: `agent/drive-fleet-plan/20260924-1353` | **Date**: 2026-09-24 | **Spec**: `specs/001-drive-backed-fleet-storage-routing/spec.md`
+**Branch**: `agent/drive-fleet-exec/20260924` | **Date**: 2026-09-24 | **Spec**: `specs/001-drive-backed-fleet-storage-routing/spec.md`
 
 **Input**: Feature specification from `specs/001-drive-backed-fleet-storage-routing/spec.md`
 
