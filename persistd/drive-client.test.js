@@ -142,3 +142,17 @@ test('DriveClient exposes start token and change pages', async () => {
   assert.equal(page.newStartPageToken, 't2');
   assert.ok(urls.some((url) => url.includes('pageToken=t1')));
 });
+
+test('DriveClient can restrict hash search to one gdb_record kind', async () => {
+  let query;
+  const client = new DriveClient({
+    tokenProvider,
+    fetchImpl: async (url) => {
+      query = new URL(url).searchParams.get('q');
+      return response({ json: { files: [] } });
+    },
+  });
+  await client.searchByHash('c'.repeat(64), { record: 'object' });
+  assert.match(query, /key='gdb_record'/);
+  assert.match(query, /value='object'/);
+});

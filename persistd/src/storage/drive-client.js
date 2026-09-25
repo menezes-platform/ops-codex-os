@@ -51,14 +51,18 @@ class DriveClient {
     return { response: await this.fetchImpl(url, { ...init, headers }), access };
   }
 
-  async searchByHash(sha256) {
+  async searchByHash(sha256, { record } = {}) {
     if (!/^[0-9a-f]{64}$/i.test(String(sha256))) throw new Error('INVALID_SHA256');
     const access = await this.access();
-    const query = [
+    const clauses = [
       "'" + escapeQueryValue(access.rootId) + "' in parents",
       'trashed = false',
       "appProperties has { key='gdb_sha256' and value='" + escapeQueryValue(sha256) + "' }",
-    ].join(' and ');
+    ];
+    if (record) {
+      clauses.push("appProperties has { key='gdb_record' and value='" + escapeQueryValue(record) + "' }");
+    }
+    const query = clauses.join(' and ');
     const params = new URLSearchParams({
       q: query,
       fields: 'files(' + FILE_FIELDS + '),nextPageToken',

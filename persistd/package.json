@@ -6,7 +6,9 @@
   "scripts": {
     "test": "node --test",
     "start": "node src/start-entrypoint.js",
-    "fleet:agent": "node src/fleet/node-agent.js"
+    "fleet:agent": "node src/fleet/node-agent.js",
+    "drive:authorize": "node scripts/authorize-drive.js",
+    "drive:bootstrap": "node scripts/bootstrap-drive-store.js"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",
