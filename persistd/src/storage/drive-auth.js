@@ -18,15 +18,29 @@ function readOptionalText(filePath) {
   }
 }
 
-function readOptionalRootId(filePath) {
+function readOptionalJson(filePath, invalidCode) {
   try {
-    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    return String(parsed?.rootId || '').trim();
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch (error) {
-    if (error?.code === 'ENOENT') return '';
-    if (error instanceof SyntaxError) throw new Error('DRIVE_STORE_CONFIG_INVALID');
+    if (error?.code === 'ENOENT') return null;
+    if (error instanceof SyntaxError) throw new Error(invalidCode);
     throw error;
   }
+}
+
+function readOAuthClientMaterial(filePath) {
+  const parsed = readOptionalJson(filePath, 'DRIVE_OAUTH_CLIENT_FILE_INVALID');
+  if (!parsed) return { clientId: '', clientSecret: '' };
+  const client = parsed.installed || parsed.web || {};
+  return {
+    clientId: String(client.client_id || '').trim(),
+    clientSecret: String(client.client_secret || '').trim(),
+  };
+}
+
+function readOptionalRootId(filePath) {
+  const parsed = readOptionalJson(filePath, 'DRIVE_STORE_CONFIG_INVALID');
+  return String(parsed?.rootId || '').trim();
 }
 
 function resolveDriveAuthMaterial(env = process.env, {
@@ -34,9 +48,12 @@ function resolveDriveAuthMaterial(env = process.env, {
   rootIdOverride = '',
 } = {}) {
   const dir = dataDir(env, homedir);
+  const oauthFile = env.GOOGLE_DRIVE_OAUTH_CLIENT_FILE
+    || path.join(dir, 'google-drive-oauth-client.json');
+  const oauth = readOAuthClientMaterial(oauthFile);
   return {
-    clientId: String(env.GOOGLE_DRIVE_CLIENT_ID || '').trim(),
-    clientSecret: String(env.GOOGLE_DRIVE_CLIENT_SECRET || '').trim(),
+    clientId: String(env.GOOGLE_DRIVE_CLIENT_ID || '').trim() || oauth.clientId,
+    clientSecret: String(env.GOOGLE_DRIVE_CLIENT_SECRET || '').trim() || oauth.clientSecret,
     refreshToken: String(env.GOOGLE_DRIVE_REFRESH_TOKEN || '').trim()
       || readOptionalText(path.join(dir, 'google-drive-refresh-token')),
     rootId: String(rootIdOverride || env.GABRIEL_DRIVE_ROOT_ID || '').trim()
@@ -125,6 +142,7 @@ module.exports = {
   DriveTokenProvider,
   createDriveTokenProviderFromEnv,
   resolveDriveAuthMaterial,
+  readOAuthClientMaterial,
   dataDir,
   DRIVE_FILE_SCOPE,
   TOKEN_URL,
