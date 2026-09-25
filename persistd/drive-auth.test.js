@@ -1,6 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { DriveTokenProvider, createDriveTokenProviderFromEnv } = require('./src/storage/drive-auth');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const {
+  DriveTokenProvider,
+  createDriveTokenProviderFromEnv,
+  resolveDriveAuthMaterial,
+} = require('./src/storage/drive-auth');
 
 test('DriveTokenProvider refreshes once and caches until sixty seconds before expiry', async () => {
   let calls = 0;
@@ -40,7 +47,7 @@ test('DriveTokenProvider rejects a token response without drive.file scope', asy
   await assert.rejects(() => provider.getAccess(), /DRIVE_SCOPE_MISMATCH/);
 });
 
-test('createDriveTokenProviderFromEnv stays disabled unless every central credential exists', () => {
+test('createDriveTokenProviderFromEnv stays disabled unless every central value exists', () => {
   assert.equal(createDriveTokenProviderFromEnv({}), null);
   const provider = createDriveTokenProviderFromEnv({
     GOOGLE_DRIVE_CLIENT_ID: 'id',
@@ -51,4 +58,62 @@ test('createDriveTokenProviderFromEnv stays disabled unless every central creden
   assert.ok(provider instanceof DriveTokenProvider);
   assert.equal(JSON.stringify(provider).includes('refresh'), false);
   assert.equal(JSON.stringify(provider).includes('secret'), false);
+});
+
+test('Drive auth material loads OAuth client, refresh token, and root id from secure files', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'drive-file-auth-'));
+  fs.writeFileSync(path.join(dir, 'google-drive-oauth-client.json'), JSON.stringify({
+    installed: { client_id: 'file-client', client_secret: 'file-secret' },
+  }));
+  fs.writeFileSync(path.join(dir, 'google-drive-refresh-token'), 'file-refresh\n');
+  fs.writeFileSync(path.join(dir, 'drive-store.json'), JSON.stringify({ rootId: 'file-root' }));
+
+  const material = resolveDriveAuthMaterial({ PERSISTFLOW_DATA_DIR: dir });
+  assert.deepEqual(material, {
+    clientId: 'file-client',
+    clientSecret: 'file-secret',
+    refreshToken: 'file-refresh',
+    rootId: 'file-root',
+  });
+
+  const provider = createDriveTokenProviderFromEnv(
+    { PERSISTFLOW_DATA_DIR: dir },
+    { fetchImpl: async () => { throw new Error('unused'); } },
+  );
+  assert.ok(provider instanceof DriveTokenProvider);
+  assert.equal(provider.rootId, 'file-root');
+  assert.equal(JSON.stringify(provider).includes('file-secret'), false);
+  assert.equal(JSON.stringify(provider).includes('file-refresh'), false);
+});
+
+test('explicit Drive env values override secure-file values', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'drive-file-override-'));
+  fs.writeFileSync(path.join(dir, 'google-drive-oauth-client.json'), JSON.stringify({
+    installed: { client_id: 'file-client', client_secret: 'file-secret' },
+  }));
+  fs.writeFileSync(path.join(dir, 'google-drive-refresh-token'), 'file-refresh\n');
+  fs.writeFileSync(path.join(dir, 'drive-store.json'), JSON.stringify({ rootId: 'file-root' }));
+
+  const material = resolveDriveAuthMaterial({
+    PERSISTFLOW_DATA_DIR: dir,
+    GOOGLE_DRIVE_CLIENT_ID: 'env-client',
+    GOOGLE_DRIVE_CLIENT_SECRET: 'env-secret',
+    GOOGLE_DRIVE_REFRESH_TOKEN: 'env-refresh',
+    GABRIEL_DRIVE_ROOT_ID: 'env-root',
+  });
+  assert.deepEqual(material, {
+    clientId: 'env-client',
+    clientSecret: 'env-secret',
+    refreshToken: 'env-refresh',
+    rootId: 'env-root',
+  });
+});
+
+test('invalid secure Drive JSON fails closed', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'drive-file-invalid-'));
+  fs.writeFileSync(path.join(dir, 'google-drive-oauth-client.json'), '{nope');
+  assert.throws(
+    () => resolveDriveAuthMaterial({ PERSISTFLOW_DATA_DIR: dir }),
+    /DRIVE_OAUTH_CLIENT_FILE_INVALID/,
+  );
 });
