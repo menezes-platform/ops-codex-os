@@ -186,3 +186,22 @@ test('FleetRouter uses single-candidate fallback and blocks when no node is elig
   });
   await assert.rejects(() => none.route(baseIntent), /NO_ELIGIBLE_NODE/);
 });
+
+test('equal TypeSafe scores defer to artifact locality', async () => {
+  const artifact = 'f'.repeat(64);
+  const intent = { ...baseIntent, artifactRefs: ['sha256:' + artifact] };
+  const fleetRouter = new FleetRouter({
+    fleetConfig: config(),
+    fleetStore: { snapshot: () => ({ nodes: [
+      beat('desktop-primary', { cachedObjectHashes: [artifact] }),
+      beat('ec2-primary', { cachedObjectHashes: [] }),
+    ] }) },
+    typesafeRouter: {
+      score: async () => ({ 'desktop-primary': 1, 'ec2-primary': 1 }),
+    },
+    clock: () => new Date('2026-09-24T17:01:00Z'),
+  });
+  const decision = await fleetRouter.route(intent);
+  assert.equal(decision.decisionSource, 'typesafe');
+  assert.equal(decision.nodeId, 'desktop-primary');
+});

@@ -66,3 +66,23 @@ test('fleet agent installers and package script are present without embedded sec
   const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
   assert.equal(pkg.scripts['fleet:agent'], 'node src/fleet/node-agent.js');
 });
+
+test('cache inventory advertises at most 256 most-recent hashes', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { readCacheInventory } = require('./src/fleet/node-agent');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fleet-cache-inventory-'));
+  const entries = {};
+  for (let i = 0; i < 300; i += 1) {
+    const sha = i.toString(16).padStart(64, '0');
+    entries[sha] = {
+      sha256: sha, size: 1, lastAccessAt: new Date(1700000000000 + i * 1000).toISOString(),
+    };
+  }
+  fs.writeFileSync(path.join(root, 'index.json'), JSON.stringify({ entries }), 'utf8');
+  const inventory = await readCacheInventory(root);
+  assert.equal(inventory.cachedObjectHashes.length, 256);
+  assert.equal(inventory.cacheBytes, 300);
+  assert.equal(inventory.cachedObjectHashes[0], (299).toString(16).padStart(64, '0'));
+});

@@ -9,6 +9,7 @@ class PersistFlowService {
     fleetConfig = { nodes: [] },
     fleetRouter = null,
     driveAuth = null,
+    objectStore = null,
   } = {}) {
     if (!store) throw new Error('AUTHORITY_STORE_REQUIRED');
     this.store = store;
@@ -18,6 +19,7 @@ class PersistFlowService {
     this.fleetConfig = fleetConfig;
     this.fleetRouter = fleetRouter;
     this.driveAuth = driveAuth;
+    this.objectStore = objectStore;
   }
 
   nowIso() {
@@ -45,6 +47,38 @@ class PersistFlowService {
     if (!registered) throw new Error('FLEET_NODE_NOT_REGISTERED');
     if (!this.driveAuth) throw new Error('DRIVE_AUTH_UNAVAILABLE');
     return this.driveAuth.getAccess();
+  }
+
+  async objectCatalogLookup(ref) {
+    if (!this.objectStore) throw new Error('OBJECT_STORE_NOT_CONFIGURED');
+    const file = await this.objectStore.resolve(ref);
+    const appProperties = {};
+    for (const [key, value] of Object.entries(file?.appProperties || {})) {
+      if (key.startsWith('gdb_')) appProperties[key] = String(value);
+    }
+    return {
+      ref: String(ref),
+      fileId: String(file.id || ''),
+      name: file.name ? String(file.name) : null,
+      size: file.size == null ? null : Number(file.size),
+      mimeType: file.mimeType ? String(file.mimeType) : null,
+      modifiedTime: file.modifiedTime ? String(file.modifiedTime) : null,
+      appProperties,
+    };
+  }
+
+  cacheStatus() {
+    const fleet = this.fleetStatus();
+    return {
+      nodes: fleet.nodes.map((row) => ({
+        nodeId: row.nodeId,
+        fresh: row.fresh,
+        cacheBytes: Number(row.heartbeat?.cacheBytes || 0),
+        cachedObjectCount: Array.isArray(row.heartbeat?.cachedObjectHashes)
+          ? row.heartbeat.cachedObjectHashes.length
+          : 0,
+      })),
+    };
   }
 
   assertRunGeneration(runId, generation) {

@@ -13,6 +13,8 @@ const { FileFleetStore } = require('../fleet/store');
 const { loadFleetConfig } = require('../fleet/contracts');
 const { verifyNodeRequest, parseNodeSecrets } = require('../fleet/auth');
 const { createDriveTokenProviderFromEnv } = require('../storage/drive-auth');
+const { DriveClient } = require('../storage/drive-client');
+const { DriveObjectStore } = require('../storage/object-store');
 
 function sendJson(res, statusCode, body) {
   const payload = JSON.stringify(body);
@@ -105,7 +107,13 @@ function createServer({
   fleetNodeSecrets = {},
   fleetRouter = null,
   driveAuth = createDriveTokenProviderFromEnv(),
+  objectStore = undefined,
 } = {}) {
+  let resolvedObjectStore = objectStore;
+  if (resolvedObjectStore === undefined && driveAuth?.rootId) {
+    const client = new DriveClient({ tokenProvider: () => driveAuth.getAccess() });
+    resolvedObjectStore = new DriveObjectStore({ client, rootId: driveAuth.rootId });
+  }
   const service = new PersistFlowService({
     store,
     clock,
@@ -114,6 +122,7 @@ function createServer({
     fleetConfig,
     fleetRouter,
     driveAuth,
+    objectStore: resolvedObjectStore || null,
   });
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
   const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;

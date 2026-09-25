@@ -79,6 +79,22 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
       annotations: { readOnlyHint: true },
     }, async () => jsonResult({ fleet: service.fleetStatus() }));
 
+    server.registerTool('persist_object_lookup', {
+      title: 'Inspect one durable Drive object',
+      description: 'Read bounded object metadata by SHA-256 reference without downloading bytes.',
+      inputSchema: z.object({
+        ref: z.string().regex(/^sha256:[0-9a-f]{64}$/i),
+      }),
+      annotations: { readOnlyHint: true },
+    }, async ({ ref }) => jsonResult({ object: await service.objectCatalogLookup(ref) }));
+
+    server.registerTool('persist_cache_status', {
+      title: 'Inspect fleet cache status',
+      description: 'Read heartbeat-derived cache size and object-count telemetry without reading arbitrary paths.',
+      inputSchema: z.object({}),
+      annotations: { readOnlyHint: true },
+    }, async () => jsonResult({ cache: service.cacheStatus() }));
+
     server.registerTool('persist_fleet_route', {
       title: 'Route a PersistFlow task to the fleet',
       description: 'Choose and durably record the best eligible machine for one bounded task intent.',
