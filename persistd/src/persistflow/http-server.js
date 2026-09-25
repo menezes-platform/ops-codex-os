@@ -103,6 +103,7 @@ function createServer({
   fleetStore = null,
   fleetConfig = { nodes: [] },
   fleetNodeSecrets = {},
+  fleetRouter = null,
   driveAuth = createDriveTokenProviderFromEnv(),
 } = {}) {
   const service = new PersistFlowService({
@@ -111,6 +112,7 @@ function createServer({
     sandbox: sandboxProvider,
     fleetStore,
     fleetConfig,
+    fleetRouter,
     driveAuth,
   });
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;

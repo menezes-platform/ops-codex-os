@@ -79,6 +79,29 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
       annotations: { readOnlyHint: true },
     }, async () => jsonResult({ fleet: service.fleetStatus() }));
 
+    server.registerTool('persist_fleet_route', {
+      title: 'Route a PersistFlow task to the fleet',
+      description: 'Choose and durably record the best eligible machine for one bounded task intent.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        generation: z.number().int().positive(),
+        intent: z.object({
+          taskId: z.string().min(1),
+          summary: z.string().min(1).max(2000),
+          repo: z.string().optional(),
+          ref: z.string().optional(),
+          requiredCapabilities: z.array(z.string()).default([]),
+          preferredCapabilities: z.array(z.string()).default([]),
+          estimatedScratchBytes: z.number().int().nonnegative().default(0),
+          artifactRefs: z.array(z.string()).default([]),
+          requiresInteractiveUi: z.boolean().default(false),
+          requiresGpu: z.boolean().default(false),
+          parallelSafe: z.boolean().default(false),
+          pinnedNodeId: z.string().optional(),
+        }),
+      }),
+    }, async ({ runId, ...input }) => jsonResult(await service.routeTask(runId, input)));
+
     server.registerTool('persist_sandbox_create', {
       title: 'Create PersistFlow Sandbox workspace',
       description: 'Create a bounded execution workspace for a durable PersistFlow run and checkpoint the workspace evidence.',

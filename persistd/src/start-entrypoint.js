@@ -2,6 +2,18 @@ function chooseStartMode(env = process.env) {
   return Object.prototype.hasOwnProperty.call(env, 'PORT') ? 'web' : 'daemon';
 }
 
+function createProductionFleetRouter({ env = process.env, fleetConfig, fleetStore, clock = () => new Date() } = {}) {
+  if (String(env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') !== '1') return null;
+  const { FleetRouter } = require('./fleet/router');
+  const { TypeSafeFleetRouter } = require('./fleet/typesafe-router');
+  const typesafeRouter = new TypeSafeFleetRouter({
+    apiKey: env.TYPESAFE_API_KEY,
+    endpoint: env.TYPESAFE_ENDPOINT,
+    model: env.TYPESAFE_MODEL,
+  });
+  return new FleetRouter({ fleetConfig, fleetStore, typesafeRouter, clock });
+}
+
 function startWeb() {
   const {
     createServer,
@@ -17,7 +29,10 @@ function startWeb() {
   const fleetStore = createProductionFleetStore();
   const fleetConfig = loadProductionFleetConfig();
   const fleetNodeSecrets = productionFleetNodeSecrets();
-  const server = createServer({ store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets });
+  const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore });
+  const server = createServer({
+    store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetRouter,
+  });
   server.listen(port, '0.0.0.0', () => {
     const address = server.address();
     process.stdout.write('persistflow listening on ' + address.port + ' authority=' + store.kind + '\n');
@@ -33,4 +48,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { chooseStartMode, startWeb, start };
+module.exports = { chooseStartMode, createProductionFleetRouter, startWeb, start };

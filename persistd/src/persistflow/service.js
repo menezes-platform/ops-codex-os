@@ -53,6 +53,37 @@ class PersistFlowService {
     return state;
   }
 
+  async routeTask(runId, input = {}) {
+    this.assertRunGeneration(runId, input.generation);
+    if (!this.fleetRouter) throw new Error('FLEET_ROUTER_NOT_CONFIGURED');
+    const decision = await this.fleetRouter.route(input.intent || {});
+    const now = this.nowIso();
+    const run = this.store.update(runId, (state) => {
+      assertMutableGeneration(state, input.generation);
+      const checkpoint = {
+        at: now,
+        generation: Number(input.generation),
+        nextSafeAction: state.nextSafeAction ?? null,
+        evidence: {
+          type: 'fleet.route',
+          taskId: decision.taskId,
+          nodeId: decision.nodeId,
+          decisionSource: decision.decisionSource,
+          eligibleNodeIds: decision.eligibleNodeIds,
+          evaluatedAt: decision.evaluatedAt,
+        },
+      };
+      return {
+        ...state,
+        latestRoute: decision,
+        checkpoints: [...(state.checkpoints || []), checkpoint],
+        latestCheckpoint: checkpoint,
+        updatedAt: now,
+      };
+    });
+    return { decision, run };
+  }
+
   startRun(input = {}) {
     const now = this.nowIso();
     const state = createRunState({

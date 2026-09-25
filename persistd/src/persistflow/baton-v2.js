@@ -8,6 +8,7 @@ function parseJson(value, fallback) {
 function buildBatonV2(state, nextGeneration) {
   const manifest = parseJson(state.CAPABILITY_MANIFEST_JSON, {});
   const needs = parseJson(state.TOOL_NEEDS_JSON, []);
+  const latestRoute = parseJson(state.LATEST_ROUTE_JSON, null);
   return {
     version: 2,
     authority: {
@@ -28,7 +29,10 @@ function buildBatonV2(state, nextGeneration) {
       branch: state.BRANCH || null,
       head: state.HEAD || null,
     },
-    machine: { deviceId: state.DEVICE_ID || null },
+    machine: {
+      deviceId: state.DEVICE_ID || null,
+      nodeId: latestRoute?.nodeId || null,
+    },
     autonomy: { preset: state.AUTONOMY_PRESET || null },
     tools: resolveToolProfile(manifest, needs),
   };

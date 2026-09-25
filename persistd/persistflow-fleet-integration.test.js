@@ -164,3 +164,97 @@ test('Drive access endpoint reports unavailable auth as 503 without deleting or 
     assert.deepEqual(await response.json(), { error: 'drive_auth_unavailable' });
   }, { driveAuth: null });
 });
+
+test('routeTask records one atomic fleet.route checkpoint and latestRoute', async () => {
+  const { PersistFlowService } = require('./src/persistflow/service');
+  const store = new MemoryAuthorityStore();
+  const service = new PersistFlowService({
+    store,
+    clock: () => new Date('2026-09-24T17:02:00.000Z'),
+    fleetRouter: {
+      route: async (intent) => ({
+        taskId: intent.taskId,
+        nodeId: 'ec2-primary',
+        decisionSource: 'typesafe',
+        eligibleNodeIds: ['desktop-primary', 'ec2-primary'],
+        typesafeScores: { 'desktop-primary': 1, 'ec2-primary': 2 },
+        evaluatedAt: '2026-09-24T17:02:00.000Z',
+      }),
+    },
+  });
+  service.startRun({ runId: 'route-run', generation: 1, goal: 'route task' });
+  const result = await service.routeTask('route-run', {
+    generation: 1,
+    intent: {
+      taskId: 'task-123', summary: 'run tests',
+      requiredCapabilities: [], preferredCapabilities: [],
+      estimatedScratchBytes: 0, artifactRefs: [],
+    },
+  });
+  assert.equal(result.run.latestRoute.nodeId, 'ec2-primary');
+  assert.equal(result.run.latestCheckpoint.evidence.type, 'fleet.route');
+  assert.equal(result.run.latestCheckpoint.evidence.taskId, 'task-123');
+  assert.equal(result.decision.nodeId, 'ec2-primary');
+});
+
+test('persist_fleet_route MCP tool exposes durable route decision', async () => {
+  const fakeRouter = {
+    route: async (intent) => ({
+      taskId: intent.taskId, nodeId: 'ec2-primary',
+      decisionSource: 'deterministic-fallback',
+      eligibleNodeIds: ['ec2-primary'], typesafeScores: null,
+      evaluatedAt: '2026-09-24T17:02:00.000Z',
+    }),
+  };
+  await withFleetServer(async (base) => {
+    let response = await fetch(base + '/v1/runs', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ runId: 'mcp-route', generation: 1 }),
+    });
+    assert.equal(response.status, 201);
+
+    const { Client, StreamableHTTPClientTransport } = await import('@modelcontextprotocol/client');
+    const client = new Client({ name: 'route-test', version: '1.0.0' });
+    const transport = new StreamableHTTPClientTransport(new URL(base + '/mcp'), {
+      requestInit: { headers: { Authorization: 'Bearer owner' } },
+    });
+    await client.connect(transport);
+    try {
+      const result = await client.callTool({
+        name: 'persist_fleet_route',
+        arguments: {
+          runId: 'mcp-route', generation: 1,
+          intent: { taskId: 'task-1', summary: 'route me' },
+        },
+      });
+      const payload = JSON.parse(result.content[0].text);
+      assert.equal(payload.decision.nodeId, 'ec2-primary');
+      assert.equal(payload.run.latestRoute.nodeId, 'ec2-primary');
+    } finally { await client.close(); }
+  }, { fleetRouter: fakeRouter });
+});
+
+test('routeTask rechecks generation after async scheduling before persisting route', async () => {
+  const { PersistFlowService } = require('./src/persistflow/service');
+  const store = new MemoryAuthorityStore();
+  let service;
+  service = new PersistFlowService({
+    store,
+    fleetRouter: {
+      route: async (intent) => {
+        store.update('route-race', (state) => ({ ...state, generation: 2 }));
+        return {
+          taskId: intent.taskId, nodeId: 'ec2-primary',
+          decisionSource: 'typesafe', eligibleNodeIds: ['ec2-primary'],
+          typesafeScores: { 'ec2-primary': 2 }, evaluatedAt: new Date().toISOString(),
+        };
+      },
+    },
+  });
+  service.startRun({ runId: 'route-race', generation: 1 });
+  await assert.rejects(() => service.routeTask('route-race', {
+    generation: 1,
+    intent: { taskId: 'race', summary: 'race check' },
+  }), /STALE_GENERATION/);
+  assert.equal(service.inspectRun('route-race').latestRoute, undefined);
+});
