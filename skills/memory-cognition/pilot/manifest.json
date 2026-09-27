@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "scope": "project/menezesx2k26-byte/edu-trigonometria-pretemporada",
+  "repository": "https://github.com/menezesx2k26-byte/edu-trigonometria-pretemporada",
+  "current_ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea",
+  "sources": [
+    { "ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea", "path": "README.md", "kind": "project_doc" },
+    { "ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea", "path": "AUDIT.md", "kind": "project_doc" },
+    { "ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea", "path": "package.json", "kind": "runtime_config" },
+    { "ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea", "path": "wrangler.jsonc", "kind": "runtime_config" },
+    { "ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea", "path": "src/lib/progress.ts", "kind": "source" },
+    { "ref": "64c6d83", "path": "README.md", "kind": "historical_project_doc" },
+    { "ref": "64c6d83", "path": "wrangler.jsonc", "kind": "historical_runtime_config" }
+  ],
+  "history": { "ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea", "max_count": 20 },
+  "excluded": ["private PDFs and study materials", "personal chats", "account memory", "Engram records", "Drive", "credentials", "unrelated project data"],
+  "secret_scan": { "tracked_files": 28, "pattern_classes": ["GitHub/AWS/LLM API tokens", "bearer/JWT", "cookies/session tokens", "passwords/credentials", "private keys", "database connection strings"], "pattern_hits": 0, "status": "passed", "scanned_at": "2026-09-27" },
+  "engram": { "query_count": 1, "results": 0, "scope_filter": "project title prefix (relevance only, not security)" },
+  "hindsight_ingestion": "not run: no runtime/deployment/bank available"
+}
