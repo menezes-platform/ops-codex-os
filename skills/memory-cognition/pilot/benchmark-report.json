@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-27T13:59:27.740Z",
+  "generated_at": "2026-09-27T14:13:08.422Z",
   "scope": "project/menezesx2k26-byte/edu-trigonometria-pretemporada",
   "repo": "https://github.com/menezesx2k26-byte/edu-trigonometria-pretemporada",
   "current_ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea",
@@ -9,9 +9,17 @@
     "indexed_passages": 39,
     "corpusTextBytes": 13637,
     "serializedIndexBytes": 28241,
-    "ingestLatencyMs": 67.27612200000002,
+    "ingestLatencyMs": 67.46692599999999,
     "secret_scan": {
       "tracked_files": 28,
+      "pattern_classes": [
+        "GitHub/AWS/LLM API tokens",
+        "bearer/JWT",
+        "cookies/session tokens",
+        "passwords/credentials",
+        "private keys",
+        "database connection strings"
+      ],
       "pattern_hits": 0,
       "status": "passed",
       "scanned_at": "2026-09-27"
@@ -19,7 +27,7 @@
     "engramResults": 0
   },
   "baseline": {
-    "provider": "Git/docs BM25 + Engram adapter",
+    "provider": "Git/docs BM25; Engram project probe measured separately",
     "metrics": {
       "queryCount": 10,
       "answerableCount": 8,
@@ -36,8 +44,8 @@
       "contradictionCases": 1,
       "staleMemoryRate": 0,
       "temporalRetrievalAccuracy": 1,
-      "recallLatencyP50Ms": 0.21536899999998127,
-      "recallLatencyP95Ms": 1.1642010000000198,
+      "recallLatencyP50Ms": 0.20809900000000425,
+      "recallLatencyP95Ms": 1.2459949999999935,
       "queryBytes": 668,
       "estimatedQueryTokens": 171,
       "estimatedContextTokens": 6424,

@@ -320,7 +320,7 @@ async function main() {
     repo: manifest.repository,
     current_ref: manifest.current_ref,
     corpus: { manifest_sources: manifest.sources.length, indexed_passages: docs.length, corpusTextBytes: Buffer.byteLength(docs.map((doc) => doc.text).join('\n')), serializedIndexBytes: index.serializedBytes, ingestLatencyMs, secret_scan: manifest.secret_scan, engramResults: manifest.engram.results },
-    baseline: { provider: 'Git/docs BM25 + Engram adapter', metrics: baseline.metrics, questions: baseline.queryDetails },
+    baseline: { provider: 'Git/docs BM25; Engram project probe measured separately', metrics: baseline.metrics, questions: baseline.queryDetails },
     hindsight_shadow: hindsightShadow,
     flags: { COGNITION_ENABLED: flags.cognitionEnabled, HINDSIGHT_SHADOW_ENABLED: flags.hindsightShadowEnabled, HINDSIGHT_SERVING_ENABLED: false },
   };
