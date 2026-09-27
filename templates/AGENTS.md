@@ -30,6 +30,17 @@ This file contains repo-specific instructions for Codex.
 - Layout priorities:
 - Asset rules:
 
+## Project specification contract
+- This repository must have durable project-level sources of truth appropriate to its type before non-trivial work proceeds.
+- Map the local files that satisfy the global contract below. Reuse existing equivalent documents instead of duplicating them.
+- Product/system requirements:
+- Architecture:
+- Design system (UI projects only):
+- Security:
+- Testing:
+- Code style (when not fully enforced by tooling):
+- Feature specs/plans under `docs/superpowers/` do not replace the durable project-level documents above.
+
 ## Durable continuity
 - Treat `docs/context/*` and observable Git/repository state as durable project memory.
 - On resume, verify current branch/state and read the relevant context files before repeating previous work.
