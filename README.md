@@ -37,6 +37,7 @@ A continuidade segue o princípio de que **contexto do modelo não é histórico
 - `persistent-conversation-controller`: mantém workflows supervisionados vivos através de limites de conversas no navegador, com rollover preventivo e takeover verificado.
 - `llm-app-pattern-library`: consulta seletiva a padrões e exemplos de agentes, RAG, multimodal, voice, generative UI, always-on e multi-agent antes de introduzir arquitetura ou dependências novas.
 - `context-budget-manager`: controla o working set de contexto, usa carregamento progressivo e evita leituras, referências e reexploração desnecessárias sem sacrificar validação.
+- `memory-cognition-provider`: recuperação neutra e limitada por projeto, com candidatos apenas para revisão; Engram continua episódico e Hindsight permanece opcional em shadow.
 - `reuse-first-router`: procura primeiro por soluções existentes e canivetes suíços antes de autorizar implementação customizada.
 - `media-transcriber`: transcreve áudio/vídeo e URLs de mídia, incluindo Instagram Reels, com aquisição resiliente e ASR local.
 - `/revise`: rigorous code review orchestration with deterministic checks, PR-Agent, reviewdog, and OpenReviewer-style refute-or-drop verification.
