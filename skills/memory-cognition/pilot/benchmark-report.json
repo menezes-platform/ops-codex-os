@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-27T13:59:27.740Z",
+  "scope": "project/menezesx2k26-byte/edu-trigonometria-pretemporada",
+  "repo": "https://github.com/menezesx2k26-byte/edu-trigonometria-pretemporada",
+  "current_ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea",
+  "corpus": {
+    "manifest_sources": 7,
+    "indexed_passages": 39,
+    "corpusTextBytes": 13637,
+    "serializedIndexBytes": 28241,
+    "ingestLatencyMs": 67.27612200000002,
+    "secret_scan": {
+      "tracked_files": 28,
+      "pattern_hits": 0,
+      "status": "passed",
+      "scanned_at": "2026-09-27"
+    },
+    "engramResults": 0
+  },
+  "baseline": {
+    "provider": "Git/docs BM25 + Engram adapter",
+    "metrics": {
+      "queryCount": 10,
+      "answerableCount": 8,
+      "unanswerableCount": 2,
+      "hitRate": 0.875,
+      "precisionAtK": 0.22499999999999998,
+      "recallAtK": 0.8125,
+      "mrr": 0.6145833333333334,
+      "correctAbstentionRate": null,
+      "relevanceAtK": 0.22499999999999998,
+      "unsupportedAnswers": null,
+      "abstentionMeasurement": "not measured: retrieval-only benchmark has no answer generator or semantic no-answer judgment",
+      "contradictionsDetected": 1,
+      "contradictionCases": 1,
+      "staleMemoryRate": 0,
+      "temporalRetrievalAccuracy": 1,
+      "recallLatencyP50Ms": 0.21536899999998127,
+      "recallLatencyP95Ms": 1.1642010000000198,
+      "queryBytes": 668,
+      "estimatedQueryTokens": 171,
+      "estimatedContextTokens": 6424,
+      "averageEstimatedContextTokens": 642.4,
+      "llmInputTokens": null,
+      "llmOutputTokens": null,
+      "llmCalls": 0,
+      "estimatedCostUsd": 0,
+      "contextBytes": 25678
+    },
+    "questions": [
+      {
+        "id": "factual-runtime",
+        "category": "factual",
+        "resultIds": [
+          "package.json@d95a196#file",
+          "README.md@d95a196#Estrutura",
+          "README.md@d95a196#Stack",
+          "AUDIT.md@d95a196#Validação"
+        ],
+        "scores": [
+          8.005,
+          2.8144,
+          2.7066,
+          2.5633
+        ],
+        "retrievedCount": 4,
+        "estimatedContextTokens": 412
+      },
+      {
+        "id": "architecture-progress",
+        "category": "architecture",
+        "resultIds": [
+          "src/lib/progress.ts@d95a196#file"
+        ],
+        "scores": [
+          4.6528
+        ],
+        "retrievedCount": 1,
+        "estimatedContextTokens": 1201
+      },
+      {
+        "id": "historical-release-slug",
+        "category": "historical",
+        "resultIds": [
+          "AUDIT.md@d95a196#Publicação",
+          "wrangler.jsonc@d95a196#file",
+          "wrangler.jsonc@64c6d83#file",
+          "README.md@d95a196#Estrutura",
+          "README.md@d95a196#Stack"
+        ],
+        "scores": [
+          5.0283,
+          4.8109,
+          3.3854,
+          2.8144,
+          2.7066
+        ],
+        "retrievedCount": 5,
+        "estimatedContextTokens": 211
+      },
+      {
+        "id": "temporal-old-campaign",
+        "category": "temporal",
+        "resultIds": [
+          "AUDIT.md@d95a196#Resultado-atual",
+          "AUDIT.md@d95a196#Banco-de-questões",
+          "README.md@d95a196#Princípios-didáticos",
+          "README.md@64c6d83#Princípios",
+          "README.md@d95a196#Validação"
+        ],
+        "scores": [
+          4.5819,
+          4.3291,
+          3.5054,
+          3.3916,
+          3.3493
+        ],
+        "retrievedCount": 5,
+        "estimatedContextTokens": 366
+      },
+      {
+        "id": "keyword-storage-key",
+        "category": "keyword_exact",
+        "resultIds": [
+          "src/lib/progress.ts@d95a196#file"
+        ],
+        "scores": [
+          1.9901
+        ],
+        "retrievedCount": 1,
+        "estimatedContextTokens": 1201
+      },
+      {
+        "id": "semantic-resume",
+        "category": "semantic",
+        "resultIds": [],
+        "scores": [],
+        "retrievedCount": 0,
+        "estimatedContextTokens": 0
+      },
+      {
+        "id": "current-pages-name",
+        "category": "contradictory",
+        "resultIds": [
+          "README.md@d95a196#Estrutura",
+          "AUDIT.md@d95a196#Publicação",
+          "wrangler.jsonc@d95a196#file",
+          "README.md@64c6d83#Cloudflare-Pages",
+          "wrangler.jsonc@64c6d83#file"
+        ],
+        "scores": [
+          9.2002,
+          8.2188,
+          4.3146,
+          3.9758,
+          3.0362
+        ],
+        "retrievedCount": 5,
+        "estimatedContextTokens": 265
+      },
+      {
+        "id": "test-and-build",
+        "category": "coding_convention",
+        "resultIds": [
+          "README.md@d95a196#Validação",
+          "package.json@d95a196#file",
+          "README.md@64c6d83#Validar",
+          "README.md@d95a196#Cloudflare-Pages",
+          "AUDIT.md@d95a196#Publicação"
+        ],
+        "scores": [
+          5.2859,
+          4.7065,
+          4.5472,
+          4.438,
+          3.7086
+        ],
+        "retrievedCount": 5,
+        "estimatedContextTokens": 366
+      },
+      {
+        "id": "no-database",
+        "category": "absence",
+        "resultIds": [
+          "src/lib/progress.ts@d95a196#file"
+        ],
+        "scores": [
+          3.211
+        ],
+        "retrievedCount": 1,
+        "estimatedContextTokens": 1201
+      },
+      {
+        "id": "no-runtime-status",
+        "category": "absence",
+        "resultIds": [
+          "src/lib/progress.ts@d95a196#file",
+          "commit:62ce00c"
+        ],
+        "scores": [
+          1.9901,
+          0.8778
+        ],
+        "retrievedCount": 2,
+        "estimatedContextTokens": 1201
+      }
+    ]
+  },
+  "hindsight_shadow": {
+    "status": "unavailable",
+    "reason": "Shadow flags are off or no Hindsight URL is configured.",
+    "metrics": null
+  },
+  "flags": {
+    "COGNITION_ENABLED": false,
+    "HINDSIGHT_SHADOW_ENABLED": false,
+    "HINDSIGHT_SERVING_ENABLED": false
+  }
+}
