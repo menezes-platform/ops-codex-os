@@ -1,0 +1,11 @@
+{
+  "name": "@menezes-platform/memory-cognition",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "evaluate:pilot": "node scripts/evaluate-pilot.js"
+  },
+  "engines": { "node": ">=22 <25" }
+}

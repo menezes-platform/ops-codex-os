@@ -1,0 +1,12 @@
+[
+  { "id": "factual-runtime", "category": "factual", "query": "What Astro version is declared in the current package.json?", "answerable": true, "expected": ["package.json@d95a196#file", "README.md@d95a196#Stack"] },
+  { "id": "architecture-progress", "category": "architecture", "query": "Where does the browser persist answered question progress between sessions?", "answerable": true, "expected": ["src/lib/progress.ts@d95a196#file"] },
+  { "id": "historical-release-slug", "category": "historical", "query": "Which Cloudflare Pages project name was configured at the first public release?", "answerable": true, "expected": ["wrangler.jsonc@64c6d83#file"] },
+  { "id": "temporal-old-campaign", "category": "temporal", "query": "Quantas questões fechadas existiam na versão inicial antes da Forja Polinomial?", "answerable": true, "expected": ["README.md@64c6d83#Princípios"] },
+  { "id": "keyword-storage-key", "category": "keyword_exact", "query": "Find the exact STORAGE_KEY identifier and source path.", "answerable": true, "expected": ["src/lib/progress.ts@d95a196#file"] },
+  { "id": "semantic-resume", "category": "semantic", "query": "How can a student continue work after closing and reopening the page?", "answerable": true, "expected": ["src/lib/progress.ts@d95a196#file", "README.md@d95a196#Interface"] },
+  { "id": "current-pages-name", "category": "contradictory", "query": "Qual nome de projeto Cloudflare Pages aparece no wrangler.jsonc atual?", "answerable": true, "expected": ["wrangler.jsonc@d95a196#file", "README.md@d95a196#Cloudflare-Pages"], "stale_evidence": ["wrangler.jsonc@64c6d83#file", "README.md@64c6d83#Cloudflare-Pages"] },
+  { "id": "test-and-build", "category": "coding_convention", "query": "What commands run the project's tests and production build?", "answerable": true, "expected": ["README.md@d95a196#Validação", "package.json@d95a196#file"] },
+  { "id": "no-database", "category": "absence", "query": "Which PostgreSQL database currently stores remote student progress?", "answerable": false, "expected": [] },
+  { "id": "no-runtime-status", "category": "absence", "query": "Is the current production deployment healthy right now?", "answerable": false, "expected": [] }
+]
