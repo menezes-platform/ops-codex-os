@@ -23,6 +23,25 @@ These are persistent cross-project operating rules for Codex.
 - When choosing custom implementation despite a plausible existing solution, record the concrete reason rather than silently reinventing it.
 - Reuse concepts and patterns even when the dependency itself is unsuitable.
 
+## Hard project specification contract
+- Treat durable project specification as a mandatory gate for every non-trivial project. Do not rely on chat history or feature specs as the only description of the system.
+- Before substantive product, architecture, or implementation work, identify the repository's durable project-level sources of truth and read the smallest relevant set.
+- The baseline contract is role-based, not filename cargo-culting:
+  - `AGENTS.md` — how agents must operate in this repository.
+  - `README.md` — human entrypoint and project orientation.
+  - Product requirements — normally `docs/PRD.md` for products/apps; infrastructure, agent/tooling, research, or library repos may use an equivalent such as `docs/SYSTEM_REQUIREMENTS.md` when that better matches the domain.
+  - `docs/ARCHITECTURE.md` or an equivalent durable architecture document for non-trivial systems.
+  - `docs/DESIGN_SYSTEM.md` or an equivalent only for user-facing/UI projects where visual/interaction consistency is material.
+  - `docs/SECURITY.md` when the project crosses trust boundaries, handles auth/secrets/sensitive data, performs external writes, or exposes networked capabilities.
+  - `docs/TESTING.md` for code repositories unless the complete strategy and gates are already durably specified elsewhere.
+  - `docs/CODE_STYLE.md` only when meaningful conventions are not fully enforced by tooling/configuration.
+- Existing equivalent documents satisfy the contract. Reuse and map them; never create duplicate placeholder Markdown merely to satisfy a filename checklist.
+- Project-level specs and feature-level Superpowers artifacts have different authority: project specs describe the durable product/system; `docs/superpowers/specs/*` describe a specific change; `docs/superpowers/plans/*` describe how that change will be executed. A feature spec or plan does not substitute for missing durable project truth.
+- Keep the hierarchy explicit when applicable: global agent rules -> project `AGENTS.md` -> durable project specs -> feature spec -> implementation plan -> implementation -> durable state/handoff.
+- When a substantive change alters product intent, architecture, design language, security boundaries, or validation gates, update the corresponding durable project document in the same workstream.
+- For legacy repositories, do not block a trivial safe fix solely because the full contract has not yet been normalized. Before the next non-trivial product or architectural change, reconcile existing documentation and establish the missing durable sources of truth.
+- This is a hard operating rule across projects. Do not silently skip it; if the required durable source cannot be established, surface the gap explicitly before proceeding with non-trivial implementation.
+
 ## Browser automation efficiency
 - For browser automation, prefer tools and patterns that reduce repeated observe/act round-trips by composing deterministic multi-step actions when safe.
 - Prefer semantic snapshots, scoped page state, and targeted extraction over repeatedly loading full-page representations.
