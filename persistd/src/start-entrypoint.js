@@ -2,7 +2,15 @@ function chooseStartMode(env = process.env) {
   return Object.prototype.hasOwnProperty.call(env, 'PORT') ? 'web' : 'daemon';
 }
 
-function createProductionFleetRouter({ env = process.env, fleetConfig, fleetStore, clock = () => new Date() } = {}) {
+function createProductionRailwayProvider({ env = process.env, provider } = {}) {
+  if (String(env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') !== '1'
+    || String(env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') !== '1') return null;
+  if (provider) return provider;
+  const { RailwayAnonymousProvider } = require('./fleet/railway-anonymous');
+  return new RailwayAnonymousProvider();
+}
+
+function createProductionFleetRouter({ env = process.env, fleetConfig, fleetStore, railwayProvider, clock = () => new Date() } = {}) {
   if (String(env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') !== '1') return null;
   const { FleetRouter } = require('./fleet/router');
   const { TypeSafeFleetRouter } = require('./fleet/typesafe-router');
@@ -11,7 +19,12 @@ function createProductionFleetRouter({ env = process.env, fleetConfig, fleetStor
     endpoint: env.TYPESAFE_ENDPOINT,
     model: env.TYPESAFE_MODEL,
   });
-  return new FleetRouter({ fleetConfig, fleetStore, typesafeRouter, clock });
+  return new FleetRouter({
+    fleetConfig, fleetStore, typesafeRouter,
+    railwayProvider: railwayProvider || createProductionRailwayProvider({ env }),
+    railwayEnabled: String(env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') === '1',
+    clock,
+  });
 }
 
 function startWeb() {
@@ -29,9 +42,13 @@ function startWeb() {
   const fleetStore = createProductionFleetStore();
   const fleetConfig = loadProductionFleetConfig();
   const fleetNodeSecrets = productionFleetNodeSecrets();
-  const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore });
+  const ephemeralEnabled = String(process.env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') === '1'
+    && String(process.env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') === '1';
+  const ephemeralProvider = createProductionRailwayProvider({ env: process.env });
+  const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore, railwayProvider: ephemeralProvider });
   const server = createServer({
     store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetRouter,
+    ephemeralProvider, ephemeralEnabled,
   });
   server.listen(port, '0.0.0.0', () => {
     const address = server.address();
@@ -48,4 +65,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { chooseStartMode, createProductionFleetRouter, startWeb, start };
+module.exports = { chooseStartMode, createProductionRailwayProvider, createProductionFleetRouter, startWeb, start };

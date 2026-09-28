@@ -110,3 +110,24 @@ test('loop preserves predecessor when successor acquisition fails', async () => 
   );
   assert.deepEqual(released, []);
 });
+
+test('loop preserves predecessor and releases the unused successor when finalize fails', async () => {
+  let acquisitions = 0;
+  const released = [];
+  const provider = {
+    acquire: async () => worker('w' + (++acquisitions), '2026-09-27T05:00:00.000Z'),
+    release: async (value) => released.push(value.id),
+  };
+  const events = [];
+  const loop = new EphemeralWorkerLoop({ provider, checkpoint: async (event) => events.push(event.type) });
+  await assert.rejects(() => loop.run({ id: 'finalize-fail' }, {
+    executeWorker: async ({ attempt }) => attempt === 1
+      ? { status: 'handoff', resume: { step: 2 } }
+      : { status: 'completed' },
+    finalizeHandoff: async () => { throw new Error('FINALIZE_DENIED'); },
+  }), /FINALIZE_DENIED/);
+  assert.equal(acquisitions, 2);
+  assert.deepEqual(released, ['w2']);
+  assert.ok(events.includes('ephemeral.worker.handoff_failed'));
+  assert.ok(!events.includes('ephemeral.worker.handoff'));
+});

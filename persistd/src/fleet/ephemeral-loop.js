@@ -45,6 +45,7 @@ class EphemeralWorkerLoop {
     resume = null,
     executeWorker,
     finalizeHandoff = async () => {},
+    checkpoint = this.checkpoint,
   } = {}) {
     if (!job || typeof job !== 'object') throw new Error('EPHEMERAL_JOB_REQUIRED');
     const jobId = String(job.id || job.taskId || '').trim();
@@ -53,9 +54,20 @@ class EphemeralWorkerLoop {
     if (typeof finalizeHandoff !== 'function') throw new Error('EPHEMERAL_FINALIZER_REQUIRED');
 
     let attempt = 1;
-    let current = await this.provider.acquire({ workerId: jobId + '-g' + attempt, job, attempt });
+    await this.checkpointEvent(checkpoint, 'ephemeral.worker.acquire.started', { jobId, attempt, provider: 'railway-anonymous' });
+    let current;
+    try {
+      current = await this.provider.acquire({ workerId: jobId + '-g' + attempt, job, attempt });
+    } catch (error) {
+      await this.checkpointEvent(checkpoint, 'ephemeral.worker.acquire.failed', {
+        jobId, attempt, provider: 'railway-anonymous', error: String(error?.message || error).slice(0, 160),
+      });
+      throw error;
+    }
+    await this.checkpointEvent(checkpoint, 'ephemeral.worker.acquire.succeeded', { jobId, attempt, worker: workerView(this.provider, current) });
+    await this.checkpointEvent(checkpoint, 'ephemeral.worker.ready', { jobId, attempt, worker: workerView(this.provider, current) });
     let currentResume = resume;
-    await this.emit('ephemeral.worker.acquired', {
+    await this.checkpointEvent(checkpoint, 'ephemeral.worker.acquired', {
       jobId,
       attempt,
       worker: workerView(this.provider, current),
@@ -77,7 +89,7 @@ class EphemeralWorkerLoop {
           hardDeadlineAt: new Date(deadlineMs).toISOString(),
         }));
       } catch (error) {
-        await this.emit('ephemeral.worker.failed', {
+        await this.checkpointEvent(checkpoint, 'ephemeral.worker.failed', {
           jobId,
           attempt,
           worker: workerView(this.provider, current),
@@ -87,13 +99,14 @@ class EphemeralWorkerLoop {
       }
 
       if (outcome.status === 'completed') {
-        await this.emit('ephemeral.worker.completed', {
+        await this.checkpointEvent(checkpoint, 'ephemeral.worker.completed', {
           jobId,
           attempt,
           worker: workerView(this.provider, current),
           result: outcome.result ?? null,
         });
         await this.provider.release(current);
+        await this.checkpointEvent(checkpoint, 'ephemeral.worker.release', { jobId, attempt, worker: workerView(this.provider, current) });
         return {
           status: 'completed',
           attempts: attempt,
@@ -101,7 +114,7 @@ class EphemeralWorkerLoop {
         };
       }
 
-      await this.emit('ephemeral.worker.handoff.requested', {
+      await this.checkpointEvent(checkpoint, 'ephemeral.worker.handoff.requested', {
         jobId,
         attempt,
         worker: workerView(this.provider, current),
@@ -109,7 +122,7 @@ class EphemeralWorkerLoop {
       });
 
       if (attempt >= this.maxWorkers) {
-        await this.emit('ephemeral.worker.budget_exhausted', {
+        await this.checkpointEvent(checkpoint, 'ephemeral.worker.budget_exhausted', {
           jobId,
           attempt,
           worker: workerView(this.provider, current),
@@ -120,6 +133,9 @@ class EphemeralWorkerLoop {
 
       const nextAttempt = attempt + 1;
       let successor;
+      await this.checkpointEvent(checkpoint, 'ephemeral.worker.acquire.started', {
+        jobId, attempt: nextAttempt, provider: 'railway-anonymous', predecessor: workerView(this.provider, current),
+      });
       try {
         successor = await this.provider.acquire({
           workerId: jobId + '-g' + nextAttempt,
@@ -128,7 +144,10 @@ class EphemeralWorkerLoop {
           predecessor: current,
         });
       } catch (error) {
-        await this.emit('ephemeral.worker.successor_failed', {
+        await this.checkpointEvent(checkpoint, 'ephemeral.worker.acquire.failed', {
+          jobId, attempt: nextAttempt, provider: 'railway-anonymous', error: String(error?.message || error).slice(0, 160),
+        });
+        await this.checkpointEvent(checkpoint, 'ephemeral.worker.successor_failed', {
           jobId,
           attempt,
           worker: workerView(this.provider, current),
@@ -138,7 +157,10 @@ class EphemeralWorkerLoop {
         throw error;
       }
 
-      await this.emit('ephemeral.worker.successor_ready', {
+      await this.checkpointEvent(checkpoint, 'ephemeral.worker.acquire.succeeded', {
+        jobId, attempt: nextAttempt, worker: workerView(this.provider, successor),
+      });
+      await this.checkpointEvent(checkpoint, 'ephemeral.worker.successor_ready', {
         jobId,
         attempt,
         worker: workerView(this.provider, current),
@@ -156,7 +178,7 @@ class EphemeralWorkerLoop {
         });
       } catch (error) {
         await this.provider.release(successor);
-        await this.emit('ephemeral.worker.handoff_failed', {
+        await this.checkpointEvent(checkpoint, 'ephemeral.worker.handoff_failed', {
           jobId,
           attempt,
           worker: workerView(this.provider, current),
@@ -166,7 +188,7 @@ class EphemeralWorkerLoop {
         throw error;
       }
 
-      await this.emit('ephemeral.worker.handoff', {
+      await this.checkpointEvent(checkpoint, 'ephemeral.worker.handoff', {
         jobId,
         attempt,
         worker: workerView(this.provider, current),
@@ -175,17 +197,22 @@ class EphemeralWorkerLoop {
       });
 
       await this.provider.release(current);
+      await this.checkpointEvent(checkpoint, 'ephemeral.worker.release', { jobId, attempt, worker: workerView(this.provider, current) });
       current = successor;
       currentResume = outcome.resume ?? null;
       attempt = nextAttempt;
 
-      await this.emit('ephemeral.worker.acquired', {
+      await this.checkpointEvent(checkpoint, 'ephemeral.worker.acquired', {
         jobId,
         attempt,
         worker: workerView(this.provider, current),
         resumed: true,
       });
     }
+  }
+
+  async checkpointEvent(checkpoint, type, payload) {
+    await checkpoint({ type, at: this.clock().toISOString(), ...payload });
   }
 }
 

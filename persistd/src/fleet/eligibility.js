@@ -59,9 +59,15 @@ function eligibleNodes({ config, snapshot, intent } = {}) {
   return candidates.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-function deterministicOrder(candidates, intent) {
+function deterministicOrder(candidates, intent, { honorPreferredCapabilities = false } = {}) {
   const scratch = Number(intent?.estimatedScratchBytes || 0);
+  const preferred = new Set(intent?.preferredCapabilities || []);
   return [...candidates].sort((a, b) => {
+    if (honorPreferredCapabilities) {
+      const aPreferred = (a.capabilities || []).filter((capability) => preferred.has(capability)).length;
+      const bPreferred = (b.capabilities || []).filter((capability) => preferred.has(capability)).length;
+      if (bPreferred !== aPreferred) return bPreferred - aPreferred;
+    }
     if (b.cachedArtifactCount !== a.cachedArtifactCount) return b.cachedArtifactCount - a.cachedArtifactCount;
     const aRatio = (a.freeDiskBytes - scratch) / a.totalDiskBytes;
     const bRatio = (b.freeDiskBytes - scratch) / b.totalDiskBytes;

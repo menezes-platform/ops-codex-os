@@ -187,6 +187,7 @@ class RailwayAnonymousProvider {
     this.execGuardMs = Number(execGuardMs);
     this.clock = clock;
     this.runProcess = runProcessImpl;
+    this.acquireTail = Promise.resolve();
   }
 
   sshBaseArgs(keyPath) {
@@ -219,8 +220,21 @@ class RailwayAnonymousProvider {
     };
   }
 
-  async acquire({ workerId } = {}) {
-    if (this.quotaStore.remaining(this.dailyLimit) <= 0) {
+  remaining() {
+    return this.quotaStore.remaining(this.dailyLimit);
+  }
+
+  async acquire(options = {}) {
+    const prior = this.acquireTail;
+    let unlock;
+    this.acquireTail = new Promise((resolve) => { unlock = resolve; });
+    await prior;
+    try { return await this.acquireOne(options); }
+    finally { unlock(); }
+  }
+
+  async acquireOne({ workerId } = {}) {
+    if (this.remaining() <= 0) {
       throw new Error('RAILWAY_ANON_DAILY_BUDGET_EXHAUSTED');
     }
 
@@ -238,11 +252,17 @@ class RailwayAnonymousProvider {
       throw new Error('RAILWAY_ANON_KEYGEN_FAILED');
     }
 
-    const connected = await this.runProcess(
-      this.sshBinary,
-      this.sshBaseArgs(keyPath),
-      { timeoutMs: this.connectTimeoutMs },
-    );
+    let connected;
+    try {
+      connected = await this.runProcess(
+        this.sshBinary,
+        this.sshBaseArgs(keyPath),
+        { timeoutMs: this.connectTimeoutMs },
+      );
+    } catch (error) {
+      await this.release({ keyPath }, { cleanupKey: true });
+      throw new Error('RAILWAY_ANON_CONNECT_FAILED:' + String(error?.code || 'process'));
+    }
 
     let manifest;
     try {

@@ -106,6 +106,8 @@ function createServer({
   fleetConfig = { nodes: [] },
   fleetNodeSecrets = {},
   fleetRouter = null,
+  ephemeralProvider = null,
+  ephemeralEnabled = false,
   driveAuth = createDriveTokenProviderFromEnv(),
   objectStore = undefined,
 } = {}) {
@@ -121,6 +123,8 @@ function createServer({
     fleetStore,
     fleetConfig,
     fleetRouter,
+    ephemeralProvider,
+    ephemeralEnabled,
     driveAuth,
     objectStore: resolvedObjectStore || null,
   });
