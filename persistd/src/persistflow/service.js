@@ -197,8 +197,10 @@ class PersistFlowService {
     const command = String(input.command || '');
     if (!operationId || operationId.length > 128) throw new Error('OPERATION_ID_INVALID');
     if (!command.trim() || command.length > 8192 || command.includes('\0')) throw new Error('EPHEMERAL_COMMAND_INVALID');
+    const commandDigest = crypto.createHash('sha256').update(command, 'utf8').digest('hex');
     const state = this.assertRunGeneration(runId, input.generation);
     const existing = state.ephemeralOperations?.[operationId];
+    if (existing && existing.commandDigest !== commandDigest) throw new Error('OPERATION_ID_CONFLICT');
     const active = this.activeEphemeralOperations.get(runId + '\0' + operationId);
     if (active) return active;
     if (existing && existing.status !== 'PREPARING') {
@@ -218,7 +220,7 @@ class PersistFlowService {
           status: 'PREPARING',
           provider: null,
           workerGeneration: 0,
-          commandDigest: crypto.createHash('sha256').update(command, 'utf8').digest('hex'),
+          commandDigest,
           correlationId: String(input.correlationId || crypto.randomUUID()).slice(0, 128),
           events: [],
           createdAt: now,

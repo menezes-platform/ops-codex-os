@@ -42,11 +42,14 @@ An attempted local clone of private `ops-gabriel-ops` failed because this shell 
 - A non-provisioning DNS check from this execution runtime returned `EAI_AGAIN` for `railway.new`. The provider removes its generated key material after the manifest error; its local success-only quota ledger remained absent. The outcome of the attempted anonymous SSH request on Railway's side cannot be verified from this environment, so no further anonymous provisioning attempt was made.
 - The live Cloudflare Worker settings for `gabriel-ops` expose binding names only in this audit; there is no PersistFlow endpoint/token binding. Railway project inventory also contains no deployed PersistFlow authority. Thus this branch has no identified production endpoint on which to enable the feature or prove a production restart/disconnect path.
 - Final local verification after installing declared root dependencies: Railway/PersistFlow focused tests 36/36; PersistFlow suite 230/230; root suite 12/12; `git diff --check` clean. No lint/typecheck script is defined in either package manifest.
-- Production rollout, real Railway completion proof, Desktop-offload proof, CI result, and rollback exercise remain blocked. Both required gates remain default-off; no Railway persistent service or deployment was changed.
+- Reusing an `operationId` with a different command initially returned the prior result. The service now rejects that mismatch as `OPERATION_ID_CONFLICT`; a regression assertion verifies the mismatch cannot silently masquerade as an idempotent retry.
+- Production rollout, real Railway completion proof, Desktop-offload proof, and rollback exercise remain blocked; GitHub Analyze and CodeQL checks passed. Both required gates remain default-off; no Railway persistent service or deployment was changed.
+- Restart/retry of a completed operation is deduplicated. For an operation interrupted mid-execution, restart leaves its durable status inspectable and suppresses a duplicate, but does not automatically reattach to the running SSH process; automated recovery after controller restart remains unimplemented.
 
 ## Prevention
 
 - Keep executable composition tests at the production PersistFlow service boundary, not only provider/loop unit tests.
+- Bind every durable operation ID to its command digest; treat any digest mismatch as an idempotency conflict.
 - Verify the actual deployed source repository and runtime before describing a branch as rolled out.
 - Keep Railway feature gates off until the target PersistFlow authority is identified, durable storage is confirmed, and a bounded runtime smoke is recorded.
 - Do not treat a FleetRouter node choice as execution proof until a real node dispatch contract exists.

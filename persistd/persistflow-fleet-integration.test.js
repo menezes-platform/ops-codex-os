@@ -261,6 +261,11 @@ test('ephemeral operation idempotency survives service restart and client retry'
   const retry = await restarted.executeEphemeralTask('restart-run', args);
   assert.equal(executions, 1);
   assert.equal(retry.operation.status, 'COMPLETED');
+  await assert.rejects(
+    () => restarted.executeEphemeralTask('restart-run', { ...args, command: 'false' }),
+    { message: 'OPERATION_ID_CONFLICT' },
+  );
+  assert.equal(executions, 1);
 });
 
 test('PersistFlow restart inspects an already acquired operation without launching a duplicate worker', async () => {
