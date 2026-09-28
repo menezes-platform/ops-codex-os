@@ -39,6 +39,7 @@ A continuidade segue o princípio de que **contexto do modelo não é histórico
 - `context-budget-manager`: controla o working set de contexto, usa carregamento progressivo e evita leituras, referências e reexploração desnecessárias sem sacrificar validação.
 - `memory-cognition-provider`: recuperação neutra e limitada por projeto, com candidatos apenas para revisão; Engram continua episódico e Hindsight permanece opcional em shadow.
 - `reuse-first-router`: procura primeiro por soluções existentes e canivetes suíços antes de autorizar implementação customizada.
+- `pdf-production-router`: escolhe a stack e o design system para PDFs bonitos/reutilizáveis; Typst é o padrão editorial, WeasyPrint cobre layouts HTML/CSS, pdfme templates orientados a dados e React-PDF integração React/Node.
 - `media-transcriber`: transcreve áudio/vídeo e URLs de mídia, incluindo Instagram Reels, com aquisição resiliente e ASR local.
 - `/revise`: rigorous code review orchestration with deterministic checks, PR-Agent, reviewdog, and OpenReviewer-style refute-or-drop verification.
 
@@ -146,6 +147,7 @@ NovoProjeto/
 - trate Git/repositório como evidência autoritativa de execução
 - use carregamento progressivo de contexto: resumo curto -> visão geral -> detalhe apenas quando necessário
 - procure primeiro no vendor toolkit antes de pesquisa ampla ou implementação customizada
+- para PDFs editoriais/educacionais/profissionais, use `pdf-production-router` e reaproveite design systems/templates antes de redesenhar o documento do zero
 - consulte `public-apis/public-apis` antes de criar scraping ou integração web customizada quando uma API pública puder resolver a necessidade
 - todo frontend não trivial passa automaticamente pelo `frontend-director`; o diretor usa `design-agent-skills`, o cohort de 42, `motion-primitives`, `watermelon-platform` e outras referências apenas quando materialmente necessário
 - para motion/UI e libraries visuais, priorize `motion-primitives`, `watermelon-platform` e `haikei.app` antes de reinventar assets ou componentes
