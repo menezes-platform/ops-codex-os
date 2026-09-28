@@ -96,6 +96,8 @@ function normalizeRouteIntent(value = {}) {
     artifactRefs,
     requiresInteractiveUi: value.requiresInteractiveUi === true,
     requiresGpu: value.requiresGpu === true,
+    requiresLocalExecution: value.requiresLocalExecution === true,
+    requiresBrowserSession: value.requiresBrowserSession === true,
     parallelSafe: value.parallelSafe === true,
     pinnedNodeId: value.pinnedNodeId ? String(value.pinnedNodeId) : null,
   };

@@ -87,6 +87,65 @@ test('provider creates a fresh SSH identity, reads manifest, and enforces local 
   assert.equal(fs.existsSync(worker.keyPath), false);
 });
 
+test('provider exposes quota remaining without acquiring anonymous capacity', () => {
+  const provider = new RailwayAnonymousProvider({
+    dailyLimit: 3,
+    quotaStore: { remaining: (limit) => limit - 2 },
+  });
+  assert.equal(provider.remaining(), 1);
+});
+
+test('concurrent acquisitions serialize quota checks so one remaining box cannot become two', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'railway-provider-concurrency-'));
+  let used = 0;
+  let sshCalls = 0;
+  const provider = new RailwayAnonymousProvider({
+    keyRoot: path.join(root, 'keys'),
+    dailyLimit: 1,
+    clock: () => new Date('2026-09-28T02:00:00.000Z'),
+    quotaStore: { remaining: (limit) => Math.max(0, limit - used), recordUse: () => ({ used: ++used }) },
+    runProcessImpl: async (file, args) => {
+      if (file === 'ssh-keygen') {
+        const keyPath = args[args.indexOf('-f') + 1];
+        fs.writeFileSync(keyPath, 'private', { mode: 0o600 });
+        fs.writeFileSync(keyPath + '.pub', 'public');
+        return { code: 0, stdout: '', stderr: '', timedOut: false };
+      }
+      sshCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return { code: 0, stdout: JSON.stringify(manifest({ build_expires_at: '2026-09-28T03:00:00.000Z' })) + '\n', stderr: '', timedOut: false };
+    },
+  });
+  const results = await Promise.allSettled([
+    provider.acquire({ workerId: 'parallel-1' }),
+    provider.acquire({ workerId: 'parallel-2' }),
+  ]);
+  assert.equal(results.filter((result) => result.status === 'fulfilled').length, 1);
+  assert.equal(results.filter((result) => result.status === 'rejected').length, 1);
+  assert.equal(sshCalls, 1);
+});
+
+test('provider removes generated key material when SSH connection setup rejects', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'railway-provider-connect-failure-'));
+  const provider = new RailwayAnonymousProvider({
+    keyRoot: path.join(root, 'keys'),
+    clock: () => new Date('2026-09-28T02:00:00.000Z'),
+    quotaStore: { remaining: () => 3, recordUse: () => { throw new Error('not reached'); } },
+    runProcessImpl: async (file, args) => {
+      if (file === 'ssh-keygen') {
+        const keyPath = args[args.indexOf('-f') + 1];
+        fs.writeFileSync(keyPath, 'private', { mode: 0o600 });
+        fs.writeFileSync(keyPath + '.pub', 'public');
+        return { code: 0, stdout: '', stderr: '', timedOut: false };
+      }
+      throw Object.assign(new Error('network detail must not be persisted'), { code: 'ECONNRESET' });
+    },
+  });
+  await assert.rejects(() => provider.acquire({ workerId: 'connect-failure' }), /RAILWAY_ANON_CONNECT_FAILED:ECONNRESET/);
+  assert.equal(fs.existsSync(path.join(root, 'keys', 'connect-failure')), false);
+  assert.equal(fs.existsSync(path.join(root, 'keys', 'connect-failure.pub')), false);
+});
+
 test('provider exec reuses worker key and strips the repeated manifest', async () => {
   const calls = [];
   const fakeRun = async (file, args, options) => {

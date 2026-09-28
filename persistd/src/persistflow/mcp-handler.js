@@ -112,11 +112,41 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
           artifactRefs: z.array(z.string()).default([]),
           requiresInteractiveUi: z.boolean().default(false),
           requiresGpu: z.boolean().default(false),
+          requiresLocalExecution: z.boolean().default(false),
+          requiresBrowserSession: z.boolean().default(false),
           parallelSafe: z.boolean().default(false),
           pinnedNodeId: z.string().optional(),
         }),
       }),
     }, async ({ runId, ...input }) => jsonResult(await service.routeTask(runId, input)));
+
+    server.registerTool('persist_fleet_execute_ephemeral', {
+      title: 'Execute one durable PersistFlow operation on eligible ephemeral capacity',
+      description: 'Route a bounded CLI operation through FleetRouter and, only when selected and eligible, execute it on a Railway anonymous worker. PersistFlow records the operation before remote acquisition; retry the same operationId to inspect/reconcile without duplicate execution.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        generation: z.number().int().positive(),
+        operationId: z.string().min(1).max(128),
+        correlationId: z.string().max(128).optional(),
+        command: z.string().min(1).max(8192),
+        intent: z.object({
+          taskId: z.string().min(1),
+          summary: z.string().min(1).max(2000),
+          repo: z.string().optional(),
+          ref: z.string().optional(),
+          requiredCapabilities: z.array(z.string()).default([]),
+          preferredCapabilities: z.array(z.string()).default([]),
+          estimatedScratchBytes: z.number().int().nonnegative().default(0),
+          artifactRefs: z.array(z.string()).default([]),
+          requiresInteractiveUi: z.boolean().default(false),
+          requiresGpu: z.boolean().default(false),
+          requiresLocalExecution: z.boolean().default(false),
+          requiresBrowserSession: z.boolean().default(false),
+          parallelSafe: z.boolean().default(false),
+          pinnedNodeId: z.string().optional(),
+        }),
+      }),
+    }, async ({ runId, ...input }) => jsonResult(await service.executeEphemeralTask(runId, input)));
 
     server.registerTool('persist_sandbox_create', {
       title: 'Create PersistFlow Sandbox workspace',
