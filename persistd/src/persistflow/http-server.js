@@ -128,10 +128,14 @@ function createServer({
     driveAuth,
     objectStore: resolvedObjectStore || null,
   });
+  const resolvedOwnerTokenDigest = ownerTokenDigest || mcpTokenDigest;
+  if (oauthStore && typeof oauthStore.synchronizeOwnerTokenDigest === 'function') {
+    oauthStore.synchronizeOwnerTokenDigest(resolvedOwnerTokenDigest);
+  }
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
   const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;
   const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl });
-  const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore, ownerTokenDigest: ownerTokenDigest || mcpTokenDigest }) : null;
+  const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore, ownerTokenDigest: resolvedOwnerTokenDigest }) : null;
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://persistflow.local');

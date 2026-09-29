@@ -22,6 +22,12 @@ function pkceS256(verifier) {
   return crypto.createHash('sha256').update(String(verifier || ''), 'utf8').digest('base64url');
 }
 
+function ownerDigestFingerprint(value) {
+  const digest = String(value || '').trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(digest)) return '';
+  return crypto.createHash('sha256').update(`persistflow-owner:${digest}`, 'utf8').digest('hex');
+}
+
 function isAllowedRedirectUri(value) {
   try {
     const url = new URL(value);
@@ -86,6 +92,29 @@ class FileOAuthStore {
     const result = fn(state);
     this.write(state);
     return result;
+  }
+
+  synchronizeOwnerTokenDigest(ownerTokenDigest) {
+    const fingerprint = ownerDigestFingerprint(ownerTokenDigest);
+    if (!fingerprint) {
+      return { changed: false, previousPresent: false, revoked: { codes: 0, accessTokens: 0, refreshTokens: 0 } };
+    }
+    return this.mutate((state) => {
+      const previous = String(state.ownerDigestFingerprint || '');
+      if (previous === fingerprint) {
+        return { changed: false, previousPresent: true, revoked: { codes: 0, accessTokens: 0, refreshTokens: 0 } };
+      }
+      const revoked = {
+        codes: Object.keys(state.codes || {}).length,
+        accessTokens: Object.keys(state.accessTokens || {}).length,
+        refreshTokens: Object.keys(state.refreshTokens || {}).length,
+      };
+      state.ownerDigestFingerprint = fingerprint;
+      state.codes = {};
+      state.accessTokens = {};
+      state.refreshTokens = {};
+      return { changed: true, previousPresent: Boolean(previous), revoked };
+    });
   }
 
   registerClient(metadata = {}) {

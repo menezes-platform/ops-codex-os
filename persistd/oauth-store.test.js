@@ -64,3 +64,46 @@ test('redirect URI validator allows HTTPS and loopback HTTP only', () => {
   assert.equal(isAllowedRedirectUri('http://localhost:3939/callback'), true);
   assert.equal(isAllowedRedirectUri('http://evil.test/callback'), false);
 });
+
+test('owner digest rotation preserves clients and revokes codes/access/refresh tokens', () => {
+  const dir = tempDir();
+  try {
+    const store = new FileOAuthStore(dir);
+    const redirectUri = 'https://chatgpt.com/callback';
+    const client = store.registerClient({ redirect_uris: [redirectUri], client_name: 'ChatGPT' });
+    const verifier = 'v'.repeat(64);
+    const code = store.issueAuthorizationCode({
+      clientId: client.client_id,
+      redirectUri,
+      codeChallenge: pkceS256(verifier),
+      resource,
+      scope: 'persistflow',
+    });
+    const pair = store.issueTokenPair({ clientId: client.client_id, resource, scope: 'persistflow' });
+
+    const first = store.synchronizeOwnerTokenDigest('a'.repeat(64));
+    assert.equal(first.changed, true);
+    assert.equal(first.previousPresent, false);
+    assert.equal(store.getClient(client.client_id).client_name, 'ChatGPT');
+    assert.equal(store.validateAccessToken(pair.access_token, resource), null);
+    assert.throws(
+      () => store.rotateRefreshToken({ refreshToken: pair.refresh_token, clientId: client.client_id, resource }),
+      /OAUTH_INVALID_GRANT/,
+    );
+    assert.throws(
+      () => store.redeemAuthorizationCode({ code, clientId: client.client_id, redirectUri, codeVerifier: verifier, resource }),
+      /OAUTH_INVALID_GRANT/,
+    );
+
+    const fresh = store.issueTokenPair({ clientId: client.client_id, resource, scope: 'persistflow' });
+    const same = store.synchronizeOwnerTokenDigest('a'.repeat(64));
+    assert.equal(same.changed, false);
+    assert.equal(store.validateAccessToken(fresh.access_token, resource).clientId, client.client_id);
+
+    const rotated = store.synchronizeOwnerTokenDigest('b'.repeat(64));
+    assert.equal(rotated.changed, true);
+    assert.equal(rotated.previousPresent, true);
+    assert.equal(store.getClient(client.client_id).client_name, 'ChatGPT');
+    assert.equal(store.validateAccessToken(fresh.access_token, resource), null);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
