@@ -86,6 +86,7 @@ function protectedResourceMetadata(origin) {
 function authorizationServerMetadata(origin) {
   return {
     issuer: origin,
+    authorization_response_iss_parameter_supported: true,
     authorization_endpoint: `${origin}/oauth/authorize`,
     token_endpoint: `${origin}/oauth/token`,
     registration_endpoint: `${origin}/oauth/register`,
@@ -148,6 +149,7 @@ function createOAuthHttpHandler({ store, ownerTokenDigest = '' } = {}) {
         const redirect = new URL(grant.redirectUri);
         redirect.searchParams.set('code', code);
         if (params.get('state')) redirect.searchParams.set('state', params.get('state'));
+        redirect.searchParams.set('iss', origin);
         res.writeHead(302, { location: redirect.href, 'cache-control': 'no-store' });
         res.end();
       } catch (error) {

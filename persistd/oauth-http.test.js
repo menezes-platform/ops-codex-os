@@ -34,6 +34,7 @@ test('publishes MCP protected-resource and OAuth authorization-server metadata',
     assert.equal(metadata.status, 200);
     const body = await metadata.json();
     assert.equal(body.issuer, origin);
+    assert.equal(body.authorization_response_iss_parameter_supported, true);
     assert.equal(body.authorization_endpoint, origin + '/oauth/authorize');
     assert.equal(body.token_endpoint, origin + '/oauth/token');
     assert.equal(body.registration_endpoint, origin + '/oauth/register');
@@ -104,6 +105,7 @@ test('authorization endpoint enforces PKCE/resource and owner approval', async (
     const location = new URL(approved.headers.get('location'));
     assert.equal(location.origin + location.pathname, redirectUri);
     assert.equal(location.searchParams.get('state'), 'state-123');
+    assert.equal(location.searchParams.get('iss'), origin);
     assert.ok(location.searchParams.get('code').startsWith('pf_code_'));
   }, { ownerTokenDigest });
 });
