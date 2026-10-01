@@ -191,7 +191,7 @@ Authenticated `listTools()` must include both new tool names.
 
 - [ ] **Step 2: Add a RED MCP checkpoint -> status round trip**
 
-Submit one clean checkpoint at generation 1, read status, and assert the same `headSha` and `checkpointDigest` are returned.
+Submit one clean checkpoint at generation 1, read status, and assert the same `headSha` and `checkpointDigest` are returned. Wrap the service with an ephemeral-provider spy and assert the status call does not invoke `acquire`, `exec`, or `release`.
 
 - [ ] **Step 3: Add a RED MCP stale-lineage conflict test**
 
