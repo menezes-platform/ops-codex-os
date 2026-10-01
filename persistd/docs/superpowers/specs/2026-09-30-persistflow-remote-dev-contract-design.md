@@ -1,6 +1,6 @@
 # PersistFlow Remote Dev Contract Design
 
-**Status:** Proposed for implementation planning  
+**Status:** PENDING — planned and intentionally deferred; implementation not started  
 **Date:** 2026-09-30  
 **Scope:** `persistd` + reusable agent skill in `ops-codex-os`
 
