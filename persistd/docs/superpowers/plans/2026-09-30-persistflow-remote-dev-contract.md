@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Status:** PENDING — implementation deferred.
+
 **Goal:** Add a provider-neutral remote-development contract to PersistFlow where each completed work unit is durably anchored by a clean Git commit plus a lineage-fenced PersistFlow checkpoint.
 
 **Architecture:** Keep `persist_fleet_execute_ephemeral` as the bounded execution primitive and keep ephemeral worker disks disposable. Add a typed remote-dev checkpoint/status layer to the existing PersistFlow authority, reuse the existing durable secret-safety rules, and ship a reusable agent skill that enforces inspect -> mutate -> verify -> commit -> checkpoint. Base44 remote-dev skills are a pinned MIT workflow reference only; no Base44 runtime dependency is introduced.
