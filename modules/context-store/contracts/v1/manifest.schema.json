@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://platform.menezes.dev/contracts/context-store/v1/manifest.schema.json",
+  "title": "Context Store Index Manifest v1",
+  "$defs": {
+    "indexManifest": {
+      "type": "object",
+      "properties": {
+        "scope": { "type": "string", "pattern": "^project/[A-Za-z0-9][A-Za-z0-9._-]{0,99}/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$" },
+        "revision": { "type": "string", "minLength": 1 },
+        "generation": { "type": "integer", "minimum": 1 },
+        "role": { "type": "string", "enum": ["current", "previous"] },
+        "corpus_manifest_ref": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "lexical_profile": { "type": "string", "minLength": 1 },
+        "vector_profile": { "type": "string", "minLength": 1 },
+        "embedding_profile": { "type": "string", "minLength": 1 },
+        "chunking_profile": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["scope", "revision", "generation", "role", "corpus_manifest_ref", "lexical_profile", "vector_profile", "embedding_profile", "chunking_profile", "created_at"],
+      "additionalProperties": false
+    }
+  }
+}
