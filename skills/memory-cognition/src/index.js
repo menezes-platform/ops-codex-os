@@ -176,8 +176,12 @@ class RAGFlowAdapter extends MemoryCognitionProvider {
     this.sleep = sleep;
     this.random = random;
     this.metrics = metrics;
-    this.similarityThreshold = Math.max(0, Math.min(1, Number(similarityThreshold)));
-    this.vectorSimilarityWeight = Math.max(0, Math.min(1, Number(vectorSimilarityWeight)));
+    const boundedNumber = (value, fallback, minimum, maximum) => {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? Math.max(minimum, Math.min(maximum, numeric)) : fallback;
+    };
+    this.similarityThreshold = boundedNumber(similarityThreshold, 0.2, 0, 1);
+    this.vectorSimilarityWeight = boundedNumber(vectorSimilarityWeight, 0.5, 0, 1);
     this.knnTopK = Math.max(1, Math.min(2048, Number(knnTopK) || 128));
     this.knnNumCandidates = Math.max(this.knnTopK, Math.min(4096, Number(knnNumCandidates) || 256));
     this.rerankCandidatesCount = Math.max(1, Math.min(512, Number(rerankCandidatesCount) || 32));
@@ -200,9 +204,13 @@ class RAGFlowAdapter extends MemoryCognitionProvider {
       rerank: Boolean(this.rerankId),
       derive: false,
       explain: false,
-      securityIsolation: true,
+      securityIsolation: false,
     });
-    this.isolation = Object.freeze({ kind: 'explicit-scope-to-dataset-allowlist', securityBoundary: true });
+    this.isolation = Object.freeze({
+      kind: 'explicit-scope-to-dataset-allowlist',
+      securityBoundary: false,
+      note: 'code-level filtering only; live backend isolation is not yet proven',
+    });
   }
 
   datasetsForScope(scope) {
