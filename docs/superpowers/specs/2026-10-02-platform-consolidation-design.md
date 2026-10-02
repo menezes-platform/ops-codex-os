@@ -1,8 +1,8 @@
 # Platform Consolidation Architecture Design
 
-**Date:** 2026-10-02  
-**Status:** Design approved in brainstorming; pending written-spec review  
-**Scope:** Entire Gabriel agent/runtime/context platform  
+**Date:** 2026-10-02
+**Status:** Design approved in brainstorming; pending written-spec review
+**Scope:** Entire Gabriel agent/runtime/context platform
 **Current architecture authority:** This document becomes the design input for the future Spec Kit. Until the migration completes, current production/runtime evidence remains authoritative for actual state.
 
 ## 1. Intent
