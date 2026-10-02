@@ -25,6 +25,29 @@ test('RAGFlowAdapter keeps project scope mapped to an explicit dataset allowlist
   assert.equal(calls, 0);
 });
 
+test('RAGFlowAdapter treats dataset filtering as defense in depth and falls back on invalid numeric config', async () => {
+  let request;
+  const adapter = new RAGFlowAdapter({
+    baseUrl: 'http://127.0.0.1:9380',
+    apiKey: 'synthetic-test-key',
+    datasetsByScope: { [scope]: [datasetId] },
+    vectorSimilarityWeight: 'not-a-number',
+    similarityThreshold: 'not-a-number',
+    fetchImpl: async (_url, init) => {
+      request = init;
+      return new Response(JSON.stringify({ code: 0, data: { chunks: [], total: 0 } }), { status: 200 });
+    },
+  });
+
+  await adapter.recall({ scope, query: 'runtime' });
+  const body = JSON.parse(request.body);
+  assert.equal(body.vector_similarity_weight, 0.5);
+  assert.equal(body.similarity_threshold, 0.2);
+  assert.equal(adapter.capabilities.securityIsolation, false);
+  assert.equal(adapter.isolation.securityBoundary, false);
+  assert.match(adapter.isolation.note, /not yet proven/i);
+});
+
 test('RAGFlowAdapter sends hybrid retrieval and normalizes provenance without serving foreign chunks', async () => {
   let request;
   const adapter = new RAGFlowAdapter({
