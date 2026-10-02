@@ -1,0 +1,29 @@
+name: memory-cognition
+
+on:
+  push:
+    branches:
+      - feat/ragflow-shadow-provider
+    paths:
+      - "skills/memory-cognition/**"
+      - ".github/workflows/memory-cognition.yml"
+  pull_request:
+    paths:
+      - "skills/memory-cognition/**"
+      - ".github/workflows/memory-cognition.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: skills/memory-cognition
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm test
