@@ -175,7 +175,8 @@ test('pilot ingestion allows local/private endpoints and rejects public endpoint
 test('feature flags default off and serving cannot be enabled before an explicit acceptance record', () => {
   assert.deepEqual(parseFeatureFlags({}), {
     cognitionEnabled: false, hindsightShadowEnabled: false,
-    hindsightServingEnabled: false, servingAllowed: false,
+    hindsightServingEnabled: false, ragflowShadowEnabled: false,
+    ragflowServingEnabled: false, servingAllowed: false,
   });
   assert.equal(parseFeatureFlags({ HINDSIGHT_SERVING_ENABLED: 'true' }).hindsightServingEnabled, false);
 });
