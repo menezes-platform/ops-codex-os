@@ -104,6 +104,16 @@ Se nenhuma das 42 resolver materialmente a tarefa, o router pode consultar o res
 As 42 skills não precisam mais ser coordenadas manualmente pelo usuário: o `frontend-director` escolhe `Lead`, `Support` e `Review` conforme a necessidade e mantém o `reuse-first-router` como infraestrutura subordinada de descoberta.
 
 
+## Platform consolidation architecture
+
+The approved consolidation architecture is governed by:
+
+- `docs/architecture/README.md` — architecture entrypoint;
+- `docs/architecture/spec-kit/00-constitution.md` — constitutional invariants;
+- `docs/superpowers/specs/2026-10-02-platform-consolidation-design.md` — approved design.
+
+The Spec Kit defines the target and migration gates. Current repository/runtime evidence remains authoritative for operational facts until the relevant migration phase completes.
+
 ## PersistFlow
 
 `PersistFlow` is the chat-native durable execution layer evolved from `persistd`. A long task belongs to a durable `RUN_ID`; ChatGPT conversations are short-lived controller generations that hand off through fenced two-phase claims. The system keeps one authoritative chat per run, archives predecessors, retries cleanup debt, and restores successors from durable state instead of chat memory.
