@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "validate:spec-kit": "node scripts/validate-spec-kit.js docs/architecture/spec-kit"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",
