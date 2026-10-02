@@ -5,6 +5,7 @@ const {
   createProvider,
   parseFeatureFlags,
 } = require('../src');
+const { buildRAGFlowProjection } = require('../scripts/prepare-ragflow-pilot');
 
 const scope = 'project/menezesx2k26-byte/edu-trigonometria-pretemporada';
 const repo = 'menezesx2k26-byte/edu-trigonometria-pretemporada';
@@ -156,4 +157,34 @@ test('RAGFlow flags default off and serving cannot be enabled by environment alo
   assert.equal(flags.ragflowShadowEnabled, true);
   assert.equal(flags.ragflowServingEnabled, false);
   assert.equal(flags.servingAllowed, false);
+});
+
+
+test('RAGFlow projection uses deterministic evidence IDs and preserves temporal provenance', () => {
+  const docs = [
+    {
+      id: 'README.md@d95a196#Stack',
+      text: 'Astro 7 and React 19',
+      stale: false,
+      provenance: {
+        repo,
+        ref: 'd95a196a07036e21e09e1e08cfdff9baaa2200ea',
+        path: 'README.md',
+        section: 'Stack',
+        timestamp: '2026-09-27T00:00:00Z',
+      },
+    },
+  ];
+  const first = buildRAGFlowProjection(docs, scope);
+  const second = buildRAGFlowProjection(docs, scope);
+  assert.deepEqual(first, second);
+  assert.equal(first.dataset.scope, scope);
+  assert.match(first.dataset.name, /^cognition-/);
+  assert.equal(first.chunks.length, 1);
+  assert.equal(first.chunks[0].metadata.source_id, docs[0].id);
+  assert.equal(first.chunks[0].metadata.repo, repo);
+  assert.equal(first.chunks[0].metadata.path, 'README.md');
+  assert.equal(first.chunks[0].metadata.section, 'Stack');
+  assert.equal(first.chunks[0].metadata.stale, false);
+  assert.equal(first.chunks[0].projection_id.length, 40);
 });
