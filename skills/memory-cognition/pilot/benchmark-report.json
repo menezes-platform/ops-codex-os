@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-27T14:13:08.422Z",
+  "generated_at": "2026-10-02T00:51:10.788Z",
   "scope": "project/menezesx2k26-byte/edu-trigonometria-pretemporada",
   "repo": "https://github.com/menezesx2k26-byte/edu-trigonometria-pretemporada",
   "current_ref": "d95a196a07036e21e09e1e08cfdff9baaa2200ea",
@@ -9,7 +9,7 @@
     "indexed_passages": 39,
     "corpusTextBytes": 13637,
     "serializedIndexBytes": 28241,
-    "ingestLatencyMs": 67.46692599999999,
+    "ingestLatencyMs": 47.395102,
     "secret_scan": {
       "tracked_files": 28,
       "pattern_classes": [
@@ -44,8 +44,8 @@
       "contradictionCases": 1,
       "staleMemoryRate": 0,
       "temporalRetrievalAccuracy": 1,
-      "recallLatencyP50Ms": 0.20809900000000425,
-      "recallLatencyP95Ms": 1.2459949999999935,
+      "recallLatencyP50Ms": 0.23353500000000338,
+      "recallLatencyP95Ms": 4.586944000000003,
       "queryBytes": 668,
       "estimatedQueryTokens": 171,
       "estimatedContextTokens": 6424,
@@ -223,6 +223,13 @@
   "flags": {
     "COGNITION_ENABLED": false,
     "HINDSIGHT_SHADOW_ENABLED": false,
-    "HINDSIGHT_SERVING_ENABLED": false
+    "HINDSIGHT_SERVING_ENABLED": false,
+    "RAGFLOW_SHADOW_ENABLED": false,
+    "RAGFLOW_SERVING_ENABLED": false
+  },
+  "ragflow_shadow": {
+    "status": "unavailable",
+    "reason": "RAGFlow shadow flags, URL, API key, or dataset ID are not configured.",
+    "metrics": null
   }
 }

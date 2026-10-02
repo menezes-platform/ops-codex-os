@@ -5,7 +5,10 @@
   "type": "commonjs",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "evaluate:pilot": "node scripts/evaluate-pilot.js"
+    "evaluate:pilot": "node scripts/evaluate-pilot.js",
+    "prepare:ragflow": "node scripts/prepare-ragflow-pilot.js"
   },
-  "engines": { "node": ">=22 <25" }
+  "engines": {
+    "node": ">=22 <25"
+  }
 }

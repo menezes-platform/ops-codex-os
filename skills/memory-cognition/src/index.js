@@ -145,6 +145,221 @@ class EngramAdapter extends MemoryCognitionProvider {
   }
 }
 
+
+class RAGFlowAdapter extends MemoryCognitionProvider {
+  constructor({
+    baseUrl,
+    apiKey,
+    datasetsByScope = {},
+    fetchImpl = globalThis.fetch,
+    timeoutMs = 2500,
+    attempts = 2,
+    sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    random = Math.random,
+    metrics = new Metrics(),
+    similarityThreshold = 0.2,
+    vectorSimilarityWeight = 0.5,
+    knnTopK = 128,
+    knnNumCandidates = 256,
+    rerankCandidatesCount = 32,
+    rerankId = null,
+    includeKnowledgeCompilation = false,
+  }) {
+    super({ provider: 'ragflow' });
+    if (!baseUrl || typeof fetchImpl !== 'function') throw new Error('RAGFlow URL and fetch transport are required');
+    if (typeof apiKey !== 'string' || !apiKey.trim()) throw new Error('RAGFlow API key is required');
+    this.baseUrl = baseUrl.replace(/\/+$/, '');
+    this.apiKey = apiKey;
+    this.fetchImpl = fetchImpl;
+    this.timeoutMs = timeoutMs;
+    this.attempts = Math.max(1, Math.min(2, attempts));
+    this.sleep = sleep;
+    this.random = random;
+    this.metrics = metrics;
+    const boundedNumber = (value, fallback, minimum, maximum) => {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? Math.max(minimum, Math.min(maximum, numeric)) : fallback;
+    };
+    this.similarityThreshold = boundedNumber(similarityThreshold, 0.2, 0, 1);
+    this.vectorSimilarityWeight = boundedNumber(vectorSimilarityWeight, 0.5, 0, 1);
+    this.knnTopK = Math.max(1, Math.min(2048, Number(knnTopK) || 128));
+    this.knnNumCandidates = Math.max(this.knnTopK, Math.min(4096, Number(knnNumCandidates) || 256));
+    this.rerankCandidatesCount = Math.max(1, Math.min(512, Number(rerankCandidatesCount) || 32));
+    this.rerankId = typeof rerankId === 'string' && rerankId.trim() ? rerankId.trim() : null;
+    this.includeKnowledgeCompilation = includeKnowledgeCompilation === true;
+    this.datasetsByScope = new Map();
+    for (const [rawScope, ids] of Object.entries(datasetsByScope)) {
+      const canonical = canonicalProjectScope(rawScope);
+      const normalizedIds = Array.isArray(ids)
+        ? [...new Set(ids.filter((id) => typeof id === 'string' && id.trim()).map((id) => id.trim()))]
+        : [];
+      if (!normalizedIds.length) throw new Error('RAGFlow dataset allowlist must contain at least one dataset per scope');
+      this.datasetsByScope.set(canonical, Object.freeze(normalizedIds));
+    }
+    this.capabilities = Object.freeze({
+      recall: true,
+      semantic: true,
+      keyword: true,
+      hybrid: true,
+      rerank: Boolean(this.rerankId),
+      derive: false,
+      explain: false,
+      securityIsolation: false,
+    });
+    this.isolation = Object.freeze({
+      kind: 'explicit-scope-to-dataset-allowlist',
+      securityBoundary: false,
+      note: 'code-level filtering only; live backend isolation is not yet proven',
+    });
+  }
+
+  datasetsForScope(scope) {
+    const canonical = canonicalProjectScope(scope);
+    const datasetIds = this.datasetsByScope.get(canonical);
+    if (!datasetIds?.length) throw new Error('scope is not in the configured RAGFlow dataset allowlist');
+    return { scope: canonical, datasetIds };
+  }
+
+  async request(body) {
+    let lastError;
+    for (let attempt = 1; attempt <= this.attempts; attempt += 1) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+      const started = Date.now();
+      this.metrics.increment('requests');
+      try {
+        const response = await this.fetchImpl(`${this.baseUrl}/api/v1/retrieval`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${this.apiKey}`,
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+        if (response.status === 429) this.metrics.increment('rateLimits');
+        if (!response.ok) {
+          const error = new Error(`RAGFlow HTTP ${response.status}`);
+          error.status = response.status;
+          throw error;
+        }
+        let payload;
+        try { payload = await response.json(); } catch { throw new Error('RAGFlow malformed response'); }
+        if (!payload || typeof payload !== 'object') throw new Error('RAGFlow malformed response');
+        if (Number.isFinite(payload.code) && payload.code !== 0) {
+          const error = new Error('RAGFlow request rejected');
+          error.status = 400;
+          throw error;
+        }
+        this.metrics.increment('successes');
+        this.metrics.observeLatency(Date.now() - started);
+        return payload;
+      } catch (error) {
+        lastError = error;
+        const isTimeout = error?.name === 'AbortError';
+        if (isTimeout) this.metrics.increment('timeouts');
+        if (attempt < this.attempts && (isTimeout || !error?.status || error.status === 429 || error.status >= 500)) {
+          this.metrics.increment('retries');
+          const delay = Math.min(250, 30 * (2 ** (attempt - 1))) * (0.5 + this.random());
+          await this.sleep(delay);
+          continue;
+        }
+        this.metrics.increment('failures');
+        this.metrics.observeLatency(Date.now() - started);
+        throw new Error('RAGFlow request failed');
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    this.metrics.increment('failures');
+    throw new Error(lastError ? 'RAGFlow request failed' : 'RAGFlow request unavailable');
+  }
+
+  async recall(request) {
+    if (!request?.query?.trim()) throw new Error('query is required');
+    const { scope, datasetIds } = this.datasetsForScope(request.scope);
+    const [, owner, repo] = scope.split('/');
+    const repoName = `${owner}/${repo}`;
+    const limit = Math.min(20, Math.max(1, Number(request.limit) || 8));
+    const body = {
+      question: request.query,
+      dataset_ids: datasetIds,
+      page: 1,
+      page_size: limit,
+      similarity_threshold: this.similarityThreshold,
+      vector_similarity_weight: this.vectorSimilarityWeight,
+      knn_top_k: this.knnTopK,
+      knn_num_candidates: this.knnNumCandidates,
+      rerank_candidates_count: Math.max(limit, this.rerankCandidatesCount),
+      keyword: true,
+      highlight: false,
+      use_kg: request.evidenceFilters?.useKg === true,
+      toc_enhance: request.evidenceFilters?.tocEnhance === true,
+      include_knowledge_compilation: this.includeKnowledgeCompilation,
+      metadata_condition: {
+        logic: 'and',
+        conditions: [{ name: 'repo', comparison_operator: '=', value: repoName }],
+      },
+    };
+    if (this.rerankId) body.rerank_id = this.rerankId;
+    if (Array.isArray(request.evidenceFilters?.documentIds)) {
+      body.document_ids = request.evidenceFilters.documentIds
+        .filter((id) => typeof id === 'string' && id.trim())
+        .slice(0, 100);
+    }
+    if (Array.isArray(request.evidenceFilters?.crossLanguages)) {
+      body.cross_languages = request.evidenceFilters.crossLanguages
+        .filter((language) => typeof language === 'string' && language.trim())
+        .slice(0, 8);
+    }
+
+    const payload = await this.request(body);
+    const envelope = payload.data && typeof payload.data === 'object' ? payload.data : payload;
+    const rows = Array.isArray(envelope.chunks) ? envelope.chunks : [];
+    const allowedDatasets = new Set(datasetIds);
+    const normalized = [];
+
+    for (const row of rows.slice(0, limit)) {
+      if (!row || typeof row.content !== 'string' || !row.content.trim()) continue;
+      if (row.dataset_id && !allowedDatasets.has(row.dataset_id)) continue;
+      const metadata = row.document_metadata && typeof row.document_metadata === 'object'
+        ? row.document_metadata
+        : row.metadata && typeof row.metadata === 'object'
+          ? row.metadata
+          : {};
+      if (metadata.repo && String(metadata.repo).toLowerCase() !== repoName.toLowerCase()) continue;
+      normalized.push({
+        id: row.id,
+        text: row.content,
+        score: Number.isFinite(row.similarity) ? row.similarity : null,
+        retrievalMethod: this.rerankId ? 'ragflow-hybrid-rerank' : 'ragflow-hybrid',
+        recordedAt: metadata.observed_at ?? metadata.timestamp ?? null,
+        stale: metadata.stale === true,
+        provenance: {
+          repo: repoName,
+          ref: metadata.ref ?? metadata.commit ?? null,
+          path: metadata.path ?? row.document_name ?? null,
+          section: metadata.section ?? null,
+          timestamp: metadata.observed_at ?? metadata.timestamp ?? null,
+          datasetId: row.dataset_id ?? datasetIds[0],
+          documentId: row.document_id ?? null,
+          documentName: row.document_name ?? null,
+          vectorSimilarity: Number.isFinite(row.vector_similarity) ? row.vector_similarity : null,
+          termSimilarity: Number.isFinite(row.term_similarity) ? row.term_similarity : null,
+          provider: 'ragflow',
+          retrievalMethod: this.rerankId ? 'ragflow-hybrid-rerank' : 'ragflow-hybrid',
+          originalEvidenceRef: metadata.source_id ?? row.document_id ?? row.id ?? null,
+        },
+      });
+    }
+
+    this.metrics.increment('recalls');
+    this.metrics.increment('recallResults', normalized.length);
+    if (!normalized.length) this.metrics.increment('noResults');
+    return this.normalizeRecall(normalized, { ...request, scope, limit });
+  }
+}
+
 class HindsightAdapter extends MemoryCognitionProvider {
   constructor({ baseUrl, token, projectScopes = [], fetchImpl = globalThis.fetch, timeoutMs = 2500, attempts = 2, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), random = Math.random, metrics = new Metrics() }) {
     super({ provider: 'hindsight' });
@@ -408,6 +623,8 @@ function parseFeatureFlags(env = process.env) {
     cognitionEnabled: on(env.COGNITION_ENABLED),
     hindsightShadowEnabled: on(env.HINDSIGHT_SHADOW_ENABLED),
     hindsightServingEnabled: false,
+    ragflowShadowEnabled: on(env.RAGFLOW_SHADOW_ENABLED),
+    ragflowServingEnabled: false,
     servingAllowed: false,
   };
 }
@@ -426,32 +643,62 @@ function safeEvalSummary(baseline, shadow) {
   };
 }
 
-function createProvider({ flags = parseFeatureFlags(), baseline, hindsight, evaluate = () => {}, retry = {} }) {
+function createProvider({ flags = parseFeatureFlags(), baseline, hindsight, ragflow, evaluate = () => {}, retry = {} }) {
   if (!baseline || typeof baseline.recall !== 'function') throw new Error('baseline provider is required');
   const metrics = new Metrics();
-  let failures = 0;
-  let circuitOpenUntil = 0;
+  const states = new Map();
+
+  const shadowState = (name) => {
+    if (!states.has(name)) states.set(name, { failures: 0, circuitOpenUntil: 0 });
+    return states.get(name);
+  };
+
+  async function runShadow(name, provider, enabled, request, baselineItems) {
+    if (!enabled || !provider || typeof provider.recall !== 'function') return;
+    const state = shadowState(name);
+    if (Date.now() < state.circuitOpenUntil) {
+      metrics.increment('circuitOpen');
+      evaluate({
+        shadowProvider: name,
+        metrics: { circuitOpen: true },
+        baseline: baselineItems,
+        shadow: [],
+        shadowServed: false,
+      });
+      return;
+    }
+    try {
+      const shadowItems = await provider.recall(request);
+      state.failures = 0;
+      const summary = safeEvalSummary(baselineItems, shadowItems);
+      evaluate({
+        shadowProvider: name,
+        metrics: summary,
+        baseline: baselineItems,
+        shadow: shadowItems,
+        shadowServed: false,
+      });
+    } catch {
+      state.failures += 1;
+      if (state.failures >= 3) state.circuitOpenUntil = Date.now() + 30000;
+      metrics.increment('failures');
+      evaluate({
+        shadowProvider: name,
+        metrics: { failure: true, circuitOpen: state.circuitOpenUntil > Date.now() },
+        baseline: baselineItems,
+        shadow: [],
+        shadowServed: false,
+      });
+    }
+  }
+
   return {
     metrics,
     async recall(request) {
       const baselineItems = await baseline.recall(request);
-      if (!flags.cognitionEnabled || !flags.hindsightShadowEnabled || !hindsight) return baselineItems;
-      if (Date.now() < circuitOpenUntil) {
-        metrics.increment('circuitOpen');
-        evaluate({ metrics: { circuitOpen: true }, baseline: baselineItems, shadow: [], shadowServed: false });
-        return baselineItems;
-      }
-      try {
-        const shadowItems = await hindsight.recall(request);
-        failures = 0;
-        const summary = safeEvalSummary(baselineItems, shadowItems);
-        evaluate({ metrics: summary, baseline: baselineItems, shadow: shadowItems, shadowServed: false });
-      } catch {
-        failures += 1;
-        if (failures >= 3) circuitOpenUntil = Date.now() + 30000;
-        metrics.increment('failures');
-        evaluate({ metrics: { failure: true, circuitOpen: circuitOpenUntil > Date.now() }, baseline: baselineItems, shadow: [], shadowServed: false });
-      }
+      if (!flags.cognitionEnabled) return baselineItems;
+      await runShadow('hindsight', hindsight, flags.hindsightShadowEnabled, request, baselineItems);
+      await runShadow('ragflow', ragflow, flags.ragflowShadowEnabled, request, baselineItems);
       return baselineItems;
     },
     async derive(request) {
@@ -493,4 +740,4 @@ function createMcpHandlers(provider) {
   });
 }
 
-module.exports = { MemoryCognitionProvider, EngramAdapter, HindsightAdapter, Metrics, createProvider, createMcpHandlers, MCP_TOOL_DEFINITIONS, parseFeatureFlags, canonicalProjectScope, scopeToBankId };
+module.exports = { MemoryCognitionProvider, EngramAdapter, RAGFlowAdapter, HindsightAdapter, Metrics, createProvider, createMcpHandlers, MCP_TOOL_DEFINITIONS, parseFeatureFlags, canonicalProjectScope, scopeToBankId };

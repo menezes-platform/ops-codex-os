@@ -5,7 +5,7 @@ description: Provider-neutral, project-scoped retrieval and derived-candidate ga
 
 # Memory Cognition Provider
 
-Use this package when an agent needs selective repository context or a review-only memory candidate. Agents call `memory_recall`, `memory_derive`, and `memory_explain` through the host's MCP integration. They do not call Engram or Hindsight APIs directly.
+Use this package when an agent needs selective repository context or a review-only memory candidate. Agents call `memory_recall`, `memory_derive`, and `memory_explain` through the host's MCP integration. They do not call Engram, Hindsight, or RAGFlow APIs directly.
 
 ## Rules
 
@@ -13,9 +13,10 @@ Use this package when an agent needs selective repository context or a review-on
 - Treat every provider result as derived. Check Git and current runtime/project sources before answering current-state questions or proposing promotion.
 - Engram's project/title filter is for relevance only; it is not an authorization boundary.
 - Hindsight is optional shadow evaluation. Its results do not change the recall result returned to the agent.
+- RAGFlow is optional retrieval-only shadow evaluation. Scope must map to an explicit host-configured dataset allowlist; cross-project/dataset results are discarded.
 - Candidates carry provenance and `canonical_write: false`; validate them with the private Memory repository's validator using the exact project scope. A valid candidate is only `ready_for_review`.
 - Never ingest account chats, secrets, private study material, or unrelated project data.
-- Keep `HINDSIGHT_SERVING_ENABLED` off. This implementation hard-disables serving pending an actual isolated pilot and measured acceptance.
+- Keep `HINDSIGHT_SERVING_ENABLED` and `RAGFLOW_SERVING_ENABLED` off. Both are hard-disabled pending measured acceptance; shadow flags alone never serve derived retrieval to agents.
 
 ## Contract
 
