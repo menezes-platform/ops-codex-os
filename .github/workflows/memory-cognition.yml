@@ -3,7 +3,7 @@ name: memory-cognition
 on:
   push:
     branches:
-      - feat/ragflow-shadow-provider
+      - main
     paths:
       - "skills/memory-cognition/**"
       - ".github/workflows/memory-cognition.yml"
