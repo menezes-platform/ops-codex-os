@@ -5,7 +5,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { performance } = require('node:perf_hooks');
 const { estimateTokens, percentile, scoreQuerySet } = require('../src/evaluation');
-const { HindsightAdapter, createProvider, parseFeatureFlags } = require('../src');
+const { HindsightAdapter, RAGFlowAdapter, createProvider, parseFeatureFlags } = require('../src');
 
 const SECRET_PATTERNS = [
   /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/,
@@ -289,6 +289,142 @@ async function evaluateHindsightShadow(index, docs, questions, manifest) {
   };
 }
 
+
+async function evaluateRAGFlowShadow(index, docs, questions, manifest, env = process.env, fetchImpl = globalThis.fetch) {
+  const url = env.RAGFLOW_API_URL;
+  const apiKey = env.RAGFLOW_API_KEY;
+  const datasetId = env.RAGFLOW_DATASET_ID;
+  if (!url || !apiKey || !datasetId
+    || String(env.COGNITION_ENABLED).toLowerCase() !== 'true'
+    || String(env.RAGFLOW_SHADOW_ENABLED).toLowerCase() !== 'true') {
+    return { status: 'unavailable', reason: 'RAGFlow shadow flags, URL, API key, or dataset ID are not configured.', metrics: null };
+  }
+
+  const vectorWeight = Number(env.RAGFLOW_VECTOR_WEIGHT);
+  const adapter = new RAGFlowAdapter({
+    baseUrl: url,
+    apiKey,
+    datasetsByScope: { [manifest.scope]: [datasetId] },
+    fetchImpl,
+    ...(Number.isFinite(vectorWeight) ? { vectorSimilarityWeight: vectorWeight } : {}),
+    ...(env.RAGFLOW_RERANK_ID ? { rerankId: env.RAGFLOW_RERANK_ID } : {}),
+  });
+
+  let shadow = [];
+  let summary = null;
+  const coordinator = createProvider({
+    flags: {
+      cognitionEnabled: true,
+      hindsightShadowEnabled: false,
+      hindsightServingEnabled: false,
+      ragflowShadowEnabled: true,
+      ragflowServingEnabled: false,
+      servingAllowed: false,
+    },
+    baseline: {
+      recall: async ({ query, limit }) => search(index, query, limit)
+        .map((item) => ({ ...item, scope: manifest.scope, provider: 'git-docs', derived: false })),
+    },
+    ragflow: adapter,
+    evaluate: (evaluation) => {
+      if (evaluation.shadowProvider !== 'ragflow') return;
+      shadow = evaluation.shadow;
+      summary = evaluation.metrics;
+    },
+  });
+
+  const latency = [];
+  const rows = [];
+  const details = [];
+  let contextBytes = 0;
+  let contextTokens = 0;
+
+  for (const question of questions) {
+    const started = performance.now();
+    await coordinator.recall({ scope: manifest.scope, query: question.query, limit: 5, maxTokens: 1200 });
+    latency.push(performance.now() - started);
+    const results = shadow.map((item) => ({ ...item, evidenceId: matchEvidenceId(item, docs) }));
+    const ids = results.map((item) => item.evidenceId);
+    rows.push({ answerable: question.answerable, expected: question.expected, retrieved: ids });
+    const context = results.map((item) => item.text).join('\n').slice(0, 1200 * 4);
+    contextBytes += Buffer.byteLength(context, 'utf8');
+    contextTokens += estimateTokens(context);
+    details.push({
+      id: question.id,
+      category: question.category,
+      resultIds: ids,
+      retrievedCount: ids.length,
+      estimatedContextTokens: estimateTokens(context),
+    });
+    shadow = [];
+  }
+
+  const quality = scoreQuerySet(rows, 5);
+  let contradictionsDetected = 0;
+  let staleCount = 0;
+  let staleWrongOrder = 0;
+  let contradictionCases = 0;
+
+  for (let i = 0; i < questions.length; i += 1) {
+    const question = questions[i];
+    if (!question.stale_evidence?.length) continue;
+    contradictionCases += 1;
+    const ids = rows[i].retrieved;
+    const current = ids.findIndex((id) => question.expected.includes(id));
+    const stale = ids.findIndex((id) => question.stale_evidence.includes(id));
+    if (current >= 0 && (stale < 0 || current < stale)) contradictionsDetected += 1;
+    if (stale >= 0) {
+      staleCount += 1;
+      if (current < 0 || stale < current) staleWrongOrder += 1;
+    }
+  }
+
+  const raw = adapter.metrics.snapshot();
+  return {
+    status: raw.failures ? 'partial_or_failed' : 'completed',
+    metrics: {
+      ...quality,
+      relevanceAtK: quality.precisionAtK,
+      unsupportedAnswers: null,
+      correctAbstentionRate: null,
+      abstentionMeasurement: 'not measured: retrieval-only benchmark has no answer generator or semantic no-answer judgment',
+      contradictionsDetected,
+      contradictionCases,
+      staleMemoryRate: staleCount ? staleWrongOrder / staleCount : 0,
+      temporalRetrievalAccuracy: (() => {
+        const temporal = questions
+          .map((question, index) => ({ question, ids: rows[index].retrieved }))
+          .filter(({ question }) => question.category === 'temporal');
+        return temporal.length
+          ? temporal.filter(({ question, ids }) => ids.some((id) => question.expected.includes(id))).length / temporal.length
+          : null;
+      })(),
+      recallLatencyP50Ms: percentile(latency, 0.5),
+      recallLatencyP95Ms: percentile(latency, 0.95),
+      inputTokens: null,
+      outputTokens: null,
+      llmCalls: 0,
+      estimatedCostUsd: null,
+      contextBytes,
+      estimatedContextTokens: contextTokens,
+      indexSizeBytes: null,
+      requests: raw.requests ?? 0,
+      successes: raw.successes ?? 0,
+      failures: raw.failures ?? 0,
+      timeouts: raw.timeouts ?? 0,
+      rateLimits: raw.rateLimits ?? 0,
+      retries: raw.retries ?? 0,
+      noResultQueries: raw.noResults ?? 0,
+      unscopedOrUnmappedResults: details.reduce(
+        (sum, detail) => sum + detail.resultIds.filter((id) => id.startsWith('unmapped:')).length,
+        0,
+      ),
+      shadowDelta: summary,
+    },
+    questions: details,
+  };
+}
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -312,6 +448,7 @@ async function main() {
   const ingestLatencyMs = performance.now() - ingestStart;
   const baseline = evaluateQueries(index, questions);
   const hindsightShadow = await evaluateHindsightShadow(index, docs, questions, manifest);
+  const ragflowShadow = await evaluateRAGFlowShadow(index, docs, questions, manifest);
   const flags = parseFeatureFlags();
   const report = {
     schema_version: 1,
@@ -322,7 +459,14 @@ async function main() {
     corpus: { manifest_sources: manifest.sources.length, indexed_passages: docs.length, corpusTextBytes: Buffer.byteLength(docs.map((doc) => doc.text).join('\n')), serializedIndexBytes: index.serializedBytes, ingestLatencyMs, secret_scan: manifest.secret_scan, engramResults: manifest.engram.results },
     baseline: { provider: 'Git/docs BM25; Engram project probe measured separately', metrics: baseline.metrics, questions: baseline.queryDetails },
     hindsight_shadow: hindsightShadow,
-    flags: { COGNITION_ENABLED: flags.cognitionEnabled, HINDSIGHT_SHADOW_ENABLED: flags.hindsightShadowEnabled, HINDSIGHT_SERVING_ENABLED: false },
+    ragflow_shadow: ragflowShadow,
+    flags: {
+      COGNITION_ENABLED: flags.cognitionEnabled,
+      HINDSIGHT_SHADOW_ENABLED: flags.hindsightShadowEnabled,
+      HINDSIGHT_SERVING_ENABLED: false,
+      RAGFLOW_SHADOW_ENABLED: flags.ragflowShadowEnabled,
+      RAGFLOW_SERVING_ENABLED: false,
+    },
   };
   const rendered = `${JSON.stringify(report, null, 2)}\n`;
   if (args.output) fs.writeFileSync(path.resolve(args.output), rendered, { mode: 0o600 });
@@ -336,4 +480,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { buildCorpus, buildIndex, evaluateQueries, evaluateHindsightShadow, search, tokenize };
+module.exports = { buildCorpus, buildIndex, evaluateQueries, evaluateHindsightShadow, evaluateRAGFlowShadow, search, tokenize, matchEvidenceId };
