@@ -170,22 +170,40 @@ function buildArchiveRunChatScript({ runId, chatId }) {
   const taskName = `persist:${runId}`;
   return `
 await taskSpaces.useOrCreate(${js(taskName)})
-await browser.openOrReuseTab('https://chatgpt.com/c/' + encodeURIComponent(${js(chatId)}), { wait: true, timeout: 20000 })
-const currentTitle = await page.title()
-if (await page.getByTestId('close-sidebar-button').count() === 0) {
-  const openSidebar = page.getByRole('button', { name: 'Abrir barra lateral' })
-  if (await openSidebar.count()) { await openSidebar.click(); await page.waitForTimeout(250) }
+let persistdResult = { status: 'ARCHIVE_ERROR', ok: false, verified: false, chatId: ${js(chatId)} }
+try {
+  await browser.openOrReuseTab('https://chatgpt.com/c/' + encodeURIComponent(${js(chatId)}), { wait: true, timeout: 20000 })
+  const parseChatId = (url) => { const match = /\\/c\\/([^/?#]+)/.exec(String(url || '')); return match ? match[1] : null }
+  const currentUrl = await page.url()
+  if (parseChatId(currentUrl) !== ${js(chatId)}) {
+    const loginButton = page.getByRole('button', { name: /log in|sign in|entrar/i })
+    const loginLink = page.getByRole('link', { name: /log in|sign in|entrar/i })
+    let authRequired = /auth|login|signin/i.test(String(currentUrl || ''))
+    if (!authRequired && (await loginButton.count()) > 0) authRequired = await loginButton.first().isVisible()
+    if (!authRequired && (await loginLink.count()) > 0) authRequired = await loginLink.first().isVisible()
+    persistdResult = { status: authRequired ? 'AUTH_REQUIRED' : 'ARCHIVE_CHAT_ID_MISMATCH', ok: false, verified: false, chatId: ${js(chatId)}, url: currentUrl }
+  } else {
+    const currentTitle = await page.title()
+    if (await page.getByTestId('close-sidebar-button').count() === 0) {
+      const openSidebar = page.getByRole('button', { name: /Abrir barra lateral|Open sidebar/i })
+      if (await openSidebar.count()) { await openSidebar.first().click(); await page.waitForTimeout(250) }
+    }
+    let options = page.getByRole('button', { name: 'Abrir opções de conversa para ' + currentTitle }).first()
+    if (await options.count() === 0) options = page.getByRole('button', { name: 'Open conversation options for ' + currentTitle }).first()
+    if (await options.count() === 0) throw new Error('ARCHIVE_OPTIONS_MISSING')
+    await options.click()
+    let archiveItem = page.getByRole('menuitem').filter({ hasText: /^(Arquivar|Archive)$/i }).first()
+    if (await archiveItem.count() === 0) archiveItem = page.getByText(/^(Arquivar|Archive)$/i).first()
+    if (await archiveItem.count() === 0) throw new Error('ARCHIVE_MENU_MISSING')
+    await archiveItem.click()
+    await page.waitForTimeout(500)
+    persistdResult = { status: 'ARCHIVED', ok: true, verified: true, chatId: ${js(chatId)} }
+  }
+} catch (error) {
+  const message = error && error.message ? String(error.message) : String(error)
+  persistdResult = { status: message === 'AUTH_REQUIRED' ? 'AUTH_REQUIRED' : 'ARCHIVE_ERROR', ok: false, verified: false, chatId: ${js(chatId)}, error: message }
 }
-let options = page.getByRole('button', { name: 'Abrir opções de conversa para ' + currentTitle }).first()
-if (await options.count() === 0) options = page.getByRole('button', { name: 'Open conversation options for ' + currentTitle }).first()
-if (await options.count() === 0) throw new Error('Conversation options missing for archive: ' + currentTitle)
-await options.click()
-let archiveItem = page.getByText('Arquivar', { exact: true }).first()
-if (await archiveItem.count() === 0) archiveItem = page.getByText('Archive', { exact: true }).first()
-if (await archiveItem.count() === 0) throw new Error('Archive menu item missing')
-await archiveItem.click()
-await page.waitForTimeout(500)
-console.log('PERSISTD_RESULT:' + JSON.stringify({ status: 'ARCHIVED', ok: true, chatId: ${js(chatId)} }))
+console.log('PERSISTD_RESULT:' + JSON.stringify(persistdResult))
 `;
 }
 
