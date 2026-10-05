@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:59:22Z`
-- `recorded_at`: `2026-10-05T10:59:22Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T11:03:03Z`
+- `recorded_at`: `2026-10-05T11:03:03Z`
 - `github_check_status_observed_at`: `2026-10-05T10:55Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
@@ -296,3 +296,7 @@ The open draft PR #31 reports head `9c400a0b003577fe0a51e48bdc45829be6c49b1d`; r
 ## P09 full preservation census refresh — 2026-10-05T10:55Z
 
 The [current preservation snapshot](2026-10-05-P09-P11-current-preservation-recheck-1055.json) re-read all seven frozen-scope repositories through GitHub metadata and `git ls-remote`. It reports 29 open PRs, 262 branch refs, 3 tags, 154 GitHub pull-head refs, all 29 PR heads matching both their same-repository branch and `refs/pull/<number>/head`, and all seven repositories `archived=false`. The 226 non-default branches without an exact open-PR head match remain preservation-review items only. No refs or repositories were modified. This does not prove caller/deployment zero or archive eligibility; P09 remains `NOT_PASSED` and destructive gates stay closed.
+
+## P06 indexed provider-call search — 2026-10-05T11:03Z
+
+A focused GitHub code-index search across the seven frozen-scope default branches returned 15 `TYPESAFE_API_KEY` matches spanning Agent Platform and Gabriel Ops files; direct source candidates include Agent Platform `persistd/src/fleet/typesafe-router.js` / `start-entrypoint.js` and Gabriel Ops `scripts/typesafe-guardrail.mjs`, `scripts/email-triage-typesafe.mjs`, and the provider-related workflows. Separate indexed searches returned matches for `api.typesafe.ai` (6), `openrouter` (5), `api.groq.com` (2), and `generativelanguage.googleapis.com` (1), plus no indexed `api.mistral.ai` match. These are source-index results, not an exhaustive checkout scan or proof of live execution; zero search hits do not establish caller-zero. They confirm that P06 still has direct-provider candidates outside the unmerged Provider Gateway draft. No provider was called and no secret values were read; P06 remains `NOT_PASSED`.
