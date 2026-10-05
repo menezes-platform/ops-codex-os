@@ -1,8 +1,8 @@
 # P03 — Hostinger post-apply refresh
 
 - `phase_id`: `P03`
-- `checkpoint_id`: `P03-HOSTINGER-POST-APPLY-REFRESH-2026-10-05T09:31Z`
-- `recorded_at`: `2026-10-05T09:31:51Z`
+- `checkpoint_id`: `P03-HOSTINGER-POST-APPLY-REFRESH-2026-10-05T10:38Z`
+- `recorded_at`: `2026-10-05T10:38:52Z`
 - `status`: `CURRENT_DEPLOYMENT_COMPLETE_HEALTH_OK_STATE_ROOT_UNMAPPED`
 - `P03_exit`: `NOT_PASSED`
 - `HG-001`: `OPEN`
@@ -41,3 +41,7 @@ Through the existing active read-only Composio MCP connection, `persist_fleet_st
 ## Public endpoint recheck — 2026-10-05T09:31Z
 
 Fresh unauthenticated direct GETs returned HTTP `200` from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and `/.well-known/oauth-authorization-server` (issuer and authorization/token/registration endpoints matched the Hostinger origin). Unauthenticated `GET /mcp` returned `401`. These checks confirm public health, metadata discovery, and rejection of an unauthenticated MCP request; they do not prove the fleet-secret JSON was consumed, authenticate a fleet node, map state roots, or establish the sole primary. No credential or protected payload was read, and no runtime setting changed. P03/HG-001 remains `NOT_PASSED`.
+
+## Post-apply public and authenticated status refresh — 2026-10-05T10:38Z
+
+After the owner reported applying the Hostinger fleet-secret JSON correction, unauthenticated GETs returned HTTP `200` from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and `/.well-known/oauth-authorization-server` (issuer matches the Hostinger origin), and HTTP `401` from `/mcp`. Through the existing active Composio connection, read-only `persist_fleet_status` and `persist_cache_status` calls both succeeded and again returned `fleet.nodes=[]` and `cache.nodes=[]`. No credential value was read; no run, heartbeat, enrollment, mutation, or ephemeral execution tool was called. The healthy public process and empty status projections do not prove that the process consumed the corrected JSON, that the desktop agent authenticated, that callers are globally absent, or that the Hostinger file authority is the sole primary. P03/HG-001 remains `NOT_PASSED`.

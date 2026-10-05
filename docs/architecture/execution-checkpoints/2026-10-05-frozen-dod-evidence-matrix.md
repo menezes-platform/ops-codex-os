@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:32Z`
-- `recorded_at`: `2026-10-05T10:32Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:38:52Z`
+- `recorded_at`: `2026-10-05T10:38:52Z`
 - `github_check_status_observed_at`: `2026-10-05T09:35:45Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
@@ -280,3 +280,7 @@ The existing read-only AWS/SSM workflow [#37230436006, attempt 2](https://github
 ## P10 public version endpoint refresh — 2026-10-05T10:18Z
 
 Unauthenticated `GET /api/version.php` returned HTTP `200` for `persistflow-sandbox`, source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`, `built_at=2026-09-18T00:25:02.755Z`, and `build_time=null`. This confirms the same legacy Sandbox release remains publicly active; it does not establish its last collector call or authenticated production dependencies. No dashboard, secret-bearing response, config, or deployment was accessed. P10 remains `NOT_PASSED`, its archive gate remains closed, and the frozen DoD remains `NOT_MET`.
+
+## P03 post-apply public and authenticated status refresh — 2026-10-05T10:38Z
+
+After the owner reported applying the Hostinger fleet-secret JSON correction, unauthenticated GETs returned HTTP `200` from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and `/.well-known/oauth-authorization-server` (issuer matches the Hostinger origin), and `401` from `/mcp`. Through the existing active Composio connection, read-only `persist_fleet_status` and `persist_cache_status` calls both succeeded and again returned `fleet.nodes=[]` and `cache.nodes=[]`. No credential value was read; no run, heartbeat, enrollment, mutation, or ephemeral execution tool was called. The healthy public process and empty status projections do not prove that the process consumed the corrected JSON, that the desktop agent authenticated, that callers are globally absent, or that the Hostinger file authority is the sole primary. P03/HG-001 remains `NOT_PASSED`; the frozen DoD remains `NOT_MET`.
