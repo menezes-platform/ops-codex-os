@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:37:22Z`
-- `recorded_at`: `2026-10-05T02:37:22Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:40:55Z`
+- `recorded_at`: `2026-10-05T02:40:55Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -73,7 +73,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | --- | --- | --- |
 | One authoritative primary owns SQLite/WAL execution state | `UNRESOLVED` | Hostinger reports file authority and is healthy; Resident Node `main` also has SQLite/WAL state. Sole-primary mapping and global writer census are missing. |
 | Manual failover procedure is verified | `TARGET_ONLY` | No witnessed failover exercise, receipt, or recovery report exists. |
-| Authority epoch advances on primary recovery/failover | `PARTIAL` | Resident Node draft PR #1 implements source-level epoch fencing and CI tests; production wiring and recovery receipt are absent. |
+| Authority epoch advances on primary recovery/failover | `NOT_MET` | Resident Node draft PR #1 fences lease writes against the current epoch and lockdown increments it, but source review at `128671f0937c861cb43c57d716614b9a76ba02fc` shows `reconcile_after_restart()` clears/reconciles lease rows without incrementing `security_epoch`. A safe restart increment also needs a verified single-primary acquisition lock, which is absent. Production recovery/failover proof is absent. |
 | Stale-epoch worker authoritative commits are rejected | `PARTIAL` | Draft PR #1 adds source-level rejection tests; no authenticated production worker/runtime evidence exists. |
 | Expired-lease worker authoritative commits are rejected | `PARTIAL` | Draft PR #1 adds source-level rejection tests; sandbox draft lacks equivalent epoch/expiry result predicates, and no production proof exists. |
 | Secrets are held by Secrets Broker and excluded from repos/logs/corpus/indexes/ordinary snapshots | `UNRESOLVED` | No end-to-end broker custody/exclusion audit exists. The owner applied the Hostinger secret JSON; the agent did not read or record secret values. |
@@ -96,7 +96,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | Frozen criterion | Status | Evidence and remaining proof |
 | --- | --- | --- |
 | Forbidden dependency edges = 0 | `UNRESOLVED` | No final architecture graph/checker result covers all repositories and production dependencies. |
-| Repository tests pass | `PARTIAL` | Resident Node CI #43 passed Linux/macOS/Windows; ops-gabriel-ops CI and TypeSafe PR Guardrail passed for P07 head; memory-cognition retrieval suite passed 30/30; P05 PR #32 passed 28/28 targeted tests locally; P06 PR #30 passed 21/21 focused provider-policy/module tests locally. A direct full Agent Platform Node-suite run here was incomplete: 14/18 top-level tests passed and 4 could not start/pass because `@modelcontextprotocol/server` is absent and the server did not start. P05/P06/P08 PR heads have no recorded CI runs/statuses in the latest queries; absence of status is not a pass. |
+| Repository tests pass | `PARTIAL` | Resident Node CI #43 passed Linux/macOS/Windows; ops-gabriel-ops CI and TypeSafe PR Guardrail passed for P07 head; memory-cognition retrieval suite passed 30/30; P05 PR #32 passed 28/28 targeted generation/module/spec-validator tests locally; P06 PR #30 passed 28/28 focused Provider Gateway/module/fleet-router tests locally, with provider calls mocked. A direct full Agent Platform Node-suite run here was incomplete: 14/18 top-level tests passed and 4 could not start/pass because `@modelcontextprotocol/server` is absent and the server did not start. P05/P06/P08 PR heads have no recorded CI runs/statuses in the latest queries; absence of status is not a pass. |
 | Architecture gates pass | `NOT_MET` | P03, P04, P05, P06, P07 and P08 exit evidence is incomplete; P09–P11 have not started destructive actions. |
 | Integration/E2E tests pass | `UNRESOLVED` | No full consolidated production-path E2E result exists. |
 | Production smoke passes | `PARTIAL` | P03 probes showed Hostinger `/healthz` 200, metadata 200, and unauthenticated MCP 401; hPanel also marked its latest deployment `Concluído` and `Atual` at displayed time `2026-10-04 23:44:46` (timezone unlabeled). These are bounded health/deployment observations, not the DoD smoke suite. |
@@ -111,7 +111,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | Gate | Disposition | Safe next work |
 | --- | --- | --- |
 | P03 / HG-001 | `BLOCKED / NOT_PASSED` | Preserve healthy-service evidence; obtain VM service/origin/caller mapping, global caller census, sole-primary proof, and a fresh verified rollback snapshot before any cutover. |
-| P04 | `FORMAL_ENTRY_NOT_SATISFIED` | Continue source review of the draft fence and design authenticated identity/transport plus restart/external-effect recovery; no production migration. |
+| P04 | `FORMAL_ENTRY_NOT_SATISFIED / RECOVERY_EPOCH_GAP` | Draft leases reject stale/expired result writes, but restart reconciliation does not advance the authority epoch and no cross-process single-primary lock exists. Continue source design for authenticated identity/transport, safe epoch acquisition, and restart/external-effect recovery; no production migration. |
 | P05 | `PREPARATION_ONLY / ENTRY_NOT_SATISFIED` | P04 indexing runtime is absent from Resident Node `main`. Draft Context Gateway/Store seams exist on the P03 migration branch; [PR #32](https://github.com/menezes-platform/ops-codex-os/pull/32) advances source-level generation policy only. The Drive driver and execution-plane interface/runtime remain pending. |
 | P06 | `PREPARATION_ONLY / SOURCE_BYPASS_PRESENT` | Provider policy and focused tests are prepared, but the Agent Platform fleet scorer still calls TypeSafe directly in source; direct Gabriel Ops and Orquestra/OmniRoute candidates also remain. Production activity/configuration is unresolved; no live routing switch. |
 | P07 | `PREPARATION_ONLY` | Complete the read-only writer/caller inventory and distinguish business-domain state from platform authority; no source-system mutation. |
