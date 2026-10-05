@@ -149,3 +149,7 @@ Sandbox `main` remains at `bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65` with stale 
 ## P11 Sandbox design-history refresh — 2026-10-05T07:30Z
 
 Draft PR #1 now also labels its v2 design and v1 implementation plan as historical under the frozen consolidation Spec Kit, retaining both documents' original text. Current head is `dba5f9cd54f2c70c9765b3f832876d2da9b7c195`; no CI result was checked. Sandbox `main` is unchanged, P10 remains NOT_PASSED, formal P11 entry is not satisfied, and the frozen DoD remains NOT_MET.
+
+## P11 Memory routing preparation — 2026-10-05T07:44Z
+
+A bounded read-only inventory of private Memory `main` at `2f43e8d1b20f6325c44e7a3174e80e00e3a809b7` found a multi-repository cognitive-memory design spec, its implementation plan, an account-memory candidate workflow, and project index entries that mix personal pointers with implementation notes. The proposed routing is documented in [P09–P11 pre-cleanup inventory](2026-10-05-P09-P11-precleanup-audit.md): reconcile the global design with the frozen Spec Kit before moving it to Agent Platform; split global provider planning from account-memory validation procedure; retain personal preferences/canonical pointers while routing implementation facts to owning repositories; keep account-memory governance in Memory. This is preparation, not a P11 migration. The inventory was scoped to selected docs and memory paths, no Memory file was changed, P10 remains NOT_PASSED, formal P11 entry is unmet, and the frozen DoD remains NOT_MET.
