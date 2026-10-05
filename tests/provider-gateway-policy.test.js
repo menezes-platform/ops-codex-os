@@ -44,6 +44,20 @@ test('nonfinite cost and unsafe token budgets are rejected before policy or adap
   assert.equal(policyCalls, 0);
 });
 
+test('sparse inference input is rejected before policy or provider execution', async () => {
+  const input = [];
+  input.length = 1;
+  let policyCalls = 0;
+  let providerCalls = 0;
+  const gateway = createProviderGateway({
+    resolveRoute: () => { policyCalls++; return route(); },
+    adapters: { primary: { infer: async () => { providerCalls++; return result(); } } },
+  });
+  await assert.rejects(gateway.infer(request({ input })), /INFERENCE_INPUT_INVALID/);
+  assert.equal(policyCalls, 0);
+  assert.equal(providerCalls, 0);
+});
+
 test('configured fallback can replace an unavailable adapter without widening the effective budget', async () => {
   const calls = [];
   const gateway = setup(route({ fallback_routes: [route({ route_id: 'fallback-v1', adapter_id: 'fallback', max_output_tokens: 50, max_cost_usd: 0.005 })] }), {
@@ -87,6 +101,15 @@ test('an invalid fallback policy is rejected before any provider dispatch', asyn
   let calls = 0;
   const gateway = setup(route({ fallback_routes: [route({ max_cost_usd: NaN })] }), { primary: { infer: async () => { calls++; return result(); } } });
   await assert.rejects(gateway.infer(request()), /PROVIDER_BUDGET_POLICY_UNAVAILABLE/);
+  assert.equal(calls, 0);
+});
+
+test('sparse fallback routes are rejected before any provider dispatch', async () => {
+  const fallback_routes = [];
+  fallback_routes.length = 1;
+  let calls = 0;
+  const gateway = setup(route({ fallback_routes }), { primary: { infer: async () => { calls++; return result(); } } });
+  await assert.rejects(gateway.infer(request()), /PROVIDER_FALLBACK_POLICY_INVALID/);
   assert.equal(calls, 0);
 });
 
@@ -191,4 +214,20 @@ test('unsafe input-token usage is rejected instead of becoming an accounting rec
     }) },
   });
   await assert.rejects(gateway.infer(request()), /PROVIDER_USAGE_INVALID/);
+});
+
+test('sparse provider output is rejected without retrying or caching an invalid result', async () => {
+  const cache = memoryCache();
+  const output = [];
+  output.length = 1;
+  let primaryCalls = 0;
+  let fallbackCalls = 0;
+  const gateway = setup(route({ cache_namespace: 'summary-policy-v1', fallback_routes: [route({ route_id: 'fallback-v1', adapter_id: 'fallback' })] }), {
+    primary: { infer: async () => { primaryCalls++; return { output, usage: { input_tokens: 1, output_tokens: 1 } }; } },
+    fallback: { infer: async () => { fallbackCalls++; return result(); } },
+  }, cache);
+  await assert.rejects(gateway.infer(request()), /PROVIDER_RESULT_INVALID/);
+  assert.equal(primaryCalls, 1);
+  assert.equal(fallbackCalls, 0);
+  assert.equal(cache.writes.length, 0);
 });

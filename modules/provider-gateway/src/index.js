@@ -15,12 +15,21 @@ function assertText(value, code) {
   if (typeof value !== 'string' || !value.trim()) throw new Error(code);
 }
 
+function mapDenseArray(value, code, map) {
+  const items = [];
+  for (let index = 0; index < value.length; index += 1) {
+    if (!Object.hasOwn(value, index)) throw new Error(code);
+    items.push(map(value[index]));
+  }
+  return items;
+}
+
 function normalizeRequest(request) {
   assertOnlyFields(request, REQUEST_FIELDS);
   assertText(request.policy_profile, 'POLICY_PROFILE_REQUIRED');
   assertText(request.task_class, 'TASK_CLASS_REQUIRED');
   if (!Array.isArray(request.input) || request.input.length === 0) throw new Error('INFERENCE_INPUT_REQUIRED');
-  const input = request.input.map((message) => {
+  const input = mapDenseArray(request.input, 'INFERENCE_INPUT_INVALID', (message) => {
     assertOnlyFields(message, new Set(['role', 'content']));
     if (!['system', 'user', 'assistant'].includes(message.role) || typeof message.content !== 'string') throw new Error('INFERENCE_INPUT_INVALID');
     return { role: message.role, content: message.content };
@@ -43,7 +52,7 @@ function normalizeRequest(request) {
 function normalizeResult(routeId, result, maxOutputTokens) {
   assertRecord(result, 'PROVIDER_RESULT_INVALID');
   if (!Array.isArray(result.output) || result.output.length === 0) throw new Error('PROVIDER_RESULT_INVALID');
-  const output = result.output.map((message) => {
+  const output = mapDenseArray(result.output, 'PROVIDER_RESULT_INVALID', (message) => {
     assertOnlyFields(message, new Set(['role', 'content']));
     if (!['system', 'user', 'assistant'].includes(message.role) || typeof message.content !== 'string') throw new Error('PROVIDER_RESULT_INVALID');
     return { role: message.role, content: message.content };
@@ -99,7 +108,9 @@ function createProviderGateway({ resolveRoute, adapters, cache } = {}) {
       });
       const primary = normalizeRoute(route);
       if (route.fallback_routes !== undefined && !Array.isArray(route.fallback_routes)) throw new Error('PROVIDER_FALLBACK_POLICY_INVALID');
-      const routes = [primary, ...(route.fallback_routes || []).map(normalizeRoute)];
+      const fallbackRoutes = route.fallback_routes === undefined
+        ? [] : mapDenseArray(route.fallback_routes, 'PROVIDER_FALLBACK_POLICY_INVALID', normalizeRoute);
+      const routes = [primary, ...fallbackRoutes];
       let unavailableCode = 'PROVIDER_ADAPTER_UNAVAILABLE';
       for (const candidate of routes) {
         const budget = {
