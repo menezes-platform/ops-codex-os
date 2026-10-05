@@ -142,6 +142,6 @@ Private Memory `main` at `2f43e8d1b20f6325c44e7a3174e80e00e3a809b7` contains a T
 
 A source-only scan on draft PR #30 found no known provider endpoint/key path in runtime source. Commit `18e60fe843295a74297144a7dce005428b3bed83` labels the branch's TypeSafe-era spec/plan as historical and links the current Gateway disposition, while preserving the original task details. This resolves the ambiguous draft-branch wording but has not updated `main` or passed P11; the frozen DoD remains `NOT_MET`.
 
-## P11 Sandbox documentation follow-up — 2026-10-05T07:20Z
+## P11 Sandbox documentation follow-up — 2026-10-05T07:25Z
 
 Sandbox `main` remains at `bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65` with stale README identity/status language. Existing draft PR #1 head `c03c9bea2c7d36021d4aebd37ecf091e8d0d36a8` now updates README.md and docs/hostinger.md to state the frozen target ownership boundaries, mark the Hostinger guide as an earlier deployment contract, and separately identify the live Hostinger service/collector as an unresolved P10 dependency. The PR remains draft; its current head was not CI-checked, and no live service/data changed. This is preparation only. P10 archival and P11 global documentation/adoption/preservation gates remain NOT_PASSED; frozen DoD remains NOT_MET.
