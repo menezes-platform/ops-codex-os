@@ -24,7 +24,7 @@ const knownProviderEdges = [
   /api\.together\.xyz/i,
   /api\.perplexity\.ai/i,
   /[a-z0-9-]+\.openai\.azure\.com/i,
-  /@ai-sdk\/(?:openai(?:-compatible)?|anthropic|google(?:-vertex)?|mistral|groq|cohere|amazon-bedrock)\b/i,
+  /@ai-sdk\/[a-z0-9][a-z0-9._/-]*/i,
   /(?:from\s+|require\s*\(\s*|import\s*\(\s*)['"](?:openai|@openai\/[^'"]+|@anthropic-ai\/sdk|@google\/(?:generative-ai|genai)|@mistralai\/mistralai|@aws-sdk\/client-bedrock-runtime|@google-cloud\/vertexai|cohere-ai)['"]/i,
   /^\s*(?:from|import)\s+(?:openai|anthropic|google\.generativeai|mistralai|cohere)\b/im,
 ];
@@ -232,6 +232,7 @@ test('AG-014 source guard recognizes provider endpoints and common provider SDKs
     "import OpenAI from 'openai';",
     "const provider = { npm: '@ai-sdk/openai-compatible' };",
     "const provider = { npm: '@ai-sdk/google' };",
+    "const provider = { npm: '@ai-sdk/xai' };",
     "import { GoogleGenAI } from '@google/genai';",
     'const endpoint = "https://project.openai.azure.com/openai/v1";',
     'const endpoint = "https://api.together.xyz/v1";',
