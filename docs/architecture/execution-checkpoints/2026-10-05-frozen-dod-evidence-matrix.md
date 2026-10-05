@@ -366,3 +366,9 @@ The bounded seven-main SDK-marker scan found no new vendor-SDK runtime path. Orq
 ## P08 exact-head refresh — 2026-10-05T12:07Z
 
 Agent Platform PR #31 head `93b3fa4df2328121276f75cc7a8e6ead95c8605f` matched its branch and pull ref. `node --test tests/*.test.js` passed 23/23 on that tree, the Spec Kit validator and `git diff --check` passed, and the frozen Spec Kit was unchanged. CodeQL run [#37307330834](https://github.com/menezes-platform/ops-codex-os/actions/runs/37307330834) failed for both language jobs; each returned an empty step list, and the cause remains unknown. This is blocked validation, not evidence of a source defect or pass. P08 remains `NOT_PASSED` and overall DoD remains `NOT_MET`.
+
+## P05/P08 evidence refresh — 2026-10-05T12:14Z
+
+The connected Google Drive returned no metadata results for document queries `Platform Consolidation`, `Context Store`, and `PersistFlow`; no content was fetched. This narrows source-artifact discovery only and does not prove corpus absence outside those queries/account scope. P05 remains preparation-only because its P04 indexing-runtime entry gate and target corpus/runtime are missing.
+
+PR #31 remains open/draft at `f02dc2624738293a0c27c10e07a8a009954bd879`. The latest CodeQL run [#37307731527](https://github.com/menezes-platform/ops-codex-os/actions/runs/37307731527) failed both language jobs; GitHub returned empty steps and no checks, statuses, annotations, or logs, and the log download returned `BlobNotFound`. Cause unknown. P08 hosted validation remains failed/unresolved, not passed; the overall frozen DoD remains `NOT_MET`.
