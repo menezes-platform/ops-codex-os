@@ -276,3 +276,7 @@ On exact PR #31 head `1159ac2bc4db0f6fbe2287087506ff844e76fc2d`, the repository-
 ## P03 repeat AWS/SSM auth preflight — 2026-10-05T10:14Z
 
 The existing read-only AWS/SSM workflow [#37230436006, attempt 2](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37230436006) ran on `DESKTOP-L6CITUI`. `aws sts get-caller-identity` again returned `AWS_AUTH_UNAVAILABLE`; the workflow stopped before querying SSM instance status. It issued no remote command, read no credential values, and made no repository update. P03/HG-001 remains blocked on mapping state roots/callers and establishing a safe path to the existing instance session; P03 remains `NOT_PASSED` and the frozen DoD remains `NOT_MET`.
+
+## P10 public version endpoint refresh — 2026-10-05T10:18Z
+
+Unauthenticated `GET /api/version.php` returned HTTP `200` for `persistflow-sandbox`, source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`, `built_at=2026-09-18T00:25:02.755Z`, and `build_time=null`. This confirms the same legacy Sandbox release remains publicly active; it does not establish its last collector call or authenticated production dependencies. No dashboard, secret-bearing response, config, or deployment was accessed. P10 remains `NOT_PASSED`, its archive gate remains closed, and the frozen DoD remains `NOT_MET`.
