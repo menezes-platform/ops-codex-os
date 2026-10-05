@@ -60,3 +60,15 @@ The successful [metadata workflow run #37267825113](https://github.com/menezesx2
 The runner's own process-scope projection reports `PERSISTFLOW_BASE_URL` origin `http://127.0.0.1:39091`; the user-scope registry projection reports the Hostinger origin and the names `PERSISTFLOW_FLEET_NODE_ID` and `PERSISTFLOW_FLEET_NODE_SECRET`. The workflow intentionally did not collect process-scope variable names and did not read any secret values. These scopes do not identify the scheduled agent's effective environment or prove that Hostinger's corrected JSON was consumed. The local `/healthz` projection returned `200`, `authority=file`, `durable=true`, confirming a second reachable file-authority candidate on the desktop.
 
 This report is one-host metadata, not a global caller census. It strengthens the evidence that a desktop Fleet Agent task and local file-backed authority remain installed, while leaving active invocation, exact runtime roots, accepted credentials, sole-primary ownership, global callers, and current rollback unresolved. `P03 / HG-001` remains `NOT_PASSED`; no production operation was performed.
+
+## Scheduled-task last-run metadata refresh — 2026-10-05T10:48Z
+
+The metadata-only workflow [run #37298998726](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37298998726) completed on `DESKTOP-L6CITUI`; its report timestamp is `2026-10-05T10:48:29.0014820Z`. The workflow read `Get-ScheduledTaskInfo` metadata for one Windows host and did not invoke the tasks, inspect their process environments, or read secret values. For the three relevant tasks it reported:
+
+| Task | Scheduler state | Last run (host-reported UTC) | Last task result |
+| --- | --- | --- | --- |
+| `Gabriel Fleet Agent` | `Ready` | `2026-10-04T19:36:36Z` | unavailable in report |
+| `Gabriel PersistFlow Authority` | `Running` | `2026-10-01T03:08:08Z` | `267009` (`0x00041301`, `SCHED_S_TASK_RUNNING`) |
+| `GabrielOps-PrivateSourceSync` | `Ready` | `2026-10-05T10:48:48Z` | `0` |
+
+Microsoft defines `0x00041301` as “the task is currently running” ([Task Scheduler success codes](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-error-and-success-constants)). The collector task therefore completed successfully at the scheduler level shortly after the report timestamp; that does not prove its authenticated upstream dashboard fetch succeeded, because its code can publish an unavailable fallback envelope. Likewise, the Fleet Agent's `Ready` state and prior run time do not show current execution or accepted Hostinger credentials. The authority task remains reported `Running`, but this single-host scheduler metadata does not map its effective state root or establish that it is the sole writer. Host-clock synchronization is not independently verified. No task was started/stopped and no production state changed; `P03 / HG-001` remains `NOT_PASSED`.

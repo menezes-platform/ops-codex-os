@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:38:52Z`
-- `recorded_at`: `2026-10-05T10:38:52Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:51:12Z`
+- `recorded_at`: `2026-10-05T10:51:12Z`
 - `github_check_status_observed_at`: `2026-10-05T09:35:45Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
@@ -284,3 +284,7 @@ Unauthenticated `GET /api/version.php` returned HTTP `200` for `persistflow-sand
 ## P03 post-apply public and authenticated status refresh — 2026-10-05T10:38Z
 
 After the owner reported applying the Hostinger fleet-secret JSON correction, unauthenticated GETs returned HTTP `200` from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and `/.well-known/oauth-authorization-server` (issuer matches the Hostinger origin), and `401` from `/mcp`. Through the existing active Composio connection, read-only `persist_fleet_status` and `persist_cache_status` calls both succeeded and again returned `fleet.nodes=[]` and `cache.nodes=[]`. No credential value was read; no run, heartbeat, enrollment, mutation, or ephemeral execution tool was called. The healthy public process and empty status projections do not prove that the process consumed the corrected JSON, that the desktop agent authenticated, that callers are globally absent, or that the Hostinger file authority is the sole primary. P03/HG-001 remains `NOT_PASSED`; the frozen DoD remains `NOT_MET`.
+
+## P03 installed-task last-run metadata — 2026-10-05T10:48Z
+
+The successful one-host metadata workflow [#37298998726](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37298998726) reports `Gabriel Fleet Agent=Ready` (last run `2026-10-04T19:36:36Z`, result unavailable), `Gabriel PersistFlow Authority=Running` (last run `2026-10-01T03:08:08Z`, result `267009` / `0x41301`, scheduler's running status), and `GabrielOps-PrivateSourceSync=Ready` (last run `2026-10-05T10:48:48Z`, result `0`). The read-only workflow executed no task and read no secret. These fields show Scheduler state only: the successful task result does not establish successful upstream dashboard retrieval, and `Ready` does not mean the Fleet Agent is executing. P03/HG-001 remains `NOT_PASSED`; see [P03 desktop authority and fleet refresh](2026-10-05-P03-desktop-authority-and-fleet-refresh.md).
