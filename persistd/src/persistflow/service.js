@@ -176,6 +176,8 @@ class PersistFlowService {
           decisionSource: decision.decisionSource,
           eligibleNodeIds: decision.eligibleNodeIds,
           evaluatedAt: decision.evaluatedAt,
+          ...(decision.providerRouteId ? { providerRouteId: decision.providerRouteId } : {}),
+          ...(decision.providerUsage ? { providerUsage: decision.providerUsage } : {}),
           ...(decision.routingEvidence ? { routingEvidence: decision.routingEvidence } : {}),
         },
       };
@@ -262,6 +264,8 @@ class PersistFlowService {
         evidence: scrubDurable({
           type: 'fleet.route', taskId: decision.taskId, nodeId: decision.nodeId,
           provider: selectedProvider, decisionSource: decision.decisionSource,
+          ...(decision.providerRouteId ? { providerRouteId: decision.providerRouteId } : {}),
+          ...(decision.providerUsage ? { providerUsage: decision.providerUsage } : {}),
           routingEvidence: decision.routingEvidence || null,
         }),
       };

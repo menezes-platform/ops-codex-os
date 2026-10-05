@@ -175,9 +175,11 @@ test('routeTask records one atomic fleet.route checkpoint and latestRoute', asyn
       route: async (intent) => ({
         taskId: intent.taskId,
         nodeId: 'ec2-primary',
-        decisionSource: 'typesafe',
+        decisionSource: 'provider-gateway',
         eligibleNodeIds: ['desktop-primary', 'ec2-primary'],
-        typesafeScores: { 'desktop-primary': 1, 'ec2-primary': 2 },
+        semanticScores: { 'desktop-primary': 1, 'ec2-primary': 2 },
+        providerRouteId: 'fleet-semantic-v1',
+        providerUsage: { input_tokens: 42, output_tokens: 8 },
         evaluatedAt: '2026-09-24T17:02:00.000Z',
       }),
     },
@@ -194,6 +196,8 @@ test('routeTask records one atomic fleet.route checkpoint and latestRoute', asyn
   assert.equal(result.run.latestRoute.nodeId, 'ec2-primary');
   assert.equal(result.run.latestCheckpoint.evidence.type, 'fleet.route');
   assert.equal(result.run.latestCheckpoint.evidence.taskId, 'task-123');
+  assert.equal(result.run.latestCheckpoint.evidence.providerRouteId, 'fleet-semantic-v1');
+  assert.deepEqual(result.run.latestCheckpoint.evidence.providerUsage, { input_tokens: 42, output_tokens: 8 });
   assert.equal(result.decision.nodeId, 'ec2-primary');
 });
 
@@ -450,7 +454,7 @@ test('persist_fleet_route MCP tool exposes durable route decision', async () => 
     route: async (intent) => ({
       taskId: intent.taskId, nodeId: 'ec2-primary',
       decisionSource: 'deterministic-fallback',
-      eligibleNodeIds: ['ec2-primary'], typesafeScores: null,
+      eligibleNodeIds: ['ec2-primary'], semanticScores: null,
       evaluatedAt: '2026-09-24T17:02:00.000Z',
     }),
   };
@@ -528,8 +532,8 @@ test('routeTask rechecks generation after async scheduling before persisting rou
         store.update('route-race', (state) => ({ ...state, generation: 2 }));
         return {
           taskId: intent.taskId, nodeId: 'ec2-primary',
-          decisionSource: 'typesafe', eligibleNodeIds: ['ec2-primary'],
-          typesafeScores: { 'ec2-primary': 2 }, evaluatedAt: new Date().toISOString(),
+          decisionSource: 'provider-gateway', eligibleNodeIds: ['ec2-primary'],
+          semanticScores: { 'ec2-primary': 2 }, evaluatedAt: new Date().toISOString(),
         };
       },
     },

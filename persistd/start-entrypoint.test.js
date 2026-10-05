@@ -22,6 +22,63 @@ test('production fleet router is feature-flagged off by default and constructibl
     fleetStore,
   });
   assert.equal(typeof router.route, 'function');
+  assert.equal(router.providerGatewayRouter, null);
+});
+
+test('production fleet composition uses only an injected Provider Gateway scorer', async () => {
+  const now = new Date('2026-09-28T02:00:00.000Z');
+  const fleetConfig = { nodes: [
+    { id: 'desktop-primary', platform: 'win32', capabilities: ['git', 'node'], affinities: ['desktop'], concurrencyLimit: 1, drained: false },
+    { id: 'ec2-primary', platform: 'win32', capabilities: ['git', 'node'], affinities: ['tests'], concurrencyLimit: 2, drained: false },
+  ] };
+  const fleetStore = new MemoryFleetStore();
+  for (const nodeId of ['desktop-primary', 'ec2-primary']) {
+    fleetStore.putHeartbeat(nodeId, {
+      observedAt: now.toISOString(), hostname: nodeId,
+      freeDiskBytes: 200_000_000_000, totalDiskBytes: 500_000_000_000,
+      freeMemoryBytes: 20_000_000_000, totalMemoryBytes: 64_000_000_000,
+      cpuPercent: 10, activeJobs: 0, cacheBytes: 0, cachedObjectHashes: [],
+      runtimeVersion: '1', capabilitiesHash: '',
+    });
+  }
+  let request;
+  const router = createProductionFleetRouter({
+    env: { PERSISTFLOW_FLEET_ROUTER_ENABLED: '1', TYPESAFE_API_KEY: 'must-not-be-read' },
+    fleetConfig, fleetStore, clock: () => now,
+    providerGateway: {
+      infer: async (input) => {
+        request = input;
+        return {
+          route_id: 'fleet-policy-v1',
+          usage: { input_tokens: 100, output_tokens: 8 },
+          output: [{ role: 'assistant', content: '{"scores":{"candidate_1":0,"candidate_2":2}}' }],
+        };
+      },
+    },
+  });
+  const decision = await router.route({
+    taskId: 'gateway-routing-test', summary: 'run repository tests',
+    requiredCapabilities: ['git', 'node'], preferredCapabilities: [],
+    estimatedScratchBytes: 1024, artifactRefs: [],
+  });
+  assert.equal(decision.nodeId, 'ec2-primary');
+  assert.equal(decision.decisionSource, 'provider-gateway');
+  assert.equal(decision.providerRouteId, 'fleet-policy-v1');
+  assert.equal(request.policy_profile, 'fleet-routing-v1');
+  assert.equal(request.freshness_required, true);
+  assert.equal(Object.hasOwn(request, 'apiKey'), false);
+
+  const withoutGateway = createProductionFleetRouter({
+    env: { PERSISTFLOW_FLEET_ROUTER_ENABLED: '1', TYPESAFE_API_KEY: 'must-not-be-read' },
+    fleetConfig, fleetStore, clock: () => now,
+  });
+  const fallback = await withoutGateway.route({
+    taskId: 'gateway-unavailable-test', summary: 'run repository tests',
+    requiredCapabilities: ['git', 'node'], preferredCapabilities: [],
+    estimatedScratchBytes: 1024, artifactRefs: [],
+  });
+  assert.equal(fallback.decisionSource, 'deterministic-fallback');
+  assert.equal(fallback.providerGatewayError, 'PROVIDER_GATEWAY_UNAVAILABLE');
 });
 
 test('Railway ephemeral routing stays off unless its dedicated gate is enabled', async () => {

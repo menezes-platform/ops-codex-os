@@ -57,4 +57,24 @@ GREEN: node --test tests/provider-gateway-policy.test.js tests/platform-modules.
 - authority_audit: no new writer/store introduced by this patch; known Agent Platform/PersistFlow legacy authority mismatch remains pending.
 - architecture_drift_audit: changes are inside the approved Provider Gateway seam, with injected derived cache; no Spec Kit edit. Offline preparation does not satisfy production topology.
 - blockers: VM current configuration access still unresolved as previously evidenced (Actions startup billing failure, SSM AWS_AUTH_UNAVAILABLE); current global callers, broker/adapters and cutover backup unavailable.
-- next_safe_action: review/integrate this isolated P06 module patch against the source branch; continue independent preparation in later phases where prerequisites exist; resume dependent migration only when its evidence gates are established.
+- next_safe_action: move the P06 caller refactor through its existing draft PR and keep runtime, global caller and provider-secret gates pending; continue independent preparation in later phases where prerequisites exist.
+
+## PersistFlow fleet scorer moved behind Provider Gateway — draft source only
+
+- `recorded_at`: `2026-10-05T03:06:41Z`
+- `phase_id`: `P06`
+- `status`: `CALLER_REFACTORED_ON_DRAFT_BRANCH_RUNTIME_GATE_OPEN`
+- `branch`: `consolidation/p06-provider-policy-20261005`
+- `production_deployment`: `none`
+- `frozen_spec`: `unchanged`
+
+The draft no longer contains the direct PersistFlow TypeSafe HTTP caller or reads `TYPESAFE_API_KEY`. `ProviderGatewayFleetRouter` accepts only an injected `infer` client; it sends a freshness-required request under `fleet-routing-v1` / `fleet.node-ranking`, caps the candidate list at 64, limits the score response token budget by candidate count, omits raw node IDs from the model input, and accepts only one assistant JSON response with exactly one valid 0–2 score per eligible candidate. Route ID and normalized input/output token usage are carried into the route decision and durable checkpoint. Provider monetary caps remain the responsibility of the configured Provider Gateway policy and its adapter; the client does not claim or estimate actual charges.
+
+`createProductionFleetRouter` and `startWeb` accept an explicit Provider Gateway dependency. The normal `start()` path currently supplies none, so multi-candidate routing uses deterministic fallback even if the fleet flag is enabled. This removes the source-level call path from the P06 draft branch, but the change is not merged or deployed, and no production Gateway composition or broker-backed adapter exists. Agent Platform main remains unchanged at its frozen reference; direct provider candidates in Gabriel Ops/Orquestra and complete runtime caller census remain open. P06 zero-bypass and DoD remain `NOT_MET`.
+
+Validation on this checkout: 37 targeted Node tests passed across the Provider Gateway policy/module seams, fleet scorer, production composition, and synthetic end-to-end routing. `node --check` passed for changed runtime JavaScript and `git diff --check` passed. The integration test file that imports `@modelcontextprotocol/server` could not be executed locally because that package is unavailable in the bundled runtime; an independent no-MCP service test verifies route ID and token-usage checkpoint persistence. No provider request, secret read, environment edit, workflow dispatch, or deployment occurred.
+
+- `completed_gate_evidence`: changed-scope offline FG-001/FG-002 coverage and removal of this one direct scorer path from the P06 draft source.
+- `pending_gate_ids`: global AG-014 zero-bypass and installed caller census; full AG-008/AG-013 secret, freshness and cache-policy evidence; broker-backed adapter and production Gateway composition; P03 AG-001/authority-zero; P04/P05 prerequisites; P07 external caller review; all migration, rollback and later phase gates.
+- `architecture_drift_audit`: implementation stays behind the frozen Provider Gateway interface; no Spec Kit or production state change.
+- `next_safe_action`: CI/review the source-only caller refactor, update P08 inventory from its tested branch head, and retain deterministic routing when no Gateway is injected.

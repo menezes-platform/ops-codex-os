@@ -6,7 +6,7 @@ PersistFlow remains authoritative for run generation, claims, checkpoints, lease
 
 Google Drive is a durable content-addressed object store for immutable artifacts, datasets, models, media, snapshots, and manifests. It is not a lock manager, WAL, queue, or transactional run database.
 
-TypeSafe System One is a semantic scheduler only after deterministic eligibility filters have removed impossible nodes. It cannot make a drained, stale, capability-incompatible, over-concurrency, or low-disk node executable.
+Provider Gateway semantic scoring runs only after deterministic eligibility filters have removed impossible nodes. It cannot make a drained, stale, capability-incompatible, over-concurrency, or low-disk node executable. The fleet router accepts an injected Provider Gateway client; it does not call a model vendor or read a provider key directly.
 
 Local worker storage is disposable cache. A cache loss must not destroy any object already marked durable.
 
@@ -18,8 +18,9 @@ On the PersistFlow authority host only:
 - `GOOGLE_DRIVE_CLIENT_SECRET`
 - `GOOGLE_DRIVE_REFRESH_TOKEN`
 - `GABRIEL_DRIVE_ROOT_ID`
-- `TYPESAFE_API_KEY` when semantic scoring is enabled
 - `PERSISTFLOW_FLEET_NODE_SECRETS_JSON`
+
+Provider credentials belong to an approved Provider Gateway adapter/Secrets Broker path. They are not passed to the fleet router. No production adapter or Gateway composition is enabled by this source preparation; without an injected Gateway client, multi-candidate routes use the deterministic fallback.
 
 Per worker:
 
@@ -84,9 +85,9 @@ With fleet routing still disabled for production work, use a bounded test run an
 2. required capabilities are enforced;
 3. projected scratch space cannot cross the disk reserve;
 4. active jobs cannot exceed node concurrency;
-5. TypeSafe receives only eligible candidate metadata;
-6. TypeSafe scores are bounded and validated;
-7. a TypeSafe failure produces `deterministic-fallback`;
+5. the injected Provider Gateway receives only bounded, eligible candidate metadata and a freshness-required request;
+6. Provider Gateway usage and route identity are recorded, and candidate scores are validated;
+7. a missing Gateway, provider failure, or malformed score produces `deterministic-fallback`;
 8. the selected route becomes a `fleet.route` checkpoint;
 9. equal-generation remote reconciliation projects `latestRoute`;
 10. Baton v2 carries both the concrete Commander `deviceId` and routed fleet `nodeId`.
@@ -101,7 +102,7 @@ Enable only after the Drive and routing smoke tests pass:
 PERSISTFLOW_FLEET_ROUTER_ENABLED=1
 ```
 
-A missing TypeSafe API key does not grant broader authority. With multiple eligible nodes it causes deterministic fallback; with a single eligible node the single-candidate fallback is used.
+The feature flag alone does not enable semantic model calls. A Provider Gateway client must be injected by the approved composition root; with multiple eligible nodes and no client, routing uses deterministic fallback. With a single eligible node the single-candidate fallback is used.
 
 ## Local cache policy
 
@@ -117,14 +118,14 @@ Pinned/in-use objects are never evicted. If eviction cannot create sufficient he
 ## Failure handling
 
 - **Stale heartbeat:** node is excluded from eligibility.
-- **TypeSafe timeout/5xx/malformed score:** deterministic fallback; decision source is recorded.
+- **Provider Gateway unavailable/failure/malformed score:** deterministic fallback; decision source and sanitized failure code are recorded.
 - **Drive refresh failure:** no local cache entry is deleted.
 - **Interrupted large upload:** resumable upload probes Drive for the accepted offset and continues.
 - **Upload checksum mismatch:** binary uploads are confirmed against Drive `md5Checksum`; mismatches are quarantined and the local source remains intact.
 - **Download SHA mismatch:** temporary bytes are removed and retried once; a second mismatch marks the Drive object with `gdb_quarantine=hash_mismatch` and blocks promotion into cache.
 - **Duplicate SHA objects:** one deterministic canonical file ID is returned; duplicate IDs are evidence for later safe cleanup, not deleted in the write path.
 - **Drive outage:** already-cached inputs may still be used, but new output is not considered durable until Drive confirmation returns.
-- **Generation changes while TypeSafe is scoring:** route persistence rechecks generation and fails closed with `STALE_GENERATION`.
+- **Generation changes while Provider Gateway is scoring:** route persistence rechecks generation and fails closed with `STALE_GENERATION`.
 
 ## Rollback
 
