@@ -1,5 +1,7 @@
 # Implementation Plan: Drive-backed Fleet Storage and Routing
 
+> **Historical plan:** This plan records the pre-P06 direct TypeSafe integration. Do not use its TypeSafe key/endpoint steps as the current routing contract; see [consolidation status](consolidation-status.md).
+
 **Branch**: `agent/drive-fleet-exec/20260924` | **Date**: 2026-09-24 | **Spec**: `specs/001-drive-backed-fleet-storage-routing/spec.md`
 
 **Input**: Feature specification from `specs/001-drive-backed-fleet-storage-routing/spec.md`
