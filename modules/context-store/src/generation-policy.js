@@ -107,6 +107,7 @@ function planGenerationPublication({ scope, current, previous = null, candidate,
   assertIdempotencyKey(idempotency_key);
   assertExpectedCurrentGeneration(expected_current_generation, pair.current);
   if (checkedCandidate.scope !== scope) fail('INDEX_MANIFEST_SCOPE_MISMATCH');
+  if (checkedCandidate.role !== 'current') fail('CANDIDATE_MANIFEST_ROLE_INVALID');
 
   const highestPublishedGeneration = Math.max(pair.current?.generation ?? 0, pair.previous?.generation ?? 0);
   if (checkedCandidate.generation <= highestPublishedGeneration) fail('INDEX_GENERATION_NOT_ADVANCED');
@@ -116,6 +117,7 @@ function planGenerationPublication({ scope, current, previous = null, candidate,
     scope,
     idempotency_key,
     expected_current_generation: pair.current?.generation ?? null,
+    expected_previous_generation: pair.previous?.generation ?? null,
     current: withRole(checkedCandidate, 'current'),
     previous: pair.current ? withRole(pair.current, 'previous') : null,
     superseded: pair.previous,
@@ -133,6 +135,7 @@ function planGenerationRollback({ scope, current, previous, expected_current_gen
     scope,
     idempotency_key,
     expected_current_generation: pair.current.generation,
+    expected_previous_generation: pair.previous.generation,
     current: withRole(pair.previous, 'current'),
     previous: withRole(pair.current, 'previous'),
   });

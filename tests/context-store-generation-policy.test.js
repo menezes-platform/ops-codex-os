@@ -62,6 +62,7 @@ test('first publication plan selects one current generation and no fabricated pr
   assert.equal(plan.previous, null);
   assert.equal(plan.superseded, null);
   assert.equal(plan.expected_current_generation, null);
+  assert.equal(plan.expected_previous_generation, null);
 });
 
 test('publication promotes candidate and keeps the former current as previous', () => {
@@ -79,6 +80,8 @@ test('publication promotes candidate and keeps the former current as previous', 
   assert.deepEqual(plan.current, manifest(5));
   assert.deepEqual(plan.previous, manifest(4, 'previous'));
   assert.deepEqual(plan.superseded, manifest(3, 'previous'));
+  assert.equal(plan.expected_current_generation, 4);
+  assert.equal(plan.expected_previous_generation, 3);
   assert.equal(Object.isFrozen(plan), true);
   assert.equal(Object.isFrozen(plan.previous), true);
 });
@@ -112,6 +115,14 @@ test('publication rejects another project, stale writers, non-advancing generati
   assert.throws(() => planGenerationPublication({
     scope,
     current,
+    candidate: manifest(5, 'previous'),
+    expected_current_generation: 4,
+    idempotency_key: 'publish-wrong-role',
+  }), /CANDIDATE_MANIFEST_ROLE_INVALID/);
+
+  assert.throws(() => planGenerationPublication({
+    scope,
+    current,
     candidate: manifest(5),
     expected_current_generation: 4,
     idempotency_key: ' publish-5 ',
@@ -131,6 +142,8 @@ test('rollback swaps current and previous only for the expected current generati
 
   assert.deepEqual(plan.current, manifest(7));
   assert.deepEqual(plan.previous, manifest(8, 'previous'));
+  assert.equal(plan.expected_current_generation, 8);
+  assert.equal(plan.expected_previous_generation, 7);
   assert.throws(() => planGenerationRollback({
     scope,
     current,
@@ -191,6 +204,7 @@ test('publication after rollback still advances beyond every retained generation
   assert.equal(plan.current.generation, 9);
   assert.equal(plan.previous.generation, 7);
   assert.equal(plan.superseded.generation, 8);
+  assert.equal(plan.expected_previous_generation, 8);
 });
 
 test('Context Store submits validated publication and rollback plans to an injected driver', async () => {
@@ -224,6 +238,7 @@ test('Context Store submits validated publication and rollback plans to an injec
     scope,
     idempotency_key: 'publish-2',
     expected_current_generation: 1,
+    expected_previous_generation: null,
     current: manifest(2),
     previous: manifest(1, 'previous'),
     superseded: null,
@@ -236,11 +251,12 @@ test('Context Store submits validated publication and rollback plans to an injec
   });
   assert.deepEqual(rolledBack, { scope, generation: 1, status: 'planned' });
   assert.equal(calls[3][1].operation, 'rollback');
+  assert.equal(calls[3][1].expected_previous_generation, 1);
   assert.deepEqual(calls[3][1].current, manifest(1));
   assert.deepEqual(calls[3][1].previous, manifest(2, 'previous'));
 });
 
-test('Context Store generation writes fail closed without the atomic driver contract', async () => {
+test('Context Store generation writes fail closed when driver methods are absent', async () => {
   const store = createContextStore({ driver: {
     readManifest: async () => null,
     putCorpusProjection: async () => null,

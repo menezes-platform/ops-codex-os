@@ -29,6 +29,11 @@ function assertGenerationState(value) {
   return value;
 }
 
+async function applyGenerationPlan(driver, plan) {
+  // The adapter must atomically compare both expected slots and persist the idempotency key.
+  return driver.applyGenerationPlan(plan);
+}
+
 function createContextStore({ driver } = {}) {
   if (!driver || typeof driver.readManifest !== 'function' || typeof driver.putCorpusProjection !== 'function') {
     throw new Error('CONTEXT_STORE_DRIVER_REQUIRED');
@@ -77,7 +82,7 @@ function createContextStore({ driver } = {}) {
         expected_current_generation: request.expected_current_generation,
         idempotency_key: request.idempotency_key,
       });
-      return driver.applyGenerationPlan(plan);
+      return applyGenerationPlan(driver, plan);
     },
 
     async rollbackIndexGeneration(request) {
@@ -94,7 +99,7 @@ function createContextStore({ driver } = {}) {
         expected_current_generation: request.expected_current_generation,
         idempotency_key: request.idempotency_key,
       });
-      return driver.applyGenerationPlan(plan);
+      return applyGenerationPlan(driver, plan);
     },
   });
 }
