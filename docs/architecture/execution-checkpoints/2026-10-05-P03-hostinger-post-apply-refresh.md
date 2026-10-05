@@ -20,6 +20,10 @@ At approximately `2026-10-05T05:56Z`, a public `GET https://darkslategrey-raccoo
 
 Fresh unauthenticated `GET` requests returned HTTP `200` from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and `/.well-known/oauth-authorization-server` (issuer matched the site origin; authorization, token, and registration endpoint fields were present). An unauthenticated `GET /mcp` returned `401`. These bounded results confirm public health, OAuth metadata, and rejection of an unauthenticated MCP request. They do not prove that the corrected fleet-secret JSON was consumed by the running process, establish a current authenticated fleet/cache projection, identify global callers/authority roots, or verify rollback. No credential was read or sent; no deployment or runtime configuration changed. P03 remains `NOT_PASSED`.
 
+## Authenticated status projection refresh — 2026-10-05T08:55:31Z
+
+Using the existing active read-only Composio MCP connection, `persist_fleet_status` and `persist_cache_status` both returned successfully. The bounded responses were `fleet.nodes=[]` and `cache.nodes=[]`. No run, heartbeat, route, enrollment, mutation, or ephemeral execution tool was called, and no credential value was read. This confirms the authenticated status-read path for that connection and that its current projections contain no registered/reporting nodes. It does not prove global hosts or callers are absent, map the running Node process or file-backed authority root, or prove the fleet-secret JSON was consumed. P03/HG-001 remains `NOT_PASSED`.
+
 No environment values or secrets were opened. No deployment, restart, source change, or production write was performed.
 
 ## Gate impact

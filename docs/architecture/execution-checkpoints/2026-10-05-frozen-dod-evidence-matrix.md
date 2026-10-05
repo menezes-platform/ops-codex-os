@@ -185,3 +185,7 @@ After the P06/P08 documentation updates, current GitHub PR metadata and read-onl
 ## P03 public endpoint refresh — 2026-10-05T08:53Z
 
 Unauthenticated checks of the P03 Hostinger origin returned HTTP 200 from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and OAuth authorization-server metadata (issuer matched the origin and expected endpoint fields were present); unauthenticated `GET /mcp` returned 401. See [P03 Hostinger post-apply refresh](2026-10-05-P03-hostinger-post-apply-refresh.md). This confirms only the public endpoints. It does not show the process consumed the corrected fleet secret, refresh authenticated fleet/cache status, identify state roots/global callers, or verify a current rollback snapshot. P03/HG-001 remains `NOT_PASSED`.
+
+## P03 authenticated status projection refresh — 2026-10-05T08:55:31Z
+
+Through the existing active read-only Composio MCP connection, `persist_fleet_status` and `persist_cache_status` succeeded and returned `fleet.nodes=[]` and `cache.nodes=[]`. No mutating tool or credential value was used. This proves the bounded authenticated status-read path and empty projections only; it does not prove secret consumption, all hosts/callers are absent, or one global authority. P03/HG-001 remains `NOT_PASSED`.
