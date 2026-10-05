@@ -4,7 +4,7 @@
 - `checkpoint_id`: `P08-CALLERS-2026-10-05T03:12:57Z`
 - `recorded_at`: `2026-10-05T03:12:57Z`
 - `github_check_status_observed_at`: `2026-10-05T03:12:57Z`
-- `status`: `READ_ONLY_INVENTORY_P06_DRAFT_CALLER_REFACTORED_P04_LOCAL_PRIMARY_FENCE_CI_GREEN_P08_CURRENT_HEAD_CHECKS_NOT_RETURNED`
+- `status`: `READ_ONLY_INVENTORY_P06_DRAFT_CALLER_REFACTORED_P04_LOCAL_PRIMARY_FENCE_CI_GREEN_P08_CHECKS_NOT_RETURNED_FOR_OBSERVED_HEAD`
 - `P08_entry`: `NOT_SATISFIED`
 - `P08_exit`: `NOT_PASSED`
 - `DoD`: `NOT_MET`
@@ -16,7 +16,7 @@
 
 This checkpoint advances P08 through a read-only caller/worker audit and records post-application health checks after the human corrected the Hostinger environment setting and applied the configuration. P03–P07 do not yet expose verified production target paths everywhere, so formal P08 entry is still unmet. The agent did not trigger that deployment, migrate callers, enroll workers, perform mailbox actions, mutate canonical state, or delete/archive branches or repositories.
 
-GitHub metadata was rechecked at `2026-10-05T03:12:57Z`: P08 PR #31 head `5113f2e48cbd84a09f5f8b5f3353baab246cfb7e` returned no combined status checks and no PR-triggered workflow runs. This is no check result, not a pass. The previously observed CodeQL billing block applied to older head `a2a6e109215832aca59ce10f70af7d5dfade528a`; it is not attributed to the current head.
+GitHub metadata was rechecked at `2026-10-05T03:12:57Z`: P08 PR #31 head `5113f2e48cbd84a09f5f8b5f3353baab246cfb7e` returned no combined status checks and no PR-triggered workflow runs. This is no check result, not a pass. The previously observed CodeQL billing block applied to older head `a2a6e109215832aca59ce10f70af7d5dfade528a`; it is not attributed to the observed head.
 
 `OBSERVED` means a dated API/runtime response in this session. `DOCUMENTED_ONLY` means a source or workflow statement, not proof of deployment. `UNRESOLVED` means the available evidence cannot establish the fact needed by the gate.
 
