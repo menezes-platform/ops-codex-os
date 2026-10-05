@@ -1,11 +1,13 @@
 {
   "checkpoint_id": "P09-P11-REF-SNAPSHOT-2026-10-05",
-  "observed_at_utc": "2026-10-05T03:42:01Z",
+  "capture_started_at_utc": "2026-10-05T03:54:53.588Z",
+  "capture_completed_at_utc": "2026-10-05T03:55:01.018Z",
   "source": "git ls-remote --heads --tags",
-  "scope": "Exact refs visible to the authenticated GitHub client at capture time; this does not prove external deployment/caller dependencies or global inventory completeness.",
+  "scope": "Exact refs visible to the authenticated GitHub client per-repository capture time; this does not prove external deployment/caller dependencies or global inventory completeness.",
   "repositories": [
     {
       "repository": "menezes-platform/ops-dev-orquestra",
+      "captured_at_utc": "2026-10-05T03:54:54.964Z",
       "branch_count": 51,
       "tag_ref_count": 0,
       "refs": [
@@ -217,6 +219,7 @@
     },
     {
       "repository": "menezes-platform/ops-persistflow-sandbox",
+      "captured_at_utc": "2026-10-05T03:54:56.409Z",
       "branch_count": 4,
       "tag_ref_count": 0,
       "refs": [
@@ -240,6 +243,7 @@
     },
     {
       "repository": "menezes-platform/ops-codex-os",
+      "captured_at_utc": "2026-10-05T03:54:56.953Z",
       "branch_count": 52,
       "tag_ref_count": 0,
       "refs": [
@@ -256,7 +260,7 @@
           "ref": "refs/heads/agent/log-powershell-quoting-20260924-1545"
         },
         {
-          "sha": "e65fed3b5f70f8727c81fdd3fcaab9823a1701dc",
+          "sha": "a56de48ba3c037e228fabe51662e1608b06b1565",
           "ref": "refs/heads/consolidation/p05-generation-contract-20261005"
         },
         {
@@ -264,7 +268,7 @@
           "ref": "refs/heads/consolidation/p06-provider-policy-20261005"
         },
         {
-          "sha": "854f6f6c67954ae7bc48066183a689eded3456c4",
+          "sha": "23a215ca5ca41c02ae52d03d065cf707525b86d5",
           "ref": "refs/heads/consolidation/p08-caller-inventory-20261005"
         },
         {
@@ -455,6 +459,7 @@
     },
     {
       "repository": "menezes-platform/ops-site-ops",
+      "captured_at_utc": "2026-10-05T03:54:58.332Z",
       "branch_count": 21,
       "tag_ref_count": 3,
       "refs": [
@@ -553,6 +558,546 @@
         {
           "sha": "6ddf403735d579ddf0f4ebef2bfc44952deae01d",
           "ref": "refs/tags/conthabil-source-a8569c429a38"
+        }
+      ]
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "captured_at_utc": "2026-10-05T03:54:59.629Z",
+      "branch_count": 117,
+      "tag_ref_count": 0,
+      "refs": [
+        {
+          "sha": "4a955d4f4517bb2f6b47e3edcff56c6698cb2306",
+          "ref": "refs/heads/agent/dwarf-desktop-mascot-20260926"
+        },
+        {
+          "sha": "b3aee8038dbeb6838563a235900dd06734471cb7",
+          "ref": "refs/heads/agent/fleet-storage-observability-plan/20260924-1353"
+        },
+        {
+          "sha": "9108d26f77d8e8df5d49f98f2fc440f72368a4ba",
+          "ref": "refs/heads/audit/codex-orchestrator-prompt-typesafe-20260919"
+        },
+        {
+          "sha": "53ee5f5db40224b74a4780fbef38e6029a92792d",
+          "ref": "refs/heads/audit/mcp-reliability-2026-09-27"
+        },
+        {
+          "sha": "305f722e9bc5514144fb0f2db796a561f1bec1cf",
+          "ref": "refs/heads/chore/cloudflare-production"
+        },
+        {
+          "sha": "711289d43a62a9c75de1a8dfd2e80bbaea362b23",
+          "ref": "refs/heads/chore/secret-setup-log"
+        },
+        {
+          "sha": "02e49b1deda11e1613559ca7c6f1e0e336223ad6",
+          "ref": "refs/heads/codex/email-triage-protected-categories"
+        },
+        {
+          "sha": "2e20343e831afcbc55333fd912d9d55d503cff74",
+          "ref": "refs/heads/codex/email-triage-review-gate"
+        },
+        {
+          "sha": "5486914bbcfcffc40ee053b36a7a16181f7cb659",
+          "ref": "refs/heads/codex/email-triage-security-vetoes"
+        },
+        {
+          "sha": "cbf039bb020a5628a4b3e44fe9f007729618f4a5",
+          "ref": "refs/heads/consolidation/p07-source-audit-20261005"
+        },
+        {
+          "sha": "56afbdf7099efa005fd5ecb2c207da9d2c262dcb",
+          "ref": "refs/heads/data/notebook-outreach-queue"
+        },
+        {
+          "sha": "3f16e834a2fc9308cc4f2e8650123df7a3fc3bbc",
+          "ref": "refs/heads/design/live-feed"
+        },
+        {
+          "sha": "af355080ae27df6c77613e792efd025ef958e000",
+          "ref": "refs/heads/diagnostics/p03-installed-callers-20261004"
+        },
+        {
+          "sha": "4302aab808e72388a1502e9ac554208d21cfb5b1",
+          "ref": "refs/heads/docs/dashboard-dod-20260918"
+        },
+        {
+          "sha": "24e34b086ba7305b6d97393047969a9fdf9b6b96",
+          "ref": "refs/heads/docs/fleet-runbook-v201"
+        },
+        {
+          "sha": "781bac7d7cd04c9220c7a1c10cbe4f270d417f24",
+          "ref": "refs/heads/docs/gabriel-remote-mcp-connection-2026-09-28"
+        },
+        {
+          "sha": "3afd33a2e09b54e70071c53d3196f6b2ae27a219",
+          "ref": "refs/heads/docs/hostinger-connection-audit-20260928"
+        },
+        {
+          "sha": "42999e6697064b624e1aeb8a43fbe2da970217af",
+          "ref": "refs/heads/docs/hostinger-node-audit-2026-09-28"
+        },
+        {
+          "sha": "ccbb525b7198ef780ba12180153445fae1448477",
+          "ref": "refs/heads/feat/agent-runtime-control-plane"
+        },
+        {
+          "sha": "4bf56531e2de5b759785683a55be8d7b8191b872",
+          "ref": "refs/heads/feat/canonical-project-catalog"
+        },
+        {
+          "sha": "3f63ecbee0528d6893061d476198a9c7701259be",
+          "ref": "refs/heads/feat/connect-all-sources"
+        },
+        {
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+          "ref": "refs/heads/feat/dashboard-auth"
+        },
+        {
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+          "ref": "refs/heads/feat/dashboard-integration"
+        },
+        {
+          "sha": "2dd3bb9b690012e6baaf129dc2cdd62d6a189855",
+          "ref": "refs/heads/feat/dashboard-recovery-20260920"
+        },
+        {
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+          "ref": "refs/heads/feat/dashboard-sync"
+        },
+        {
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+          "ref": "refs/heads/feat/dashboard-verification"
+        },
+        {
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+          "ref": "refs/heads/feat/dashboard-visual"
+        },
+        {
+          "sha": "9d083600e7348f964661c76673bd696d7455abaf",
+          "ref": "refs/heads/feat/dungeon-ops-visual-merge-20260923"
+        },
+        {
+          "sha": "adc0350e27ad0400b5ace54b445e1a53efe27eca",
+          "ref": "refs/heads/feat/fleet-auto-enrollment-v2"
+        },
+        {
+          "sha": "8b1e147375f966530c5130b4448ec42cc2a64f84",
+          "ref": "refs/heads/feat/fleet-cloudshell-bootstrap"
+        },
+        {
+          "sha": "50782b5b9f9fb7a72674f446037b319e5b72c304",
+          "ref": "refs/heads/feat/gabriel-fleet-bootstrap-v1"
+        },
+        {
+          "sha": "ebf36af4317b51a57e0d0435b60f9387035e2eea",
+          "ref": "refs/heads/feat/gabriel-ops-v1"
+        },
+        {
+          "sha": "b65bdecd711d05105c59d00c6d970ad6b48a8097",
+          "ref": "refs/heads/feat/gcp-mcp-cloudrun-upstream"
+        },
+        {
+          "sha": "ee2b2a47e83d7d92ba33f8eccfc68be92f1bf8a0",
+          "ref": "refs/heads/feat/gcp-readonly-mcp"
+        },
+        {
+          "sha": "0660304a357d0bc18e0794b55b58f0fd6c01afe0",
+          "ref": "refs/heads/feat/geometry-dojo-preview"
+        },
+        {
+          "sha": "a6d83473ad6b39cc5827765e94258afc8bb35622",
+          "ref": "refs/heads/feat/jev-email-triage"
+        },
+        {
+          "sha": "8950180232eafea7a87e23c28978a20ce19f11d8",
+          "ref": "refs/heads/feat/live-project-feed"
+        },
+        {
+          "sha": "be1372b3947e789389d28f38bd125a89dbe89436",
+          "ref": "refs/heads/feat/notebook-outreach-infra"
+        },
+        {
+          "sha": "078ffb576e1e44db52e5b0745f61508f69a50499",
+          "ref": "refs/heads/feat/tiktok-max-priority-feed"
+        },
+        {
+          "sha": "0f8084d1ab2a795d6ca677b193b0e494a4fe952e",
+          "ref": "refs/heads/feat/typesafe-guardrail"
+        },
+        {
+          "sha": "c7f315cb3c4bc303b357952cf25496ec1cba8525",
+          "ref": "refs/heads/fix/auth-readiness-propagation"
+        },
+        {
+          "sha": "d8dc9384b3ec48446d720c7ca2bf491b1d476888",
+          "ref": "refs/heads/fix/auth-runtime-observability"
+        },
+        {
+          "sha": "c4894fa02057b8fec36761702718886aa3eb9df8",
+          "ref": "refs/heads/fix/auth-runtime-probe-20260920"
+        },
+        {
+          "sha": "e3e1dfb2124f26bf50e6842945a94d7ce828b71c",
+          "ref": "refs/heads/fix/cloudflare-account-selection"
+        },
+        {
+          "sha": "861972fa2813a7659dd5c2f425d4f16517cb450f",
+          "ref": "refs/heads/fix/cloudflare-cron-health"
+        },
+        {
+          "sha": "208bc109ef550bb2ed4e2f27bac4c6d21398dac5",
+          "ref": "refs/heads/fix/cloudflare-cron-health-route"
+        },
+        {
+          "sha": "68f4538d8f2df47ed459e21138e836e71bd6f8c0",
+          "ref": "refs/heads/fix/cloudflare-github-concurrency"
+        },
+        {
+          "sha": "87c630ea5f2ee7fb157658e196860bfb7717a780",
+          "ref": "refs/heads/fix/cloudflare-github-cron"
+        },
+        {
+          "sha": "95a811f07c3e972d2b9f16dc15a3b19299579570",
+          "ref": "refs/heads/fix/cloudflare-github-fetch-receiver-20260920"
+        },
+        {
+          "sha": "640ba917be589f2b0165b63336af91080cecccf2",
+          "ref": "refs/heads/fix/cloudflare-github-subrequests"
+        },
+        {
+          "sha": "177adc3ad6b9468fc5f2625f9d447a598000ad74",
+          "ref": "refs/heads/fix/cloudflare-pbkdf2-limit-20260920"
+        },
+        {
+          "sha": "e700c2452ef4c64a0bb8429cad7c52cb2c265b16",
+          "ref": "refs/heads/fix/composio-akimcp-redirect"
+        },
+        {
+          "sha": "6a30930b5de4a60c5526c385fe9505e391d46994",
+          "ref": "refs/heads/fix/dashboard-active-sync"
+        },
+        {
+          "sha": "174f0d563d4f22d06a2243760c28fe7e89280ad6",
+          "ref": "refs/heads/fix/dashboard-auth-credential-recovery-20260920"
+        },
+        {
+          "sha": "d7852a97a441adf2690a755db629080a042a3fb9",
+          "ref": "refs/heads/fix/dashboard-bearer-failover"
+        },
+        {
+          "sha": "ff6c1111acfdc31c10496a9bd643cd23e56f2b8b",
+          "ref": "refs/heads/fix/dashboard-machine-auth-diagnostics"
+        },
+        {
+          "sha": "09731d8ebcc1627fb6e88fa17363ba9012b0de62",
+          "ref": "refs/heads/fix/dashboard-machine-auth-worker"
+        },
+        {
+          "sha": "774d67741163f0067be55a809a2a020f313e553e",
+          "ref": "refs/heads/fix/dashboard-sync-reconcile"
+        },
+        {
+          "sha": "dd4f43e44fccb713b05b993307026b5fe9a40ba1",
+          "ref": "refs/heads/fix/dashboard-ux-live-telemetry"
+        },
+        {
+          "sha": "d8857c4a5da85414bd9f35f168cea1bf049ee53b",
+          "ref": "refs/heads/fix/dashboard-worker-secret-init"
+        },
+        {
+          "sha": "9cc2c59b34c3d787f8d9e27ab25470e8f2e43fb2",
+          "ref": "refs/heads/fix/decommission-legacy-aws-vm-20260928"
+        },
+        {
+          "sha": "b7b8b140480d70ed368bddc1e39c3b1c3ba50437",
+          "ref": "refs/heads/fix/final-project-feed-ci"
+        },
+        {
+          "sha": "f7557d3038c9b4bf4364264f4e6a6a0c0f40bc09",
+          "ref": "refs/heads/fix/fleet-hub-deploy-ssm"
+        },
+        {
+          "sha": "6db4369c9c5cdac4b90cb01047ba67b2715d8293",
+          "ref": "refs/heads/fix/fleet-windows-legacy-migration"
+        },
+        {
+          "sha": "31abcc7b0c64a7049686e5177b2cd96d0cb9facc",
+          "ref": "refs/heads/fix/full-sync-kv"
+        },
+        {
+          "sha": "94831e20b57146234c211d4c9f253a75d96d28c4",
+          "ref": "refs/heads/fix/gcp-cloudrun-health-path"
+        },
+        {
+          "sha": "356894e57d577e0a09f0fe9ded86b2975abd25b0",
+          "ref": "refs/heads/fix/github-snapshot-connection-hardening-20260918"
+        },
+        {
+          "sha": "34be53a747edc7bbcd9ad50123ba1af381a8a856",
+          "ref": "refs/heads/fix/jev-email-triage-compact-fetch"
+        },
+        {
+          "sha": "dfbc0dda7dc4034d3d58bd7b06dad55a0c663ba9",
+          "ref": "refs/heads/fix/jev-email-triage-fetch-window"
+        },
+        {
+          "sha": "095515ba7a041d6930d60b8f3ed0ac0451b6b6a4",
+          "ref": "refs/heads/fix/jev-email-triage-local-authority"
+        },
+        {
+          "sha": "d82c58e26e5e464cc54d10103443d22ab30880bd",
+          "ref": "refs/heads/fix/jev-email-triage-local-fetch-envelope"
+        },
+        {
+          "sha": "7bd207f2a71d77d4d3ae995ffbec74f6c88e7e0a",
+          "ref": "refs/heads/fix/jev-local-gmail-identity-drift"
+        },
+        {
+          "sha": "a867391c1e7e18d55d823828870c3fa09c3ccf54",
+          "ref": "refs/heads/fix/live-dungeon-single-project"
+        },
+        {
+          "sha": "a883e384bb91caa9138bb9ba69085183fbcc20d3",
+          "ref": "refs/heads/fix/mobile-dashboard-ux-20260919"
+        },
+        {
+          "sha": "7f3c184ca10aebefcf70121ed4d9f8746ed93116",
+          "ref": "refs/heads/fix/private-source-http-transport-20260919"
+        },
+        {
+          "sha": "e1c564cc3614ce0fae8f88dc9399400dd1fd061a",
+          "ref": "refs/heads/fix/production-smoke-owner-credential-20260920"
+        },
+        {
+          "sha": "4151580715f7fff4c93d22be8b822ca162ca6780",
+          "ref": "refs/heads/fix/project-feed-bom"
+        },
+        {
+          "sha": "bf4b5cb6e241b0055ff836b4dd7515d064dc7e08",
+          "ref": "refs/heads/fix/raw-body-machine-auth"
+        },
+        {
+          "sha": "efdfff428881231535f465465ce9099ec5861af2",
+          "ref": "refs/heads/fix/sync-dashboard-secret-via-deploy-20260920"
+        },
+        {
+          "sha": "55fb735c0bf985d3154998f85136c214f51f93da",
+          "ref": "refs/heads/fix/tiktok-dashboard-live-sync"
+        },
+        {
+          "sha": "9be7d8ceae3e5d4f15db8ebbd101f2f15b4684fe",
+          "ref": "refs/heads/fix/tiktok-live-project-feed"
+        },
+        {
+          "sha": "b2e43de47ec65a535154e8ada58b51981e0412f7",
+          "ref": "refs/heads/fix/tiktok-runtime-deployment-state"
+        },
+        {
+          "sha": "9119d5c506a6a29068094dea67d068ca9be3cfb3",
+          "ref": "refs/heads/fix/use-proven-snapshot-scheduler"
+        },
+        {
+          "sha": "567456b777f31963d8c535628b075e823abf2356",
+          "ref": "refs/heads/fix/webcrypto-machine-auth"
+        },
+        {
+          "sha": "f2398c21ddb57ad7384536c97e6b85b7bb4f7c6b",
+          "ref": "refs/heads/fix/windows-snapshot-scheduler"
+        },
+        {
+          "sha": "d63e75642b7b7b2a18de20f55ecbdedd5167402e",
+          "ref": "refs/heads/infra/dispatch-gabriel-ops-tsim"
+        },
+        {
+          "sha": "330c9469e9951c1082bfdc975654136b6b278776",
+          "ref": "refs/heads/infra/hermes-aws-bootstrap"
+        },
+        {
+          "sha": "2d808c7a2b0971ef67b28e099902d885612853ee",
+          "ref": "refs/heads/integrate/live-snapshot-functional"
+        },
+        {
+          "sha": "8dfcca2d544655b7317671fbc0d007c8d961c674",
+          "ref": "refs/heads/main"
+        },
+        {
+          "sha": "86c23f65b40fa6b3ebca95f339c45ee9286b5547",
+          "ref": "refs/heads/migration/platform-consolidation-p02"
+        },
+        {
+          "sha": "b1c9b52a71f4c7e10bd76d8723d6954b4cf9e0e6",
+          "ref": "refs/heads/notebook-outreach-agent"
+        },
+        {
+          "sha": "ea78e1ebab2a7f0390cb77a488b7f54afe5e8b35",
+          "ref": "refs/heads/ops/auth-recovery-20260920"
+        },
+        {
+          "sha": "85780c3ea5912f1b82b65dec5892f4ded3fd3e64",
+          "ref": "refs/heads/ops/auth-recovery-pass2-20260920"
+        },
+        {
+          "sha": "692e102a3e175f43ed35eb4b43b24092d068930e",
+          "ref": "refs/heads/ops/auth-recovery-pass4-record"
+        },
+        {
+          "sha": "017548de23ed3b38a7d7e40fcbb80cb292b0fbc1",
+          "ref": "refs/heads/ops/auth-recovery-pass5-20260920"
+        },
+        {
+          "sha": "fb2aa6ce5dcd2831d9a8c677db6c8d9b3f356790",
+          "ref": "refs/heads/ops/auth-recovery-token-bootstrap-20260920"
+        },
+        {
+          "sha": "e0d567313d767367d30c1d564789a01ce52abe43",
+          "ref": "refs/heads/ops/cloudflare-deploy-learning-20260923"
+        },
+        {
+          "sha": "d2646208966971f0b0322ccccdbf5b1fa3f9d9bc",
+          "ref": "refs/heads/ops/deploy-fleet-enrollment-now"
+        },
+        {
+          "sha": "f6c114aa30462d4293ed1f6d0c8230c5c73f031c",
+          "ref": "refs/heads/ops/gcp-agent-inventory"
+        },
+        {
+          "sha": "9de1534bf76d43c5cb017f439d9c6ca7487b2eb1",
+          "ref": "refs/heads/ops/gcp-auth-bootstrap"
+        },
+        {
+          "sha": "eaa8563e20976534099137f106c2d1784ca3735d",
+          "ref": "refs/heads/ops/gcp-cloudrun-deploy-health-fix"
+        },
+        {
+          "sha": "db68a2ce438fcef6026464c93f1b3e9f4c4207a5",
+          "ref": "refs/heads/ops/gcp-cloudrun-preflight"
+        },
+        {
+          "sha": "b5ea8497d00aea7564e47a3445f319c295df582d",
+          "ref": "refs/heads/ops/gcp-mcp-cloudrun-bootstrap"
+        },
+        {
+          "sha": "f192f87bd091b93f059d80bc56c88ee1c72144ad",
+          "ref": "refs/heads/ops/live-broadcast-node-20260925"
+        },
+        {
+          "sha": "824d519266aa4faef98757bfbb28f6e8d03db021",
+          "ref": "refs/heads/ops/omniroute-chatgpt-plugin"
+        },
+        {
+          "sha": "2bd052f2396d3c404576a3adc1148d30e568978e",
+          "ref": "refs/heads/ops/rdc-refresh-token-tab-leak-20260919"
+        },
+        {
+          "sha": "2c5a41f10a97f580f07bd12acec27b9f001ece18",
+          "ref": "refs/heads/ops/remove-one-shot-dashboard-recovery-record"
+        },
+        {
+          "sha": "e2b1e148d39fa25052a7d88a710fa96e1f4e440f",
+          "ref": "refs/heads/ops/scrapling-codebuild-scout-20261003"
+        },
+        {
+          "sha": "f4ff8a1816cb79cf532ad1ad2fa2e6c9498214d4",
+          "ref": "refs/heads/ops/ttk-live-control-probe"
+        },
+        {
+          "sha": "ac3d668dd3db25a97942c59bda15d8cfacd10444",
+          "ref": "refs/heads/reconcile/catalog-2026-09-21"
+        },
+        {
+          "sha": "70b0e9b51d2edf628eba1774d242583ee313455f",
+          "ref": "refs/heads/reconcile/ttk-single-project-20260919"
+        },
+        {
+          "sha": "3d90bf40aa3491928966ce6b5dd7e2745ca7fa66",
+          "ref": "refs/heads/reconcile/ttk-single-project-20260919-v2"
+        },
+        {
+          "sha": "586d51deabd67c921598960520b955321fa8222f",
+          "ref": "refs/heads/recovery/release-verifier"
+        },
+        {
+          "sha": "8e7520d29371333d1a5fa84f7cc10f83d9438365",
+          "ref": "refs/heads/recovery/sync-pipeline"
+        },
+        {
+          "sha": "d00f41df577e9f104581454413dac85e305fd5cd",
+          "ref": "refs/heads/recovery/visual-ops-console"
+        },
+        {
+          "sha": "79358350fae75a661487208b649b4acbe95874db",
+          "ref": "refs/heads/refactor/connector-runtime"
+        },
+        {
+          "sha": "59a04b0ea8af909bf7ff429fff5aba37924f9571",
+          "ref": "refs/heads/tooling/ai-design-stack"
+        }
+      ]
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "captured_at_utc": "2026-10-05T03:55:01.017Z",
+      "branch_count": 14,
+      "tag_ref_count": 0,
+      "refs": [
+        {
+          "sha": "2fc86be578b898e5e8302c214b8b06cf81f2f15c",
+          "ref": "refs/heads/consolidation/p04-fenced-worker-results-20261005"
+        },
+        {
+          "sha": "bb89e3a19067cd8f2fef1f8fc4dd6b76f56e08a8",
+          "ref": "refs/heads/feat/capability-mesh"
+        },
+        {
+          "sha": "7103cee52f19d1ddc77a68c108a5999dad0b7eda",
+          "ref": "refs/heads/feat/context-session-lifecycle-20260920"
+        },
+        {
+          "sha": "33fec3202c2b22a9d7bb4a291ed51cd7b0cd066f",
+          "ref": "refs/heads/feat/job-engine"
+        },
+        {
+          "sha": "560e529b6734629dc4979ac4e67023244da1e123",
+          "ref": "refs/heads/feat/os-broker"
+        },
+        {
+          "sha": "3aeb9e6ed8e57da842aaf074b9f33dbb39b586bf",
+          "ref": "refs/heads/feat/owner-plane"
+        },
+        {
+          "sha": "4738af181cf43f51a228a7e00f2019a9df7a93b5",
+          "ref": "refs/heads/feat/protocol-plane"
+        },
+        {
+          "sha": "6cbd7b31fe5c7638d1022b68035f5c05c6de5632",
+          "ref": "refs/heads/feat/security-policy"
+        },
+        {
+          "sha": "61f333995cf7d4fe634c5fa7ff4ff1f7b7451eab",
+          "ref": "refs/heads/feat/storage-lifecycle"
+        },
+        {
+          "sha": "3aeb9e6ed8e57da842aaf074b9f33dbb39b586bf",
+          "ref": "refs/heads/feat/supply-recovery"
+        },
+        {
+          "sha": "5ca0ec9c95d0376cf16b30c80ae8348be414f895",
+          "ref": "refs/heads/integration/final-inline"
+        },
+        {
+          "sha": "be3b5bd2ce7caaa91d22f1f80bf076daf772572b",
+          "ref": "refs/heads/integration/portable-mcp-host"
+        },
+        {
+          "sha": "14b4cb2f94227d918c42564447f50f28e4763c88",
+          "ref": "refs/heads/main"
+        },
+        {
+          "sha": "68a6ae81a831b11b2b0d596b21aeb4de1a57c828",
+          "ref": "refs/heads/migration/platform-consolidation-p02"
         }
       ]
     }

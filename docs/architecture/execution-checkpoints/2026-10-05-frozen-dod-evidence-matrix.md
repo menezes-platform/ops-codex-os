@@ -1,8 +1,8 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T03:52:39Z`
-- `recorded_at`: `2026-10-05T03:52:39Z`
-- `github_check_status_observed_at`: `2026-10-05T03:52:39Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T03:55:12Z`
+- `recorded_at`: `2026-10-05T03:55:12Z`
+- `github_check_status_observed_at`: `2026-10-05T03:53:32Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -117,7 +117,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | P06 | `PREPARATION_ONLY / FROZEN_MAIN_BYPASS_PRESENT` | Draft PR #30 removes the PersistFlow direct TypeSafe caller from its branch and passes 316/316 full-suite tests plus 37 targeted tests, but frozen `main` still contains the bypass; no production Gateway composition or broker-backed adapter exists. Direct Gabriel Ops and Orquestra/OmniRoute candidates remain, and production activity/configuration is unresolved. |
 | P07 | `PREPARATION_ONLY` | Complete the read-only writer/caller inventory and distinguish business-domain state from platform authority; no source-system mutation. |
 | P08 | `ENTRY_NOT_SATISFIED` | Continue read-only caller and worker inventory; no migration or archive claim. |
-| P09–P11 | `DESTRUCTIVE_GATES_CLOSED / READ_ONLY_EXACT_REF_SNAPSHOT_ADDED` | [Pre-cleanup inventory](2026-10-05-P09-P11-precleanup-audit.md) and [exact ref snapshot](2026-10-05-P09-P11-ref-inventory.json) record visible branch/tag SHAs for Orquestra (51 branches), PersistFlow Sandbox (4), Agent Platform (52), and Site Ops (21; 3 tag refs). Caller/deployment/state zero receipts, full dependency mapping, preservation decisions, and rollback proof are still absent; no deletion/archive/cleanup. |
+| P09–P11 | `DESTRUCTIVE_GATES_CLOSED / SIX_REPO_REF_AND_PR_INVENTORY_ADDED` | [Pre-cleanup inventory](2026-10-05-P09-P11-precleanup-audit.md) and [exact ref snapshot](2026-10-05-P09-P11-ref-inventory.json) record visible SHAs for Orquestra (51 branches), PersistFlow Sandbox (4), Agent Platform (52), Site Ops (21 branches/3 tags), Gabriel Ops (117), and Resident Node (14), plus open-PR IDs for all six. Caller/deployment/state zero receipts, complete dependency mapping, preservation decisions, and rollback proof are still absent; no deletion/archive/cleanup. |
 | P12 / DoD | `PRE_AUDIT_ONLY / NOT_MET` | Refresh this matrix as phase receipts arrive; run final audits only after all prerequisite gates are passed. |
 
 Evidence references: [`P03 Hostinger recovery`](2026-10-05-P03-hostinger-recovery.md), [`P03 Hostinger deployment-list read`](2026-10-05-P03-hostinger-deployment-read.md), [P03 runtime smoke follow-up](2026-10-05-P03-runtime-smoke-followup.md), [`P05 retrieval preparation`](2026-10-05-P05-retrieval-preparation.md), [`P05 generation policy PR #32`](https://github.com/menezes-platform/ops-codex-os/pull/32), [`P06 Provider Gateway PR #30`](https://github.com/menezes-platform/ops-codex-os/pull/30), [`P07 source writer inventory`](https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/82), [`P08 caller/worker inventory`](2026-10-05-P08-caller-worker-inventory.md), [P09–P11 pre-cleanup inventory](2026-10-05-P09-P11-precleanup-audit.md), [P09–P11 exact ref snapshot](2026-10-05-P09-P11-ref-inventory.json), frozen Spec Kit `11-definition-of-done.md`, `02-target-architecture.md`, `03-authority-matrix.md`, current draft PR/check metadata recorded in P08, and read-only timestamped probes noted there. This checkpoint records evidence boundaries; it does not reclassify or amend the frozen Spec Kit.
