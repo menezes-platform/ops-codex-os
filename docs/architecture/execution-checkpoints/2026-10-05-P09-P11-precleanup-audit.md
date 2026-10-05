@@ -1,8 +1,8 @@
 # P09–P11 — pre-cleanup repository readiness checkpoint
 
 - `phase_id`: `P09-P11_PREPARATION`
-- `checkpoint_id`: `P09-P11-ARCHIVE-DEPENDENCY-2026-10-05T04:17:00Z`
-- `recorded_at`: `2026-10-05T04:17:00Z`
+- `checkpoint_id`: `P09-P11-ARCHIVE-DEPENDENCY-2026-10-05T04:24:00Z`
+- `recorded_at`: `2026-10-05T04:24:00Z`
 - `status`: `READ_ONLY_SEVEN_REPO_REF_AND_29_OPEN_PR_HEAD_INVENTORY_P10_HOSTINGER_DEPLOYMENT_CANDIDATE_UNRESOLVED_DESTRUCTIVE_GATES_CLOSED`
 - `P09`: `NOT_PASSED`
 - `P10`: `NOT_PASSED`
@@ -39,6 +39,8 @@ Read-only source and deployment metadata were checked against immutable default-
 | --- | --- | --- |
 | [`ops-dev-orquestra`](https://github.com/menezes-platform/ops-dev-orquestra/tree/26c8e80dd6bacd9abc938af8a7da51b3d1abede2) | Its current main has four workflow files: [Conthabil Acquisition](https://github.com/menezes-platform/ops-dev-orquestra/blob/26c8e80dd6bacd9abc938af8a7da51b3d1abede2/.github/workflows/conthabil-acquisition.yml), [OmniRoute MCP](https://github.com/menezes-platform/ops-dev-orquestra/blob/26c8e80dd6bacd9abc938af8a7da51b3d1abede2/.github/workflows/omniroute-mcp.yml), [Semantic Cache](https://github.com/menezes-platform/ops-dev-orquestra/blob/26c8e80dd6bacd9abc938af8a7da51b3d1abede2/.github/workflows/semantic-cache.yml), and [Track G](https://github.com/menezes-platform/ops-dev-orquestra/blob/26c8e80dd6bacd9abc938af8a7da51b3d1abede2/.github/workflows/track-g.yml). The inspected workflow definitions are PR/manual validation and disposable test paths; no deployment step was found in these four files. The GitHub deployments API returned no records. | `UNRESOLVED`: no complete external deployment/caller/config inventory or capability-migration evidence exists. The four source workflows and empty GitHub deployment list do not establish deployment-zero. |
 | [`ops-persistflow-sandbox`](https://github.com/menezes-platform/ops-persistflow-sandbox/tree/bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65) | The pinned [main README](https://github.com/menezes-platform/ops-persistflow-sandbox/blob/bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65/README.md) describes a deployment mirror in a separate GitHub account/repository connected to a second Hostinger site, and lists Hostinger application/API/dashboard/workspace/job-broker responsibilities. Main has no `.github/workflows` directory at this ref, and the GitHub deployments API returned no records. | `DOCUMENTED_DEPLOYMENT_CANDIDATE / ZERO_UNPROVEN`: the second Hostinger site and mirror are not mapped or checked. No external hPanel account inventory, live health, state migration receipt, equivalent-test evidence, or preservation tag was observed. Do not archive. |
+
+The active Hostinger connection's read-only website inventory at `2026-10-05T04:23:17Z–04:23:18Z` returned two entries in that account: the current Node.js site `darkslategrey-raccoon-448222.hostingersite.com` and Builder site `consertoeletroled.com`. No separate deployment site appeared in this account's inventory. This does not cover another Hostinger account, a separately shared account, or a site without a listed website asset; it therefore narrows the search but does not resolve the second-site candidate described by Sandbox main.
 
 The 29 exact open PR heads in the dated inventory remain live review/ref candidates. Their presence alone does not prove production execution, but archive readiness cannot be inferred while the P09 entry gate and external dependency checks remain unmet. Refresh PR state and head SHAs immediately before any future cleanup decision.
 

@@ -1,9 +1,9 @@
 # P08 — caller and worker inventory checkpoint
 
 - `phase_id`: `P08`
-- `checkpoint_id`: `P08-CALLERS-2026-10-05T04:04:21Z`
-- `recorded_at`: `2026-10-05T04:04:21Z`
-- `github_check_status_observed_at`: `2026-10-05T04:04:21Z`
+- `checkpoint_id`: `P08-CALLERS-2026-10-05T04:24:00Z`
+- `recorded_at`: `2026-10-05T04:24:00Z`
+- `github_check_status_observed_at`: `2026-10-05T04:21:08Z`
 - `P06_full_suite_observed_at`: `2026-10-05T03:32:51Z`
 - `status`: `READ_ONLY_INVENTORY_P06_DRAFT_CALLER_REFACTORED_P04_LOCAL_PRIMARY_FENCE_CI_GREEN_P08_CODEQL_BLOCKED_BY_ACCOUNT_BILLING`
 - `P08_entry`: `NOT_SATISFIED`
@@ -23,6 +23,8 @@ After the later P08 documentation push, its pre-update head `228870c86419ad40321
 
 At `2026-10-05T04:04:21Z`, draft P08 PR #31 still pointed to head `06bbbd399b176155f088dcb61150c6052916a027`. GitHub returned two CodeQL check runs, for JavaScript/TypeScript and Python; both ended `failure` because the jobs were not started while the account was locked due to a billing issue. Their annotations contain no source findings. No separate commit status contexts were returned. Treat this as blocked validation, not a code finding or pass; repository content was not changed to bypass the checks.
 
+After commit `5bcf756fb6f349098551e3d6402f656e8b23b204` was pushed at `04:21:01Z`, the PR head was read at `04:21:02Z` and its CodeQL run completed at `04:21:03Z–04:21:08Z`. Both checks again ended `failure`; their annotations explicitly say the jobs were not started because the account is locked due to a billing issue. The job records have no steps, and the job-log export returned `BlobNotFound`. No source diagnostics or separate status contexts were returned. This is a billing-blocked validation, not evidence of a source defect or a pass.
+
 `OBSERVED` means a dated API/runtime response in this session. `DOCUMENTED_ONLY` means a source or workflow statement, not proof of deployment. `UNRESOLVED` means the available evidence cannot establish the fact needed by the gate.
 
 ## Current repository refs and outstanding change sets
@@ -33,7 +35,7 @@ Read-only GitHub inventory on 2026-10-05:
 | --- | --- | --- |
 | [`ops-codex-os` `main`](https://github.com/menezes-platform/ops-codex-os/tree/f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8) | `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8` | Frozen Agent Platform spec reference. |
 | [`ops-codex-os` draft PR #30](https://github.com/menezes-platform/ops-codex-os/pull/30) | head `114e781baed6ac30f9c63d6e923363e73213bc13`, base `migration/platform-consolidation-p03`; open draft. | Offline policy preparation plus a draft-only replacement of the PersistFlow direct TypeSafe caller. No production Gateway composition, broker-backed adapter, global caller census or zero-bypass proof. No CI run was returned for this head at the latest check. |
-| [`ops-codex-os` draft PR #31](https://github.com/menezes-platform/ops-codex-os/pull/31) | head `06bbbd399b176155f088dcb61150c6052916a027`, base `main`; open draft. Its two CodeQL jobs were blocked before starting by the account billing lock at `03:56:52Z`; no source diagnostics or status contexts were returned. | Read-only P08 caller/worker inventory and frozen DoD evidence matrix. The source inventory remains incomplete; this documentation PR does not pass P08 or any destructive gate. |
+| [`ops-codex-os` draft PR #31](https://github.com/menezes-platform/ops-codex-os/pull/31) | Open draft on `main`; head `5bcf756fb6f349098551e3d6402f656e8b23b204` observed at `04:21:02Z`. Two CodeQL checks failed at `04:21:03Z–04:21:08Z` with the explicit billing-lock annotation and no job steps. | Read-only P08 caller/worker inventory and frozen DoD evidence matrix. Logs were unavailable (`BlobNotFound`), but annotations establish that analysis did not start. This remains blocked validation; the documentation PR does not pass P08 or any destructive gate. |
 | [`resident-node` `main`](https://github.com/menezesx2k26-byte/resident-node/tree/14b4cb2f94227d918c42564447f50f28e4763c88) | `14b4cb2f94227d918c42564447f50f28e4763c88` | Small Rust local-runtime baseline; main remains unchanged. |
 | [`resident-node` draft PR #1](https://github.com/menezesx2k26-byte/resident-node/pull/1) | head `2fc86be578b898e5e8302c214b8b06cf81f2f15c`, base `main`; open draft. CI run [#46](https://github.com/menezesx2k26-byte/resident-node/actions/runs/37260331775) passed `fmt`, Clippy, and tests on Linux/Windows/macOS. | Draft adds a local OS sidecar lock and advances `security_epoch` before restart reconciliation; source-only. Authenticated worker identity, deployed-filesystem validation, external-effect recovery, runtime integration, production migration and rollback are unproven. |
 | [`ops-persistflow-sandbox` `main`](https://github.com/menezes-platform/ops-persistflow-sandbox/tree/bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65) | `bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65`; main contains README/spec only. | Canonical sandbox repo remains unimplemented on `main`. |
@@ -78,7 +80,7 @@ Static source review of draft PR #1 found:
 | P05 | `NOT_PASSED` | Drive corpus, isolated BM25+FAISS runtime, manifests, incremental/full rebuild and rollback remain unverified. |
 | P06 | `PREPARATION_ONLY / DRAFT_CALLER_REFACTORED / ZERO_BYPASS_NOT_MET` | Exact draft head `114e781baed6ac30f9c63d6e923363e73213bc13` passed the full Agent Platform Node suite (316/316) and 37 targeted Gateway/fleet tests locally. PR #30 removes the direct PersistFlow TypeSafe source path and falls back deterministically until an injected Gateway exists; it remains unmerged/un-deployed and GitHub returned no check statuses or PR-triggered workflow runs for this head. Gabriel Ops and Orquestra provider candidates, broker-backed adapters, secret paths, and live caller/configuration remain unverified. |
 | P07 | `PREPARATION_ONLY` | Draft PR #82 tests the dashboard read-only routes and records source writers; live writer/deployment/caller census and production command/read acceptance remain incomplete. |
-| P08 entry/exit | `NOT_SATISFIED` / `NOT_PASSED` | The inventory now includes a source-level Gabriel Ops PersistFlow read-adapter candidate, but no global legacy-caller count, complete installed worker/config map, or live-worker fencing proof exists. The P08 CodeQL jobs also did not start because of the account billing lock. |
+| P08 entry/exit | `NOT_SATISFIED` / `NOT_PASSED` | The inventory now includes a source-level Gabriel Ops PersistFlow read-adapter candidate, but no global legacy-caller count, complete installed worker/config map, or live-worker fencing proof exists. The latest CodeQL annotations at `04:21:03Z–04:21:08Z` explicitly say the jobs did not start because of the account billing lock; no source diagnostics or job steps exist. |
 | P09–P11 | `NOT_STARTED_FOR_DESTRUCTIVE_ACTIONS` | Required zero-caller/deploy/state evidence, preservation refs, archive gates and branch dependency audit are absent. No delete/archive/cleanup action is authorized by this checkpoint. |
 | P12 / DoD | `NOT_MET` | The frozen Definition of Done still has unmet repository, authority, interface, retrieval, execution/security, cleanup and final verification criteria. |
 
