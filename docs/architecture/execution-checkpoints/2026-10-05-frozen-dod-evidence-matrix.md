@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:34:39Z`
-- `recorded_at`: `2026-10-05T02:34:39Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:37:22Z`
+- `recorded_at`: `2026-10-05T02:37:22Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -47,7 +47,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | --- | --- | --- |
 | All production callers use approved producer-owned interfaces | `UNRESOLVED` | P08 caller inventory is explicitly incomplete; the global production caller census is missing. |
 | Agent Platform has no direct PersistFlow SQLite/WAL/filesystem access | `UNRESOLVED` | No complete source + deployed-process/config scan proves zero access paths. |
-| Platform-owned model calls bypassing Provider Gateway = 0 | `UNRESOLVED` | P06 policy draft exists, but the source scan of `ops-gabriel-ops@8dfcca2d544655b7317671fbc0d007c8d961c674` found direct Groq/Mistral/OpenRouter/Gemini dashboard-swarm routes plus TypeSafe System One calls; OmniRoute is configured as a fallback. Ownership and live execution are not established, so there is no defensible zero-bypass result. Production adapter, secret-path, and caller proof remain absent. |
+| Platform-owned model calls bypassing Provider Gateway = 0 | `NOT_MET` | The canonical Agent Platform source at `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8` still contains a platform-owned direct TypeSafe fleet-scoring path (`persistd/src/fleet/typesafe-router.js`), composed when `PERSISTFLOW_FLEET_ROUTER_ENABLED=1`; live flag/key state and invocation count remain `UNRESOLVED`. Gabriel Ops source also has direct dashboard-swarm provider routes and TypeSafe calls; their ownership/live use remains unresolved. The source-level zero condition is false, and no production migration through Provider Gateway is proven. |
 | Framework/vendor-specific types in public platform interfaces = 0 | `UNRESOLVED` | No exhaustive public-interface scan or gate result was recorded. |
 | Project scope is deterministic | `PARTIAL` | `memory-cognition` canonicalizes explicit repository scope and rejects unallowlisted projects in tests; this is not the final Context Gateway contract or production proof. |
 | Normal retrieval never widens scope implicitly | `PARTIAL` | Scope-bound provider tests and RAGFlow dataset/repository filtering exist; one-index-only enforcement in the target runtime is unverified. |
@@ -113,7 +113,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | P03 / HG-001 | `BLOCKED / NOT_PASSED` | Preserve healthy-service evidence; obtain VM service/origin/caller mapping, global caller census, sole-primary proof, and a fresh verified rollback snapshot before any cutover. |
 | P04 | `FORMAL_ENTRY_NOT_SATISFIED` | Continue source review of the draft fence and design authenticated identity/transport plus restart/external-effect recovery; no production migration. |
 | P05 | `PREPARATION_ONLY / ENTRY_NOT_SATISFIED` | P04 indexing runtime is absent from Resident Node `main`. Draft Context Gateway/Store seams exist on the P03 migration branch; [PR #32](https://github.com/menezes-platform/ops-codex-os/pull/32) advances source-level generation policy only. The Drive driver and execution-plane interface/runtime remain pending. |
-| P06 | `PREPARATION_ONLY / BYPASS_ZERO_UNPROVEN` | Provider policy and focused tests are prepared. The source scan adds direct model-call candidates in Gabriel Ops (dashboard swarm and TypeSafe) plus the previously inventoried Orquestra/OmniRoute paths. Scope and live use still need proof; no live routing switch. |
+| P06 | `PREPARATION_ONLY / SOURCE_BYPASS_PRESENT` | Provider policy and focused tests are prepared, but the Agent Platform fleet scorer still calls TypeSafe directly in source; direct Gabriel Ops and Orquestra/OmniRoute candidates also remain. Production activity/configuration is unresolved; no live routing switch. |
 | P07 | `PREPARATION_ONLY` | Complete the read-only writer/caller inventory and distinguish business-domain state from platform authority; no source-system mutation. |
 | P08 | `ENTRY_NOT_SATISFIED` | Continue read-only caller and worker inventory; no migration or archive claim. |
 | P09–P11 | `DESTRUCTIVE_GATES_CLOSED` | Continue preservation and dependency evidence only; no deletion/archive/cleanup until zero-caller/deployment/state receipts and rollback proof exist. |
