@@ -252,3 +252,7 @@ After refresh, Hostinger's runtime-log panel reported `Problemas: 0`, `Erros: 0`
 ## P03 post-apply public and authenticated status refresh — 2026-10-05T09:52Z
 
 Fresh unauthenticated requests at `09:52:02Z` returned HTTP `200` from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and `/.well-known/oauth-authorization-server` (issuer and authorization/token/registration endpoints match the Hostinger origin), and HTTP `401` from `/mcp` with a Bearer challenge. At `09:51:36Z`, the existing authenticated read-only status tools again returned `fleet.nodes=[]` and `cache.nodes=[]`. No mutation, job, run, heartbeat, enrollment, or secret read occurred. These results verify the bounded public routes and empty projections, not fleet-secret consumption, global callers/writers, sole-primary ownership, effective state roots, or current rollback; P03/HG-001 remains `NOT_PASSED`.
+
+## P10 public version refresh — 2026-10-05T09:53:15Z
+
+The unauthenticated Sandbox version endpoint again returned HTTP `200`, project `persistflow-sandbox`, source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`, and `built_at=2026-09-18T00:25:02.755Z`. The 09:31Z response had a null `build_time` field; this response includes `built_at`. The live legacy release and configured collector keep the P10 archive gate closed; no authenticated state, deployment, or configuration was touched. P10 remains `NOT_PASSED`.
