@@ -1,8 +1,8 @@
 # P05 — generation publication policy preparation
 
 - `phase_id`: `P05`
-- `checkpoint_id`: `P05-GENERATION-POLICY-2026-10-05T02:24:42Z`
-- `recorded_at`: `2026-10-05T02:24:42Z`
+- `checkpoint_id`: `P05-GENERATION-POLICY-VALIDATION-2026-10-05T03:51:52Z`
+- `recorded_at`: `2026-10-05T03:51:52Z`
 - `status`: `OFFLINE_GENERATION_POLICY_ONLY`
 - `P05_formal_entry`: `NOT_SATISFIED`
 - `P05_exit`: `NOT_PASSED`
@@ -16,6 +16,8 @@ The Context Store exposes these plans only through an injected generation-driver
 
 ## Validation
 
-Ten synthetic unit tests cover the closed root schema, strict manifest fields, project scope, digest/date validity, first publication, monotonic promotion, stale-current rejection, rollback swapping, missing/duplicate generations, idempotency-key validation, publication after rollback, and driver fail-closed behavior. All ten passed; adjacent Context Gateway/Store and Spec Kit validator tests also passed (28 tests total). The existing `platform-contracts` test could not load in this host because `ajv/dist/2020` is not installed; no dependencies were installed. These tests are source preparation only and do not satisfy the P04 indexing-runtime entry gate, Drive-backed corpus requirement, FAISS/retrieval execution, incremental/full rebuild, production rollback, or P05 exit.
+At exact branch head `e65fed3b5f70f8727c81fdd3fcaab9823a1701dc`, the complete Node test suite passed **310/310**. Dependencies were installed from this branch's exact `package-lock.json` into scratch with lifecycle scripts disabled; the scratch `node_modules` was exposed through a temporary junction only while tests ran, and the junction was removed afterward. This includes the ten generation-policy tests and the adjacent Context Gateway/Store, MCP, and Spec Kit tests. `node scripts/validate-spec-kit.js docs/architecture/spec-kit` and `git diff --check` also passed.
+
+The first full-suite attempt used `NODE_PATH` alone; ESM test imports and the isolated Hostinger-entry test could not resolve the scratch modules, producing 10 setup failures. Rerunning with the exact scratch modules exposed at the checkout's `node_modules` path passed all 310 tests. This was a test-harness resolution issue, not a source change. These tests remain source preparation only and do not satisfy the P04 indexing-runtime entry gate, Drive-backed corpus requirement, FAISS/retrieval execution, incremental/full rebuild, durable atomic CAS, production rollback, or P05 exit.
 
 No credentials, corpus content, Drive file, index, deployment, or Spec Kit file was read or changed by this implementation.
