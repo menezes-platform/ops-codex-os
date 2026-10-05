@@ -1,8 +1,8 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T09:31:51Z`
-- `recorded_at`: `2026-10-05T09:31:51Z`
-- `github_check_status_observed_at`: `2026-10-05T09:29:31Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T09:35:45Z`
+- `recorded_at`: `2026-10-05T09:35:45Z`
+- `github_check_status_observed_at`: `2026-10-05T09:35:45Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -219,3 +219,13 @@ The public Sandbox version endpoint again returned HTTP `200`, project `persistf
 ## P08 exact-head check — 2026-10-05T09:29Z
 
 For PR #31 SHA `54bdf0495480966d8938d876e5cb3e52bbffef86`, GitHub returned no PR-triggered workflow runs and no combined commit statuses. Read-only `git ls-remote` confirmed the branch and `refs/pull/31/head` both point to that SHA. The PR remains an open draft; the missing hosted check is not treated as a pass.
+
+## Cross-phase hosted check refresh — 2026-10-05T09:35Z
+
+- **P04 / Resident Node PR #1**, head `2fc86be578b898e5e8302c214b8b06cf81f2f15c`: CI run #46 completed successfully across Linux, Windows, and macOS. This is source-level fencing validation; P04 deployment/identity and global-primary gates remain open.
+- **P05 / Agent Platform PR #32**, head `a56de48ba3c037e228fabe51662e1608b06b1565`, and **P06 / PR #30**, head `5ffe57937af75680f458746aaaa0a2255265d96f`: read-only workflow-run and combined-status queries returned empty lists for each head. Their existing local source tests remain scoped to the revisions recorded in their PRs; hosted CI is not a pass.
+- **P07 / Gabriel Ops PR #82**, head `b8d1aa6cb13435bc19f83e4a6c4fd43c15f77acd`: TypeSafe PR Guardrail runs #141–#145 succeeded. CI run #382 remains failed at its physical-memory gate, so tests/build steps did not run on the documentation head.
+- **P10 / Sandbox PR #1**, head `dba5f9cd54f2c70c9765b3f832876d2da9b7c195`: the three latest associated workflow records (#9–#11) ended in `startup_failure`; the latest run #11 had no jobs, so the cause is not established from a job log. This does not change the live-release archive block.
+- **P08 / Agent Platform PR #31** is now at `eb760219db8504ad22f95a03348759a3b9e79e72`; read-only GitHub returned no PR-triggered runs or combined statuses, while `git ls-remote` confirmed branch and `refs/pull/31/head` both match. No workflow was dispatched or rerun.
+
+These current-source checks do not satisfy missing production integration, migration, rollback, caller-zero, or phase-exit criteria. The frozen DoD remains `NOT_MET`.
