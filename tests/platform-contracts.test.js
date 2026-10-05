@@ -205,3 +205,55 @@ test('forbidden-edge architecture checks guard only the new producer modules and
     assert.ok(columns[2], `authority row has one writer: ${line}`);
   }
 });
+
+test('AG-014 source guard keeps known model-provider endpoints and SDK imports inside Gateway adapters', () => {
+  const sourceRoots = [
+    '.github/workflows',
+    'clients',
+    'config',
+    'global',
+    'modules',
+    'persistd/src',
+    'persistd/scripts',
+    'persistd/config',
+    'scripts',
+    'skills',
+    'ego-windows-host',
+  ];
+  const sourceExtension = /\.(?:c|m)?js$|\.tsx?$|\.py$|\.ps1$|\.sh$|\.cmd$|\.bat$|\.ya?ml$|\.jsonc?$|\.toml$/i;
+  const skippedDirectories = new Set(['.git', 'dist', 'node_modules', 'tests', '__tests__']);
+  const sourceFiles = [];
+  function visit(directory) {
+    if (!fs.existsSync(directory)) return;
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory() && skippedDirectories.has(entry.name)) continue;
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(target);
+      else if (sourceExtension.test(entry.name)) sourceFiles.push(target);
+    }
+  }
+  sourceRoots.forEach((relativePath) => visit(contractPath(relativePath)));
+  sourceFiles.push(contractPath('server.js'));
+
+  const knownProviderEdges = [
+    /api\.(?:openai|anthropic|groq|mistral)\.com/i,
+    /openrouter\.ai\/api/i,
+    /generativelanguage\.googleapis\.com/i,
+    /aiplatform\.googleapis\.com/i,
+    /bedrock-runtime\.[a-z0-9-]+\.amazonaws\.com/i,
+    /api\.cohere\.(?:ai|com)/i,
+    /api\.typesafe\.ai/i,
+    /(?:from\s+|require\s*\(\s*|import\s*\(\s*)['"](?:openai|@openai\/[^'"]+|@anthropic-ai\/sdk|@google\/generative-ai|@mistralai\/mistralai|@aws-sdk\/client-bedrock-runtime|@google-cloud\/vertexai|cohere-ai)['"]/i,
+    /^\s*(?:from|import)\s+(?:openai|anthropic|google\.generativeai|mistralai|cohere)\b/im,
+  ];
+  const approvedAdapterRoot = 'modules/provider-gateway/src/adapters/';
+  const violations = [];
+  for (const sourceFile of sourceFiles) {
+    const relativePath = path.relative(root, sourceFile).replaceAll(path.sep, '/');
+    if (relativePath.startsWith(approvedAdapterRoot)) continue;
+    const source = fs.readFileSync(sourceFile, 'utf8');
+    if (knownProviderEdges.some((pattern) => pattern.test(source))) violations.push(relativePath);
+  }
+
+  assert.deepEqual(violations, [], `Known direct model-provider edge outside Gateway adapters: ${violations.join(', ')}`);
+});
