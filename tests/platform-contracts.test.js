@@ -110,6 +110,9 @@ test('Provider Gateway contract is provider-neutral and excludes conversation/ru
   assert.equal(valid(providerSchema.$id, 'inferenceResult', result), true);
   assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, provider: 'raw-provider' }), false);
   assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, conversation_id: 'authority' }), false);
+  assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, freshness_required: true }), true);
+  assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, freshness_required: false }), true);
+  assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, freshness_required: 'true' }), false);
 });
 
 test('Execution Plane client is versioned, uses JSON, and refuses a mutation without an idempotency key', async () => {
