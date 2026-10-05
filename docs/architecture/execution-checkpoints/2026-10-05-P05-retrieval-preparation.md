@@ -13,6 +13,8 @@
 
 The frozen migration plan requires P04's indexing runtime to be available before formal P05 entry. Resident Node `main` at `14b4cb2f94227d918c42564447f50f28e4763c88` contains the existing execution core, but no `indexing-runtime`, FAISS/BM25 runtime, or embedding module was found in its tracked file inventory. The `ops-codex-os` P03 migration branch at `7a211eaae2b54ad8bcbe15ff03b2abb953feed2b` does contain draft Context Gateway and Context Store interfaces plus an index-manifest schema; those source seams are not merged into `main` and have no Drive driver or retrieval runtime. The P04 fencing change remains source-only in draft PR #1; it does not supply the indexing runtime or P04 migration/rollback receipts. Therefore this work records reusable retrieval preparation only and does not advance the formal P05 gate.
 
+At `2026-10-05T05:59Z`, the exact P04 draft head `2fc86be578b898e5e8302c214b8b06cf81f2f15c` was checked in the local source tree. Its `src/` and `tests/` inventories contain no indexing, retrieval, embedding, FAISS, BM25, or Context modules. The draft advances worker lease/epoch fencing, but merging that source alone would still not satisfy the P05 indexing-runtime entry gate.
+
 ## Source evidence
 
 | Surface | Classification | Observed evidence | Boundary |
