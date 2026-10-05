@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T11:33:23Z`
-- `recorded_at`: `2026-10-05T11:33:23Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T11:44Z`
+- `recorded_at`: `2026-10-05T11:44Z`
 - `github_check_status_observed_at`: `2026-10-05T11:27Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
@@ -328,3 +328,7 @@ Unauthenticated GETs returned HTTP 200 from `/healthz` (`service=persistflow`, `
 ## Local scheduler host boundary — 2026-10-05T11:32Z
 
 The current Codex shell reports `COMPUTERNAME=EC2AMAZ-D29SEAV`. A read-only Task Scheduler query for `Gabriel Fleet Agent`, `Gabriel PersistFlow Authority`, and `GabrielOps-PrivateSourceSync` returned no tasks on this shell host. This is not the previously observed desktop host `DESKTOP-L6CITUI`; it does not establish absence or state of those tasks on the user's main machine. No arguments, environment values, or secrets were read. P03/HG-001 remains `NOT_PASSED`.
+
+## P11 stable Spec Kit link — 2026-10-05T11:42Z
+
+Sandbox draft PR #1 head `b17fb58dbe252e06164078542f28ec677c8b7248` now points its README at the frozen Agent Platform Spec Kit commit `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`, replacing a link to the moving P08 evidence branch. The one-line documentation change passed `git diff --check`; the PR remains open/draft and no CI result was checked for the new head. No deployment, migration, deletion, or archive occurred. This improves reference durability only; P10 remains `NOT_PASSED`, formal P11 entry is unmet, and overall DoD remains `NOT_MET`.
