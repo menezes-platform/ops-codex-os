@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T09:35:45Z`
-- `recorded_at`: `2026-10-05T09:35:45Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T09:42:21Z`
+- `recorded_at`: `2026-10-05T09:42:21Z`
 - `github_check_status_observed_at`: `2026-10-05T09:35:45Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
@@ -219,6 +219,13 @@ The public Sandbox version endpoint again returned HTTP `200`, project `persistf
 ## P08 exact-head check — 2026-10-05T09:29Z
 
 For PR #31 SHA `54bdf0495480966d8938d876e5cb3e52bbffef86`, GitHub returned no PR-triggered workflow runs and no combined commit statuses. Read-only `git ls-remote` confirmed the branch and `refs/pull/31/head` both point to that SHA. The PR remains an open draft; the missing hosted check is not treated as a pass.
+
+## P05/P06 focused local test refresh — 2026-10-05T09:42Z
+
+- **P05 / PR #32**, current documentation-only head `a56de48ba3c037e228fabe51662e1608b06b1565`: `tests/context-store-generation-policy.test.js` passed **10/10** using dependencies with an identical `package-lock.json` SHA-256. The pure generation contract is tested; P05 formal entry still requires the P04 indexing runtime, and Drive corpus/driver, durable CAS, and production rollback remain absent.
+- **P06 / PR #30**, current documentation-only head `5ffe57937af75680f458746aaaa0a2255265d96f`: `tests/provider-gateway-policy.test.js` and `tests/platform-contracts.test.js` passed **27/27** using dependencies with an identical `package-lock.json` SHA-256. The PR head still has no hosted runs/statuses; no production Gateway composition or global zero-bypass proof exists.
+
+Both updates add test evidence to their existing draft PR descriptions only; no source, provider, production, migration, or canonical state changed. Neither phase is marked passed.
 
 ## Cross-phase hosted check refresh — 2026-10-05T09:35Z
 
