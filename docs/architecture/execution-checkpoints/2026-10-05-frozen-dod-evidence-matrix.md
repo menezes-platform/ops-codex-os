@@ -248,3 +248,7 @@ At exact PR #82 documentation head `b8d1aa6cb13435bc19f83e4a6c4fd43c15f77acd`, t
 ## P03 runtime-log refresh — 2026-10-05T09:49Z
 
 After refresh, Hostinger's runtime-log panel reported `Problemas: 0`, `Erros: 0`, and `Última implantação: 2026-10-04 23:44`, but returned **Nenhum log de execução encontrado**. This means the panel supplied no startup diagnostic to confirm or reject parsing of the corrected fleet-secret JSON. The prior-source deployment is healthy on the 09:31Z public probe, but secret consumption remains unproven; P03/HG-001 remains `NOT_PASSED`.
+
+## P03 post-apply public and authenticated status refresh — 2026-10-05T09:52Z
+
+Fresh unauthenticated requests at `09:52:02Z` returned HTTP `200` from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and `/.well-known/oauth-authorization-server` (issuer and authorization/token/registration endpoints match the Hostinger origin), and HTTP `401` from `/mcp` with a Bearer challenge. At `09:51:36Z`, the existing authenticated read-only status tools again returned `fleet.nodes=[]` and `cache.nodes=[]`. No mutation, job, run, heartbeat, enrollment, or secret read occurred. These results verify the bounded public routes and empty projections, not fleet-secret consumption, global callers/writers, sole-primary ownership, effective state roots, or current rollback; P03/HG-001 remains `NOT_PASSED`.
