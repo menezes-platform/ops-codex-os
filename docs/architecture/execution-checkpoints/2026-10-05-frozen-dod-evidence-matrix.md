@@ -1,8 +1,8 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T09:27:00Z`
-- `recorded_at`: `2026-10-05T09:27:00Z`
-- `github_check_status_observed_at`: `2026-10-05T05:25:36Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T09:31:51Z`
+- `recorded_at`: `2026-10-05T09:31:51Z`
+- `github_check_status_observed_at`: `2026-10-05T09:29:31Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -206,4 +206,16 @@ The successful one-host metadata workflow [#37267825113](https://github.com/mene
 
 ## Local verification refresh — 2026-10-05T09:29Z
 
-On the exact current P08 documentation tree before this checkpoint commit (`450a4cc0d27b8a4fba3c9865fc007b27395359d6`), the full Node suite passed **285/285**, the Spec Kit validator passed, `git diff --check` passed, and `git diff --exit-code -- docs/architecture/spec-kit` confirmed the frozen Spec Kit is unchanged. These checks validate the local tree; they do not satisfy missing CI, production, migration, rollback, or phase-exit evidence.
+On the P08 checkout at HEAD `450a4cc0d27b8a4fba3c9865fc007b27395359d6` with the evidence-only documentation updates in the working tree, the full Node suite passed **285/285**, the Spec Kit validator passed, `git diff --check` passed, and `git diff --exit-code -- docs/architecture/spec-kit` confirmed the frozen Spec Kit is unchanged. The resulting documentation commit `54bdf0495480966d8938d876e5cb3e52bbffef86` was pushed; its read-only GitHub workflow-run and combined-status queries returned empty lists. These checks do not satisfy missing CI, production, migration, rollback, or phase-exit evidence.
+
+## P03 public endpoint refresh — 2026-10-05T09:31Z
+
+Direct unauthenticated checks of the P03 Hostinger site returned HTTP `200` from `/healthz` and OAuth authorization-server metadata, and `401` from unauthenticated `/mcp`. Health reports `authority=file` and `durable=true`. These results do not verify fleet-secret consumption, state-root mapping, sole-primary ownership, or caller-zero. P03 remains `NOT_PASSED`; see [P03 Hostinger post-apply refresh](2026-10-05-P03-hostinger-post-apply-refresh.md).
+
+## P10 public version refresh — 2026-10-05T09:31:51Z
+
+The public Sandbox version endpoint again returned HTTP `200`, project `persistflow-sandbox`, source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`, and no build timestamp. This confirms the legacy deployment remains live and keeps the P10 archive gate closed; see [P10 Hostinger sandbox follow-up](2026-10-05-P10-hostinger-sandbox-dependency.md).
+
+## P08 exact-head check — 2026-10-05T09:29Z
+
+For PR #31 SHA `54bdf0495480966d8938d876e5cb3e52bbffef86`, GitHub returned no PR-triggered workflow runs and no combined commit statuses. Read-only `git ls-remote` confirmed the branch and `refs/pull/31/head` both point to that SHA. The PR remains an open draft; the missing hosted check is not treated as a pass.

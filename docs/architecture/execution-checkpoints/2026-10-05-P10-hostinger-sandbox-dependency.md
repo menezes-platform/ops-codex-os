@@ -1,8 +1,8 @@
 # P10 — second Hostinger sandbox deployment follow-up
 
 - `phase_id`: `P10`
-- `checkpoint_id`: `P10-HOSTINGER-SANDBOX-2026-10-05T06:27:00Z`
-- `recorded_at`: `2026-10-05T06:27:09Z`
+- `checkpoint_id`: `P10-HOSTINGER-SANDBOX-2026-10-05T09:31:51Z`
+- `recorded_at`: `2026-10-05T09:31:51Z`
 - `status`: `LIVE_LEGACY_RELEASE_OBSERVED / PERIODIC_CALLER_CONFIGURED / ARCHIVE_GATE_CLOSED`
 - `P10_archive_gate`: `NOT_PASSED`
 - `DoD`: `NOT_MET`
@@ -20,6 +20,10 @@ The deployment contract in [`docs/hostinger.md`](https://github.com/menezes-plat
 ## Public version recheck — 2026-10-05T08:42:52Z
 
 A second unauthenticated `GET` to the documented public version endpoint returned HTTP **200** with project `persistflow-sandbox` and the same source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`. The selected `build_time` property was absent from this response. This confirms that the publicly served legacy release remains present at this time; it does not show whether any request came from the configured collector, identify the active dashboard/broker behavior, or provide a release/build timestamp. No authenticated dashboard or state was read, and no deployment or configuration was changed. P10 remains `NOT_PASSED`; the archive gate stays closed.
+
+## Public version recheck — 2026-10-05T09:31:51Z
+
+A fresh unauthenticated `GET https://olivedrab-weasel-504267.hostingersite.com/api/version.php` returned HTTP `200`, `project=persistflow-sandbox`, and source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`; the returned `build_time` was null. This confirms the second Hostinger deployment is still publicly serving the legacy Sandbox release. It does not show collector execution or last-success time and does not make the site archive-safe. No authenticated dashboard/state was queried and no deployment/configuration was changed. P10 remains `NOT_PASSED` and its archive gate stays closed.
 
 ## Configured caller evidence
 
