@@ -1,8 +1,8 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T11:43Z`
-- `recorded_at`: `2026-10-05T11:43Z`
-- `github_check_status_observed_at`: `2026-10-05T11:43Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T11:53Z`
+- `recorded_at`: `2026-10-05T11:53Z`
+- `github_check_status_observed_at`: `2026-10-05T11:53Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -336,3 +336,9 @@ Sandbox draft PR #1 head `b17fb58dbe252e06164078542f28ec677c8b7248` now points i
 ## P09 changed PR/ref association recheck — 2026-10-05T11:43Z
 
 Read-only GitHub metadata and `git ls-remote` confirm Sandbox PR #1 at `b17fb58dbe252e06164078542f28ec677c8b7248` matches both `feat/sandbox-v1` and `refs/pull/1/head`; Agent Platform PR #31 at `a9958060e6a6e5d62191c9c8cb130184f5917bf5` likewise matches its branch and `refs/pull/31/head`. PR #31 remains open/draft; its exact-head workflow-run and combined-status queries returned empty lists. This refresh covers these two touched PRs only; the 11:24Z seven-repository inventory remains the latest full census. No ref or repository was deleted or archived.
+
+## P08 seven-main source census — 2026-10-05T11:53Z
+
+A full tracked-file `git grep -IlE` pass at the seven unchanged `main` SHAs strengthened the P08 repository-source inventory. It confirms direct TypeSafe routing on Agent Platform frozen `main`; direct provider routes in Gabriel Ops, including the JEV entrypoint forwarding its environment key to the helper that posts to `api.typesafe.ai`; and the Orquestra OmniRoute client as a separate centralized-route candidate. The bounded exact provider/PersistFlow/worker marker results and limitations are recorded in [the P08 caller/worker inventory](2026-10-05-P08-caller-worker-inventory.md). This is source evidence only and does not establish live use, caller-zero, or deployed worker configuration.
+
+At the 11:53Z status check, Agent Platform PR #31 remained open/draft at `e9fc394633ac3054399eedc5adba76aba0b9e035`; its branch and `refs/pull/31/head` matched, and GitHub returned no PR-triggered workflow runs or combined commit statuses. The full 29-PR preservation association remains the 11:24Z snapshot; no repository was archived and no ref was deleted. P08 remains `NOT_PASSED`; the frozen DoD remains `NOT_MET`.
