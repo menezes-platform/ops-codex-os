@@ -88,3 +88,7 @@ Validation on the source tree: the focused platform-contract suite passed **9/9*
 ## P06 current-head CI lookup — 2026-10-05T08:43Z
 
 Read-only GitHub Actions-run and combined-status lookups for exact PR #30 head `8cc5bd669b87d5809e005e388b383015d3aed1b5` returned no PR-triggered workflow runs and no commit statuses. This records unavailable CI evidence for that head; it does not convert the local **321/321** suite or **9/9** source-guard result into CI evidence. No run was dispatched or rerun. P06 remains **NOT_PASSED** and the frozen DoD remains **NOT_MET**.
+
+## P06 documentation-head CI lookup — 2026-10-05T08:47Z
+
+After commit `34ccdf1c8bd54e0568e0d5095e316a73a47a0ab0` added only this CI-evidence note, read-only workflow-run and combined-status lookups for the exact current PR #30 head again returned no PR-triggered runs and no commit statuses. The tested code remains `8cc5bd669b87d5809e005e388b383015d3aed1b5`; the current documentation-only head was not tested. No run was dispatched or rerun, and P06 remains **NOT_PASSED**.
