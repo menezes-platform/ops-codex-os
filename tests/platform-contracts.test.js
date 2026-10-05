@@ -14,6 +14,8 @@ addFormats(ajv);
 
 const knownProviderEdges = [
   /api\.(?:openai|anthropic|groq|mistral)\.com/i,
+  /api\.x\.ai/i,
+  /api\.deepseek\.com/i,
   /openrouter\.ai\/api/i,
   /generativelanguage\.googleapis\.com/i,
   /aiplatform\.googleapis\.com/i,
@@ -236,6 +238,8 @@ test('AG-014 source guard recognizes provider endpoints and common provider SDKs
     "import { GoogleGenAI } from '@google/genai';",
     'const endpoint = "https://project.openai.azure.com/openai/v1";',
     'const endpoint = "https://api.together.xyz/v1";',
+    'const endpoint = "https://api.x.ai/v1/responses";',
+    'const endpoint = "https://api.deepseek.com/chat/completions";',
   ];
   for (const source of directProviderSamples) assert.equal(hasKnownProviderEdge(source), true, source);
   assert.equal(hasKnownProviderEdge('const cache = require("node:cache");'), false);
