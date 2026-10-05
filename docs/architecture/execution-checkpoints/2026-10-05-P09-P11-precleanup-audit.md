@@ -93,6 +93,6 @@ Read-only default-branch tree and document reads compared repository-level archi
 
 No legacy document was changed in this audit. P11 remains unpassed until the stale Sandbox contract is superseded under the repository preservation/review process, Memory's consumers are audited, and global authority adoption/redirect and deployment cleanup evidence is complete.
 
-## P06 draft-plan consistency follow-up — 2026-10-05T07:06Z
+## P06 draft-plan consistency follow-up — 2026-10-05T07:09Z
 
-A scoped search of the separate Agent Platform PR #30 branch found that runtime source no longer contains the known TypeSafe endpoint/key path, while its `specs/001-drive-backed-fleet-storage-routing/plan.md` still documents direct `TYPESAFE_API_KEY` configuration. The remaining search hit is a branch-local planning artifact (plus test sentinels), not evidence of a runtime call. It is a P11 documentation-alignment item; it has not been rewritten or counted as main-branch architecture authority. P11 and the frozen DoD remain unpassed.
+A scoped search of the separate Agent Platform PR #30 branch found no known TypeSafe endpoint/key path in runtime source, while its pre-P06 plan contained direct-key instructions. Draft commit `18e60fe843295a74297144a7dce005428b3bed83` now labels the feature spec/plan as historical and points to the current Spec Kit/Gateway disposition without deleting the old record. This resolves the ambiguous draft-branch plan wording only. The note is not on `main`; P11 still depends on the later phase gate and remaining global documentation, deployment, and preservation audit. P11 and the frozen DoD remain unpassed.
