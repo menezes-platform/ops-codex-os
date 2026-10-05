@@ -42,6 +42,13 @@ test('corpus manifest refuses cross-project scope, duplicate identity and unknow
   assert.throws(() => createCorpusManifest({ scope, source_revision: 'abc', documents: [{ ...documents[0], token: 'unexpected' }] }), /CORPUS_DOCUMENT_INVALID/);
 });
 
+test('corpus document paths must be bounded and relative without traversal segments', () => {
+  for (const unsafePath of ['/private/README.md', '../README.md', 'docs/../../secret.md', 'C:/private/README.md', 'docs\\README.md', 'docs//README.md']) {
+    assert.throws(() => manifest('abc', [{ ...documents[0], path: unsafePath }]), /CORPUS_DOCUMENT_INVALID/);
+  }
+  assert.throws(() => manifest('abc', [{ ...documents[0], path: `docs/${'a'.repeat(2048)}.md` }]), /CORPUS_DOCUMENT_INVALID/);
+});
+
 test('manifest validator canonicalizes order and rejects a modified digest', () => {
   const original = manifest();
   const reordered = { ...original, documents: [...original.documents].reverse() };

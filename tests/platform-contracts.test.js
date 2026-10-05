@@ -114,6 +114,12 @@ test('Context Store corpus manifest is project-scoped, content-free, and closed'
     ...corpusManifest,
     documents: [{ ...corpusManifest.documents[0], content: 'source text' }],
   }), false);
+  for (const unsafePath of ['/private/README.md', '../README.md', 'docs/../../secret.md', 'C:/private/README.md', 'docs\\README.md', 'docs//README.md']) {
+    assert.equal(valid(corpusManifestSchema.$id, 'corpusManifest', {
+      ...corpusManifest,
+      documents: [{ ...corpusManifest.documents[0], path: unsafePath }],
+    }), false);
+  }
 });
 
 test('Provider Gateway contract is provider-neutral and excludes conversation/run/project authority', () => {

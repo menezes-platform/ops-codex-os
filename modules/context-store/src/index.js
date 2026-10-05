@@ -1,6 +1,7 @@
 const PROJECT_SCOPE = /^project\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const generationPolicy = require('./generation-policy');
 const corpusManifest = require('./corpus-manifest');
+const { assertDocumentPath } = corpusManifest;
 
 function assertProjectScope(scope) {
   if (typeof scope !== 'string' || !PROJECT_SCOPE.test(scope)) throw new Error('INVALID_PROJECT_SCOPE');
@@ -56,7 +57,7 @@ function createContextStore({ driver } = {}) {
       const documents = request.documents.map((document) => {
         assertOnlyFields(document, new Set(['source_ref', 'path', 'content']));
         assertText(document.source_ref, 'SOURCE_REF_REQUIRED');
-        assertText(document.path, 'SOURCE_PATH_REQUIRED');
+        assertDocumentPath(document.path, 'SOURCE_PATH_INVALID');
         if (typeof document.content !== 'string') throw new Error('DOCUMENT_CONTENT_REQUIRED');
         return { source_ref: document.source_ref, path: document.path, content: document.content };
       });

@@ -27,6 +27,19 @@ function assertText(value, code) {
   if (typeof value !== 'string' || !value.trim() || value !== value.trim()) fail(code);
 }
 
+function assertDocumentPath(value, code) {
+  assertText(value, code);
+  if (value.length > 2048
+    || value.startsWith('/')
+    || /^[A-Za-z]:/.test(value)
+    || value.includes('\\')
+    || /[\u0000-\u001F\u007F]/u.test(value)
+    || value.split('/').some((segment) => !segment || segment === '.' || segment === '..')) {
+    fail(code);
+  }
+  return value;
+}
+
 function assertScope(scope) {
   if (typeof scope !== 'string' || !PROJECT_SCOPE.test(scope)) fail('INVALID_PROJECT_SCOPE');
 }
@@ -77,7 +90,7 @@ function createCorpusManifest({ scope, source_revision, documents } = {}) {
   const normalized = documents.map((document) => {
     assertOnlyFields(document, INPUT_DOCUMENT_FIELDS, 'CORPUS_DOCUMENT_INVALID');
     assertText(document.source_ref, 'SOURCE_REF_REQUIRED');
-    assertText(document.path, 'SOURCE_PATH_REQUIRED');
+    assertDocumentPath(document.path, 'CORPUS_DOCUMENT_INVALID');
     if (typeof document.content !== 'string') fail('DOCUMENT_CONTENT_REQUIRED');
     return {
       source_ref: document.source_ref,
@@ -99,7 +112,7 @@ function assertCorpusManifest(value) {
   const documents = value.documents.map((document) => {
     assertOnlyFields(document, DOCUMENT_FIELDS, 'CORPUS_DOCUMENT_INVALID');
     assertText(document.source_ref, 'CORPUS_DOCUMENT_INVALID');
-    assertText(document.path, 'CORPUS_DOCUMENT_INVALID');
+    assertDocumentPath(document.path, 'CORPUS_DOCUMENT_INVALID');
     if (typeof document.content_sha256 !== 'string' || !DIGEST.test(document.content_sha256)) {
       fail('CORPUS_DOCUMENT_INVALID');
     }
@@ -187,4 +200,4 @@ function planCorpusUpdate({ previous_manifest = null, candidate_manifest, previo
   });
 }
 
-module.exports = { createCorpusManifest, assertCorpusManifest, planCorpusUpdate };
+module.exports = { createCorpusManifest, assertCorpusManifest, assertDocumentPath, planCorpusUpdate };

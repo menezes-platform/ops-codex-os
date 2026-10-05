@@ -17,7 +17,12 @@
         "type": "object",
         "properties": {
           "source_ref": { "type": "string", "minLength": 1 },
-          "path": { "type": "string", "minLength": 1 },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*[\\x00-\\x1F\\x7F]).+$"
+          },
           "content_sha256": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
         },
         "required": ["source_ref", "path", "content_sha256"],
