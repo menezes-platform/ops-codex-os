@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T11:53Z`
-- `recorded_at`: `2026-10-05T11:53Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T11:56Z`
+- `recorded_at`: `2026-10-05T11:56Z`
 - `github_check_status_observed_at`: `2026-10-05T11:53Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
@@ -342,3 +342,7 @@ Read-only GitHub metadata and `git ls-remote` confirm Sandbox PR #1 at `b17fb58d
 A full tracked-file `git grep -IlE` pass at the seven unchanged `main` SHAs strengthened the P08 repository-source inventory. It confirms direct TypeSafe routing on Agent Platform frozen `main`; direct provider routes in Gabriel Ops, including the JEV entrypoint forwarding its environment key to the helper that posts to `api.typesafe.ai`; and the Orquestra OmniRoute client as a separate centralized-route candidate. The bounded exact provider/PersistFlow/worker marker results and limitations are recorded in [the P08 caller/worker inventory](2026-10-05-P08-caller-worker-inventory.md). This is source evidence only and does not establish live use, caller-zero, or deployed worker configuration.
 
 At the 11:53Z status check, Agent Platform PR #31 remained open/draft at `e9fc394633ac3054399eedc5adba76aba0b9e035`; its branch and `refs/pull/31/head` matched, and GitHub returned no PR-triggered workflow runs or combined commit statuses. The full 29-PR preservation association remains the 11:24Z snapshot; no repository was archived and no ref was deleted. P08 remains `NOT_PASSED`; the frozen DoD remains `NOT_MET`.
+
+## P03/P10 public endpoint refresh — 2026-10-05T11:56Z
+
+Fresh unauthenticated reads returned HTTP 200 from the Hostinger PersistFlow `/healthz` endpoint (`service=persistflow`, `authority=file`, `durable=true`) and HTTP 200 from the Sandbox `/api/version.php` endpoint (`project=persistflow-sandbox`, source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`, `built_at=2026-09-18T00:25:02.755Z`, `build_time=null`). The Sandbox release remains live. These public responses do not prove that Hostinger consumed the corrected fleet-secret JSON, identify its state root/writers, prove sole-primary ownership, or establish the Sandbox collector's last successful upstream read. P03/HG-001 and P10 remain `NOT_PASSED`; no external state changed.
