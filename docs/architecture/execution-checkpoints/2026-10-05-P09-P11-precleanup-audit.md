@@ -92,3 +92,7 @@ Read-only default-branch tree and document reads compared repository-level archi
 | Sandbox main `bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65`, [README](https://github.com/menezes-platform/ops-persistflow-sandbox/blob/bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65/README.md) | Says canonical PersistFlow MCP/run authority and DoD remain in the old `Gabriel-Codex-OS` identity, and labels implementation “not started yet.” | Stale repository/status language: the public Hostinger endpoint serves a Sandbox release and the SHA is on its open draft PR line. Preserve the useful broker/workspace capability until disposition/migration; do not rewrite or archive this source by inference. |
 
 No legacy document was changed in this audit. P11 remains unpassed until the stale Sandbox contract is superseded under the repository preservation/review process, Memory's consumers are audited, and global authority adoption/redirect and deployment cleanup evidence is complete.
+
+## P06 draft-plan consistency follow-up — 2026-10-05T07:06Z
+
+A scoped search of the separate Agent Platform PR #30 branch found that runtime source no longer contains the known TypeSafe endpoint/key path, while its `specs/001-drive-backed-fleet-storage-routing/plan.md` still documents direct `TYPESAFE_API_KEY` configuration. The remaining search hit is a branch-local planning artifact (plus test sentinels), not evidence of a runtime call. It is a P11 documentation-alignment item; it has not been rewritten or counted as main-branch architecture authority. P11 and the frozen DoD remain unpassed.

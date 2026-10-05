@@ -34,8 +34,8 @@ P07 remains `NOT_PASSED`: the target command/read interfaces are not verified, c
 
 No source-system state changed in this checkpoint. The source-only rollback is the previous P07 branch ref and no production configuration was modified.
 
-## Source-only health mapping correction — 2026-10-05T07:02Z
+## Source-only health mapping correction — 2026-10-05T07:05Z
 
-Follow-up review reproduced a false-healthy case in `buildInfrastructureEnvelope`: if Tailscale status was unavailable, the collector inserted a synthetic healthy local node. Runtime health evaluation also treated empty infrastructure observations and unrecognized node/deployment statuses as healthy. Draft PR #82 head `89bf21cc3cfffe5e2fb5fbb907a8fc857080642e` removes the fabricated node and returns `unknown` for empty or unrecognized status; explicit healthy, offline and degraded values retain their bounded mappings.
+Follow-up review reproduced false-healthy cases: `buildInfrastructureEnvelope` inserted a synthetic healthy local node when Tailscale status was unavailable, and runtime health evaluation treated empty infrastructure observations and unrecognized node/deployment/TikTok states as healthy. Draft PR #82 head `4c04fca00a59c7e180270d48542644024901309f` removes the fabricated node and returns `unknown` for empty or unrecognized status. Only explicit healthy/ready states report healthy; offline and degraded values retain their bounded mappings.
 
 The new regression passed in the full Vitest suite (**35 files / 230 tests**). Application and server TypeScript checks and `git diff --check` passed. No production collector, workflow, deployment or external service was run. P07 remains `NOT_PASSED`; production configuration, deployment, official command clients, smoke and rollback evidence remain open. The prior P07 test count of 229 applies to the earlier head and is superseded for source-validation reporting.
