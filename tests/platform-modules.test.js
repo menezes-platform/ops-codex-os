@@ -82,9 +82,14 @@ test('Context Store delegates project projections with scope and idempotency and
   assert.deepEqual(await store.getIndexManifest({ scope }), { generation: 1 });
   assert.deepEqual(await store.putCorpusProjection(input), { revision: 'git:abc123' });
   assert.deepEqual(calls[1], ['write', input]);
-  assert.deepEqual(Object.keys(store).sort(), ['getIndexManifest', 'putCorpusProjection']);
+  assert.deepEqual(Object.keys(store).sort(), ['getIndexManifest', 'publishIndexGeneration', 'putCorpusProjection', 'rollbackIndexGeneration']);
   await assert.rejects(store.putCorpusProjection({ ...input, scope: 'global' }), /INVALID_PROJECT_SCOPE/);
   await assert.rejects(store.putCorpusProjection({ ...input, idempotency_key: '' }), /IDEMPOTENCY_KEY_REQUIRED/);
+  await assert.rejects(store.putCorpusProjection({
+    ...input,
+    documents: [{ ...input.documents[0], path: '../outside-project.md' }],
+  }), /SOURCE_PATH_INVALID/);
+  assert.equal(calls.filter(([operation]) => operation === 'write').length, 1);
 });
 
 test('Provider Gateway selects internal route and normalizes a provider-neutral budgeted response', async () => {
