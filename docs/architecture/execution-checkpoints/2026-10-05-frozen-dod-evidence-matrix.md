@@ -372,3 +372,7 @@ Agent Platform PR #31 head `93b3fa4df2328121276f75cc7a8e6ead95c8605f` matched it
 The connected Google Drive returned no metadata results for document queries `Platform Consolidation`, `Context Store`, and `PersistFlow`; no content was fetched. This narrows source-artifact discovery only and does not prove corpus absence outside those queries/account scope. P05 remains preparation-only because its P04 indexing-runtime entry gate and target corpus/runtime are missing.
 
 PR #31 remains open/draft at `f02dc2624738293a0c27c10e07a8a009954bd879`. The latest CodeQL run [#37307731527](https://github.com/menezes-platform/ops-codex-os/actions/runs/37307731527) failed both language jobs; GitHub returned empty steps and no checks, statuses, annotations, or logs, and the log download returned `BlobNotFound`. Cause unknown. P08 hosted validation remains failed/unresolved, not passed; the overall frozen DoD remains `NOT_MET`.
+
+## P08 exact-head CI billing blocker — 2026-10-05T12:17Z
+
+PR #31 now points to `6641db3d02f5d02ba4fc044ce6362eb28b207f06`, matching its branch and `refs/pull/31/head`. CodeQL run [#37308450261](https://github.com/menezes-platform/ops-codex-os/actions/runs/37308450261) failed both analysis jobs before steps began; both check annotations say the account is locked due to a billing issue. This confirms why hosted CodeQL cannot currently validate the evidence branch. No source defect was reported, but the gate is failed and cannot count as PASS. The frozen DoD remains `NOT_MET`.

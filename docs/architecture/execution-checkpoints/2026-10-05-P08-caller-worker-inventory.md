@@ -188,3 +188,7 @@ Agent Platform PR #31 was open/draft at head `93b3fa4df2328121276f75cc7a8e6ead95
 ## P08 latest exact-head CodeQL diagnostics — 2026-10-05T12:14Z
 
 Agent Platform PR #31 remains open/draft at exact head `f02dc2624738293a0c27c10e07a8a009954bd879`. CodeQL run [#37307731527](https://github.com/menezes-platform/ops-codex-os/actions/runs/37307731527) completed with both `Analyze (javascript-typescript)` and `Analyze (python)` failed. GitHub returned no steps, checks, statuses, annotations, or job logs for either job; the log download returned `BlobNotFound`. The cause is unavailable from these diagnostics, so this is recorded as a failed hosted gate with unknown cause, not a source diagnosis or a pass. Local package tests/Spec Kit validation on the prior documented exact tree do not change this hosted result. P08 remains `NOT_PASSED` and the frozen DoD remains `NOT_MET`.
+
+## P08 exact-head billing-blocked CI — 2026-10-05T12:17Z
+
+After the evidence refresh was pushed, PR #31 moved to exact head `6641db3d02f5d02ba4fc044ce6362eb28b207f06`, matching both its branch and `refs/pull/31/head`. CodeQL run [#37308450261](https://github.com/menezes-platform/ops-codex-os/actions/runs/37308450261) failed both language jobs before execution. The check annotations state: “The job was not started because your account is locked due to a billing issue.” No source steps ran, so this is a confirmed account-level CI blocker, not a code finding or a pass. P08 remains `NOT_PASSED`; rerun evidence requires restoration of GitHub Actions billing/eligibility.
