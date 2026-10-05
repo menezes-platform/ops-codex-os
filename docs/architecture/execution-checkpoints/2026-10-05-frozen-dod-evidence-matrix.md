@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:00:30Z`
-- `recorded_at`: `2026-10-05T02:00:30Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:04:53Z`
+- `recorded_at`: `2026-10-05T02:04:53Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -37,7 +37,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | Duplicate authority paths = 0 | `UNRESOLVED` | Global caller/writer census and duplicate-authority verification are incomplete. |
 | Gabriel Ops authoritative state writers = 0 | `UNRESOLVED` | P07 audit PR #82 is draft/source-level; identified writers and live configurations have not been removed or exhaustively reconciled. |
 | Agent Platform operational authority stores = 0 | `UNRESOLVED` | No full production storage/caller scan proves the zero count. Resident Node `main` contains SQLite/WAL state, and its authority classification/cutover is unresolved. |
-| Retrieval indexes own no truth | `TARGET_ONLY` | Target is stated by frozen architecture; no deployed index lineage/authority audit proves it. |
+| Retrieval indexes own no truth | `PARTIAL` | `memory-cognition` returns derived candidates and its RAGFlow adapter has no canonical-write capability; this does not audit all deployed indexes or producers. |
 | Semantic/exact model cache owns no truth | `PARTIAL` | Orquestra source describes exact `serve`, semantic `shadow`, and promotion disabled; no live host/config/data-path validation establishes zero authority. |
 | Engram does not override Git/Memory/PersistFlow/runtime evidence | `TARGET_ONLY` | No precedence audit or adversarial verification evidence was recorded. |
 
@@ -49,23 +49,23 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | Agent Platform has no direct PersistFlow SQLite/WAL/filesystem access | `UNRESOLVED` | No complete source + deployed-process/config scan proves zero access paths. |
 | Platform-owned model calls bypassing Provider Gateway = 0 | `PARTIAL` | P06 policy draft exists; actual adapter/caller/secret-path scan and zero-bypass production proof are absent. |
 | Framework/vendor-specific types in public platform interfaces = 0 | `UNRESOLVED` | No exhaustive public-interface scan or gate result was recorded. |
-| Project scope is deterministic | `TARGET_ONLY` | Frozen target defines scoped behavior; runtime contract tests and production evidence are absent. |
-| Normal retrieval never widens scope implicitly | `TARGET_ONLY` | No runtime retrieval-policy test or leakage audit was recorded. |
+| Project scope is deterministic | `PARTIAL` | `memory-cognition` canonicalizes explicit repository scope and rejects unallowlisted projects in tests; this is not the final Context Gateway contract or production proof. |
+| Normal retrieval never widens scope implicitly | `PARTIAL` | Scope-bound provider tests and RAGFlow dataset/repository filtering exist; one-index-only enforcement in the target runtime is unverified. |
 
 ## Retrieval end state
 
 | Frozen criterion | Status | Evidence and remaining proof |
 | --- | --- | --- |
 | Context Store is Drive-backed with normalized corpus + provenance/manifests | `TARGET_ONLY` | No deployed corpus, provenance ledger, or manifest evidence was recorded. |
-| Project indexes are physically isolated | `TARGET_ONLY` | No deployed index topology or isolation test evidence exists. |
-| BM25 + FAISS hybrid retrieval is active behind Context Gateway | `TARGET_ONLY` | No deployed Context Gateway/retrieval evidence exists. |
+| Project indexes are physically isolated | `PARTIAL` | Scope and foreign-dataset rejection tests exist in the optional RAGFlow adapter; no physically isolated target index topology is implemented or verified. |
+| BM25 + FAISS hybrid retrieval is active behind Context Gateway | `PARTIAL` | A local Git/docs BM25 pilot exists; no FAISS path, target Context Gateway, or active production hybrid runtime was found. |
 | One global local embedding profile is versioned | `TARGET_ONLY` | No profile artifact or versioned runtime configuration was verified. |
 | Structural chunking profile is versioned | `TARGET_ONLY` | No profile artifact or versioned runtime configuration was verified. |
 | Incremental update works | `TARGET_ONLY` | No integration test or production receipt was recorded. |
 | Periodic/full rebuild works | `TARGET_ONLY` | No scheduled rebuild or full-rebuild evidence was recorded. |
 | Current/previous generation publication and rollback work | `TARGET_ONLY` | No generation publication or rollback exercise was recorded. |
-| Cross-project retrieval leakage = 0 | `UNRESOLVED` | No isolation/leakage test suite or corpus-wide result exists. |
-| RAGFlow runtime is not required by the initial target | `UNRESOLVED` | No complete dependency/runtime inventory proves it is absent from required paths. |
+| Cross-project retrieval leakage = 0 | `PARTIAL` | Existing source tests discard foreign scope/dataset results; no full corpus, physical-index, or deployed leakage audit exists. |
+| RAGFlow runtime is not required by the initial target | `PARTIAL` | The cognitive package hard-disables serving and treats RAGFlow as optional shadow; deployed dependency inventory is still incomplete. |
 
 ## Execution and security end state
 
@@ -96,7 +96,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | Frozen criterion | Status | Evidence and remaining proof |
 | --- | --- | --- |
 | Forbidden dependency edges = 0 | `UNRESOLVED` | No final architecture graph/checker result covers all repositories and production dependencies. |
-| Repository tests pass | `PARTIAL` | Resident Node CI #43 passed Linux/macOS/Windows; ops-gabriel-ops CI and TypeSafe PR Guardrail passed for P07 head. P06/P08 query returned no recorded combined statuses/workflow runs; this is absence of status evidence, not a failure or pass. |
+| Repository tests pass | `PARTIAL` | Resident Node CI #43 passed Linux/macOS/Windows; ops-gabriel-ops CI and TypeSafe PR Guardrail passed for P07 head; memory-cognition retrieval suite passed 30/30. A direct full Agent Platform Node-suite run here was incomplete: 14/18 top-level tests passed and 4 could not start/pass because `@modelcontextprotocol/server` is absent and the server did not start. P06/P08 query returned no recorded combined statuses/workflow runs; absence of status is not a pass. |
 | Architecture gates pass | `NOT_MET` | P03, P04, P05, P06, P07 and P08 exit evidence is incomplete; P09–P11 have not started destructive actions. |
 | Integration/E2E tests pass | `UNRESOLVED` | No full consolidated production-path E2E result exists. |
 | Production smoke passes | `PARTIAL` | P03 recovery probes showed Hostinger `/healthz` 200, metadata 200, and unauthenticated MCP 401; this is bounded endpoint evidence, not the DoD smoke suite. |
@@ -112,7 +112,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | --- | --- | --- |
 | P03 / HG-001 | `BLOCKED / NOT_PASSED` | Preserve healthy-service evidence; obtain VM service/origin/caller mapping, global caller census, sole-primary proof, and a fresh verified rollback snapshot before any cutover. |
 | P04 | `FORMAL_ENTRY_NOT_SATISFIED` | Continue source review of the draft fence and design authenticated identity/transport plus restart/external-effect recovery; no production migration. |
-| P05 | `NOT_PASSED` | Build offline retrieval implementation and contract tests only behind the frozen Context Gateway/Context Store boundaries. |
+| P05 | `PREPARATION_ONLY / ENTRY_NOT_SATISFIED` | P04 indexing runtime is absent from Resident Node `main`; retain and extend source-level scope/manifest contracts only until the execution-plane interface is available. |
 | P06 | `PREPARATION_ONLY` | Continue provider adapter/interface/test work and source-level caller/secret-path scan; no live routing switch. |
 | P07 | `PREPARATION_ONLY` | Complete the read-only writer/caller inventory and distinguish business-domain state from platform authority; no source-system mutation. |
 | P08 | `ENTRY_NOT_SATISFIED` | Continue read-only caller and worker inventory; no migration or archive claim. |
