@@ -1,8 +1,8 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:51:12Z`
-- `recorded_at`: `2026-10-05T10:51:12Z`
-- `github_check_status_observed_at`: `2026-10-05T09:35:45Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:54:57Z`
+- `recorded_at`: `2026-10-05T10:54:57Z`
+- `github_check_status_observed_at`: `2026-10-05T10:52Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -288,3 +288,7 @@ After the owner reported applying the Hostinger fleet-secret JSON correction, un
 ## P03 installed-task last-run metadata — 2026-10-05T10:48Z
 
 The successful one-host metadata workflow [#37298998726](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37298998726) reports `Gabriel Fleet Agent=Ready` (last run `2026-10-04T19:36:36Z`, result unavailable), `Gabriel PersistFlow Authority=Running` (last run `2026-10-01T03:08:08Z`, result `267009` / `0x41301`, scheduler's running status), and `GabrielOps-PrivateSourceSync=Ready` (last run `2026-10-05T10:48:48Z`, result `0`). The read-only workflow executed no task and read no secret. These fields show Scheduler state only: the successful task result does not establish successful upstream dashboard retrieval, and `Ready` does not mean the Fleet Agent is executing. P03/HG-001 remains `NOT_PASSED`; see [P03 desktop authority and fleet refresh](2026-10-05-P03-desktop-authority-and-fleet-refresh.md).
+
+## P09 exact PR/ref reconciliation — 2026-10-05T10:54Z
+
+The open draft PR #31 reports head `9c400a0b003577fe0a51e48bdc45829be6c49b1d`; read-only `git ls-remote` at 10:54Z returned the same SHA for both `consolidation/p08-caller-inventory-20261005` and `refs/pull/31/head`. This closes the head-association check for PR #31 only. The 09:08Z seven-repository preservation inventory remains the latest full census; no repository, branch, PR, deployment, or production state was deleted or changed by this check. P09 remains `NOT_PASSED`.
