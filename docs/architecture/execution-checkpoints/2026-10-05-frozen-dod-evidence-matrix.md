@@ -192,3 +192,10 @@ Through the existing active read-only Composio MCP connection, `persist_fleet_st
 ## P09 full PR/ref and archive-state recheck — 2026-10-05T09:08:46Z
 
 The [current preservation recheck](2026-10-05-P09-P11-current-preservation-recheck-0908.json) refreshes all seven frozen-scope repositories. Per-repository open-PR searches returned 29 PRs total; all 29 exact head SHAs match both same-repository branch refs and advertised GitHub `refs/pull/<number>/head` refs. `git ls-remote` found 262 branch refs and 3 tags, including 154 pull-head refs. Repository metadata reports `archived=false` for all seven repositories. The 226 non-default branches without exact open-PR head matches remain preservation-review items only. No ref, PR, deployment, repository, or production state was modified; live Sandbox deployment/collector evidence still blocks archive eligibility.
+## P03 public health spot check — 2026-10-05T09:19:32Z
+
+Fresh unauthenticated `GET /healthz` returned HTTP 200 with `service=persistflow`, `authority=file`, and `durable=true`; the latest authenticated fleet/cache projection at 09:20Z again returned empty node lists. This bounded public health response is not secret-consumption, unique-authority, caller-zero, backup, rollback, or full production-smoke evidence. See [P03 Hostinger post-apply refresh](2026-10-05-P03-hostinger-post-apply-refresh.md). P03/HG-001 remains `NOT_PASSED`.
+
+## P03 authenticated projection refresh — 2026-10-05T09:20Z
+
+Through the existing read-only connection, `persist_fleet_status` and `persist_cache_status` succeeded and returned `fleet.nodes=[]` and `cache.nodes=[]`. No job/inspect, run, heartbeat, enrollment, mutation, or ephemeral execution tool was called. These bounded projections do not prove fleet-secret consumption or global host/caller zero. P03/HG-001 remains `NOT_PASSED`; see [P03 Hostinger post-apply refresh](2026-10-05-P03-hostinger-post-apply-refresh.md).

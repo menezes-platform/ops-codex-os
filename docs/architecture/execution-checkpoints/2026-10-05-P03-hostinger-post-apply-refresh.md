@@ -29,3 +29,11 @@ No environment values or secrets were opened. No deployment, restart, source cha
 ## Gate impact
 
 The latest Hostinger deployment remains healthy and current in hPanel, but it restored the previously successful source archive rather than identifying a new source revision. The running service still reports file authority, while the actual state root, writers, and local Windows authority candidate are unresolved. Keep HG-001 and P03 open; do not infer a single primary from health or a relative file-browser directory listing. The unreadable `.persistflow-data` listing is separately recorded in [P03 Hostinger File Browser follow-up](2026-10-05-P03-hostinger-filebrowser-followup.md).
+
+## Public health spot check — 2026-10-05T09:19:32Z
+
+A fresh unauthenticated direct `GET https://darkslategrey-raccoon-448222.hostingersite.com/healthz` returned HTTP `200` with `{"ok":true,"service":"persistflow","authority":"file","durable":true}`. The latest recorded authenticated read-only `persist_fleet_status`/`persist_cache_status` result remains the 08:55Z call, which returned empty node projections. This health check does not establish that the corrected fleet-secret JSON was consumed, map the process or file-backed root, prove global caller/host zero, or verify rollback. No secret value was read or runtime changed. P03/HG-001 remains `NOT_PASSED`.
+
+## Authenticated status projection refresh — 2026-10-05T09:20Z
+
+Through the existing active read-only Composio MCP connection, `persist_fleet_status` and `persist_cache_status` both succeeded. Their bounded responses were `fleet.nodes=[]` and `cache.nodes=[]`. No sandbox job/inspect, run, heartbeat, enrollment, mutation, or ephemeral execution tool was called; no credential value was read. This refresh confirms only the authenticated status-read path and empty projections at this time. It does not prove secret consumption, all hosts/callers are absent, map the process or file-backed authority root, or verify rollback. P03/HG-001 remains `NOT_PASSED`.
