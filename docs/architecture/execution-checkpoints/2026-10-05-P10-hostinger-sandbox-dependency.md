@@ -26,3 +26,7 @@ This establishes a deployed legacy sandbox service and a matching configured col
 ## P10 disposition
 
 Do not archive `ops-persistflow-sandbox` or remove its Hostinger deployment on this evidence. P10 remains `NOT_PASSED`: the live site still reports a release from the open draft line, and Gabriel Ops has a five-minute collector configured to read it. Before archive, migrate or explicitly disposition the broker/dashboard/workspace/job/provider capabilities, identify the collector's owner and last successful run, prove caller zero after cutover, and verify state migration and rollback/preservation receipts. No deployment, endpoint configuration, state, workflow, or repository ref was changed.
+
+## Draft-branch architecture note — 2026-10-05T07:20Z
+
+The frozen target was compared with the Sandbox README on default `main` and existing draft PR #1. Main remains at `bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65`; the README still uses the old canonical `Gabriel-Codex-OS` identity and says implementation has not started. Draft PR #1 commit `cef18e7f8657160c28bc79ddde311c60fa988505` changes only README.md to align intended ownership with the frozen target while separately identifying the live Hostinger broker/site and the configured projection collector as unresolved dependencies. Its PR body retains the draft status and explicitly leaves P10 NOT PASSED. No CI result was checked, and no production deployment, endpoint, state, or source code changed. This is a proposed branch correction only; it does not certify the live service or pass P10/P11.

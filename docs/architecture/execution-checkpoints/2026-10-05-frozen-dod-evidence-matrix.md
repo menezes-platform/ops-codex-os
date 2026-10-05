@@ -137,3 +137,7 @@ Draft Gabriel Ops PR #82 now points to `b483e6eb7571cccff3cc0dcfd285b5a06e0ac71e
 ## P11 document-alignment follow-up — 2026-10-05T07:09Z
 
 A source-only scan on draft PR #30 found no known provider endpoint/key path in runtime source. Commit `18e60fe843295a74297144a7dce005428b3bed83` labels the branch's TypeSafe-era spec/plan as historical and links the current Gateway disposition, while preserving the original task details. This resolves the ambiguous draft-branch wording but has not updated `main` or passed P11; the frozen DoD remains `NOT_MET`.
+
+## P11 Sandbox documentation follow-up — 2026-10-05T07:20Z
+
+Sandbox `main` remains at `bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65` with stale README identity/status language. Existing draft PR #1 head `cef18e7f8657160c28bc79ddde311c60fa988505` now updates README.md to state the frozen target ownership boundaries and separately identify the live Hostinger service/collector as an unresolved P10 dependency. The PR remains draft; its current head was not CI-checked, and no live service/data changed. This is preparation only. P10 archival and P11 global documentation/adoption/preservation gates remain NOT_PASSED; frozen DoD remains NOT_MET.
