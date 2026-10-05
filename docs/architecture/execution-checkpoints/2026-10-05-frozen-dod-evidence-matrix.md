@@ -376,3 +376,9 @@ PR #31 remains open/draft at `f02dc2624738293a0c27c10e07a8a009954bd879`. The lat
 ## P08 exact-head CI billing blocker — 2026-10-05T12:17Z
 
 PR #31 now points to `6641db3d02f5d02ba4fc044ce6362eb28b207f06`, matching its branch and `refs/pull/31/head`. CodeQL run [#37308450261](https://github.com/menezes-platform/ops-codex-os/actions/runs/37308450261) failed both analysis jobs before steps began; both check annotations say the account is locked due to a billing issue. This confirms why hosted CodeQL cannot currently validate the evidence branch. No source defect was reported, but the gate is failed and cannot count as PASS. The frozen DoD remains `NOT_MET`.
+
+## P03/P10 and P08 live refresh — 2026-10-05T12:28Z
+
+Public read-only probes returned Hostinger `/healthz` HTTP `200` (`service=persistflow`, `authority=file`, `durable=true`) and Sandbox `/api/version.php` HTTP `200` (`project=persistflow-sandbox`, SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`, build time `2026-09-18T00:25:02.755Z`). Authorized read-only PersistFlow fleet/cache projections both succeeded with empty node arrays. This does not establish fleet-secret consumption, desktop worker enrollment/process environment, sole-primary ownership, or current rollback; the live legacy Sandbox release and configured collector candidate keep its archive gate closed. P03/HG-001 and P10 remain `NOT_PASSED`.
+
+For exact PR #31 docs head `8ad5d46c20f8a68613fa3de2ff4072fbd4266f4b`, CodeQL run [#37308603884](https://github.com/menezes-platform/ops-codex-os/actions/runs/37308603884) failed both language jobs before starting because GitHub reports the account locked due to a billing issue. This is failed hosted validation, not a source result or PASS. P08 and overall DoD remain `NOT_PASSED` / `NOT_MET`.
