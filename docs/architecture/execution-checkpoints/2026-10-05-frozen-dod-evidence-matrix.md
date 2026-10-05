@@ -236,3 +236,11 @@ Both updates add test evidence to their existing draft PR descriptions only; no 
 - **P08 / Agent Platform PR #31** is now at `eb760219db8504ad22f95a03348759a3b9e79e72`; read-only GitHub returned no PR-triggered runs or combined statuses, while `git ls-remote` confirmed branch and `refs/pull/31/head` both match. No workflow was dispatched or rerun.
 
 These current-source checks do not satisfy missing production integration, migration, rollback, caller-zero, or phase-exit criteria. The frozen DoD remains `NOT_MET`.
+
+## P03 Hostinger deployment-panel inspection — 2026-10-05T09:47Z
+
+Read-only inspection of the current hPanel deployment details shows deployment `01a1094e-4561-7179-a9e5-e00378da3390` as `Concluído` (2026-10-04 23:44). Its log says **Source: previous deployment source**, restores `persistflow-rfc9207-20260929.zip`, loads variables from `.env`, and restarts `src/hostinger-entry.js` on Node 24. This confirms that the service restarted from the prior source archive; it does not prove that the corrected `PERSISTFLOW_FLEET_NODE_SECRETS_JSON` was consumed. No secret values were opened or read. The 09:31Z public probes remain the latest health/authentication evidence; P03/HG-001 remains `NOT_PASSED`.
+
+## P07 local test refresh — 2026-10-05T09:47Z
+
+At exact PR #82 documentation head `b8d1aa6cb13435bc19f83e4a6c4fd43c15f77acd`, the local Vitest suite passed **35/35 files and 232/232 tests** using the checkout's installed dependencies (Node 24.19.0, Vitest 4.1.11). This supplies test evidence on the documentation-only head while CI run #382 remains failed before tests at the GitHub runner physical-memory gate. It does not establish production ownership, caller completeness, smoke, rollback, or P07 exit; P07 remains `NOT_PASSED` and the frozen DoD remains `NOT_MET`.
