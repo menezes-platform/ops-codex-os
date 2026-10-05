@@ -42,6 +42,8 @@ Read-only source and deployment metadata were checked against immutable default-
 
 The active Hostinger connection's read-only website inventory at `2026-10-05T04:23:17Z–04:23:18Z` returned two entries in that account: the current Node.js site `darkslategrey-raccoon-448222.hostingersite.com` and Builder site `consertoeletroled.com`. No separate deployment site appeared in this account's inventory. This does not cover another Hostinger account, a separately shared account, or a site without a listed website asset; it therefore narrows the search but does not resolve the second-site candidate described by Sandbox main.
 
+A fresh authenticated Hostinger API inventory at approximately `2026-10-05T05:05Z` again returned exactly those two enabled site assets and no second Node.js deployment in this account. This refresh narrows only the account visible to the connected Hostinger client; the separate Sandbox deployment-mirror candidate remains unresolved outside this inventory.
+
 ## Additional GitHub deployment-registry evidence for P11
 
 Read-only `GITHUB_LIST_DEPLOYMENTS` calls covered the seven repositories around `2026-10-05T04:26Z–04:28Z`, with pagination through the end of the only non-empty repository. Orquestra, PersistFlow Sandbox, Agent Platform, Site Ops, Resident Node, and Memory returned no GitHub deployment records. Gabriel Ops returned 347 records across four pages (100 + 100 + 100 + 47); page five was empty. The recorded range is `2026-09-17` through `2026-10-02`.
