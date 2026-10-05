@@ -1,5 +1,7 @@
 # Feature Specification: Drive-backed Fleet Storage and Routing
 
+> **Consolidation note:** This specification is retained as a pre-P06 feature record. Its TypeSafe direct-provider sections and “Implemented and verified” status do not establish the current production state. See [consolidation status](consolidation-status.md) for the current Gateway disposition.
+
 **Feature Branch**: `agent/drive-fleet-exec/20260924`
 **Created**: 2026-09-24  
 **Status**: Implemented and verified

@@ -8,7 +8,7 @@ const { MemoryAuthorityStore } = require('./src/persistflow/authority-store');
 const { PersistFlowService } = require('./src/persistflow/service');
 const { MemoryFleetStore } = require('./src/fleet/store');
 const { loadFleetConfig } = require('./src/fleet/contracts');
-const { TypeSafeFleetRouter } = require('./src/fleet/typesafe-router');
+const { ProviderGatewayFleetRouter } = require('./src/fleet/provider-gateway-router');
 const { FleetRouter } = require('./src/fleet/router');
 const { DriveObjectStore } = require('./src/storage/object-store');
 const { CacheManager } = require('./src/storage/cache-manager');
@@ -40,22 +40,21 @@ test('end-to-end fake providers route work, persist evidence, store object, veri
   fleetStore.putHeartbeat('ec2-primary', heartbeat(200 * GiB));
   fleetStore.putHeartbeat('aws-vm', heartbeat(180 * GiB));
 
-  let typesafeBody;
-  const typesafeRouter = new TypeSafeFleetRouter({
-    apiKey: 'fake-typesafe-key',
-    fetchImpl: async (_url, init) => {
-      typesafeBody = JSON.parse(init.body);
-      return {
-        ok: true, status: 200,
-        json: async () => ({ answers: {
-          candidate__aws_vm: { type: 'score', score: 1 },
-          candidate__ec2_primary: { type: 'score', score: 2 },
-        } }),
-      };
+  let providerGatewayRequest;
+  const providerGatewayRouter = new ProviderGatewayFleetRouter({
+    providerGateway: {
+      infer: async (request) => {
+        providerGatewayRequest = request;
+        return {
+          route_id: 'fleet-semantic-v1',
+          usage: { input_tokens: 160, output_tokens: 12 },
+          output: [{ role: 'assistant', content: JSON.stringify({ scores: { candidate_1: 1, candidate_2: 2 } }) }],
+        };
+      },
     },
   });
   const fleetRouter = new FleetRouter({
-    fleetConfig, fleetStore, typesafeRouter,
+    fleetConfig, fleetStore, providerGatewayRouter,
     clock: () => new Date(NOW),
   });
   const authority = new MemoryAuthorityStore();
@@ -73,9 +72,13 @@ test('end-to-end fake providers route work, persist evidence, store object, veri
     },
   });
   assert.equal(routed.decision.nodeId, 'ec2-primary');
-  assert.equal(routed.decision.decisionSource, 'typesafe');
+  assert.equal(routed.decision.decisionSource, 'provider-gateway');
   assert.deepEqual(routed.decision.eligibleNodeIds, ['aws-vm', 'ec2-primary']);
-  assert.deepEqual(typesafeBody.state.candidates.map((row) => row.id), ['aws-vm', 'ec2-primary']);
+  assert.equal(routed.decision.providerRouteId, 'fleet-semantic-v1');
+  assert.deepEqual(routed.decision.providerUsage, { input_tokens: 160, output_tokens: 12 });
+  const gatewayPayload = JSON.parse(providerGatewayRequest.input[1].content);
+  assert.deepEqual(gatewayPayload.candidates.map((row) => row.candidate_key), ['candidate_1', 'candidate_2']);
+  assert.equal(providerGatewayRequest.freshness_required, true);
   assert.equal(routed.run.latestCheckpoint.evidence.type, 'fleet.route');
 
   const bytes = Buffer.from('durable acceptance payload');
@@ -142,7 +145,7 @@ test('end-to-end fake providers route work, persist evidence, store object, veri
   assert.equal(baton.machine.nodeId, 'ec2-primary');
 });
 
-test('TypeSafe payload and persisted route evidence exclude configured secret sentinels', async () => {
+test('Provider Gateway payload and persisted route evidence exclude configured secret sentinels', async () => {
   const sentinels = [
     'SHOULD_NOT_LEAK_CLIENT_SECRET',
     'SHOULD_NOT_LEAK_REFRESH',
@@ -150,23 +153,23 @@ test('TypeSafe payload and persisted route evidence exclude configured secret se
     'SHOULD_NOT_LEAK_TYPESAFE_KEY',
   ];
   let requestPayload;
-  const scorer = new TypeSafeFleetRouter({
-    apiKey: sentinels[3],
+  const scorer = new ProviderGatewayFleetRouter({
+    providerGateway: {
+      infer: async (request) => {
+        requestPayload = request;
+        return {
+          route_id: 'fleet-semantic-v1',
+          usage: { input_tokens: 200, output_tokens: 12 },
+          output: [{ role: 'assistant', content: JSON.stringify({ scores: { candidate_1: 1, candidate_2: 2 } }) }],
+        };
+      },
+    },
     env: {
       GOOGLE_DRIVE_CLIENT_SECRET: sentinels[0],
       GOOGLE_DRIVE_REFRESH_TOKEN: sentinels[1],
       PERSISTFLOW_FLEET_NODE_SECRETS_JSON: JSON.stringify({ 'desktop-primary': sentinels[2] }),
     },
-    fetchImpl: async (_url, init) => {
-      requestPayload = JSON.parse(init.body);
-      return {
-        ok: true, status: 200,
-        json: async () => ({ answers: {
-          candidate__desktop_primary: { type: 'score', score: 1 },
-          candidate__ec2_primary: { type: 'score', score: 2 },
-        } }),
-      };
-    },
+    redactValues: [sentinels[3]],
   });
   const candidates = [
     {
@@ -189,7 +192,7 @@ test('TypeSafe payload and persisted route evidence exclude configured secret se
     },
     candidates,
   });
-  assert.equal(scores['ec2-primary'], 2);
+  assert.equal(scores.scores['ec2-primary'], 2);
 
   const serializedRequest = JSON.stringify(requestPayload);
   for (const sentinel of sentinels) assert.equal(serializedRequest.includes(sentinel), false);
@@ -209,7 +212,7 @@ test('TypeSafe payload and persisted route evidence exclude configured secret se
     type: 'fleet.route',
     taskId: 'safe',
     nodeId: 'ec2-primary',
-    decisionSource: 'typesafe',
+    decisionSource: 'provider-gateway',
     eligibleNodeIds: ['desktop-primary', 'ec2-primary'],
     evaluatedAt: NOW,
   });

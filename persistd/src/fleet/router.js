@@ -2,19 +2,19 @@ const { normalizeRouteIntent } = require('./contracts');
 const { eligibleNodes, deterministicOrder } = require('./eligibility');
 
 function validateScores(scores, candidates) {
-  if (!scores || typeof scores !== 'object' || Array.isArray(scores)) throw new Error('typesafe_invalid_scores');
+  if (!scores || typeof scores !== 'object' || Array.isArray(scores)) throw new Error('PROVIDER_GATEWAY_INVALID_SCORES');
   const output = {};
   for (const candidate of candidates) {
     const value = scores[candidate.id];
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 2) {
-      throw new Error('typesafe_invalid_scores');
+      throw new Error('PROVIDER_GATEWAY_INVALID_SCORES');
     }
     output[candidate.id] = value;
   }
   return output;
 }
 
-function typesafeOrder(candidates, intent, scores, options = {}) {
+function providerGatewayOrder(candidates, intent, scores, options = {}) {
   const fallbackRanks = new Map(deterministicOrder(candidates, intent, options).map((candidate, index) => [candidate.id, index]));
   return [...candidates].sort((a, b) => {
     if (scores[b.id] !== scores[a.id]) return scores[b.id] - scores[a.id];
@@ -26,7 +26,7 @@ class FleetRouter {
   constructor({
     fleetConfig,
     fleetStore,
-    typesafeRouter = null,
+    providerGatewayRouter = null,
     railwayProvider = null,
     railwayEnabled = false,
     clock = () => new Date(),
@@ -35,7 +35,7 @@ class FleetRouter {
     if (!fleetStore) throw new Error('FLEET_STORE_REQUIRED');
     this.fleetConfig = fleetConfig;
     this.fleetStore = fleetStore;
-    this.typesafeRouter = typesafeRouter;
+    this.providerGatewayRouter = providerGatewayRouter;
     this.railwayProvider = railwayProvider;
     this.railwayEnabled = railwayEnabled === true;
     this.clock = clock;
@@ -112,24 +112,27 @@ class FleetRouter {
         ...base,
         nodeId: candidates[0].id,
         decisionSource: 'single-candidate-fallback',
-        typesafeScores: null,
+        semanticScores: null,
         ...selectedEvidence(candidates[0], 'only eligible candidate'),
       };
     }
 
     try {
-      if (!this.typesafeRouter) throw new Error('typesafe_unavailable');
+      if (!this.providerGatewayRouter) throw new Error('PROVIDER_GATEWAY_UNAVAILABLE');
+      const providerResult = await this.providerGatewayRouter.score({ intent, candidates });
       const scores = validateScores(
-        await this.typesafeRouter.score({ intent, candidates }),
+        providerResult?.scores,
         candidates,
       );
-      const selected = typesafeOrder(candidates, intent, scores, routeOptions)[0];
+      const selected = providerGatewayOrder(candidates, intent, scores, routeOptions)[0];
       return {
         ...base,
         nodeId: selected.id,
-        decisionSource: 'typesafe',
-        typesafeScores: scores,
-        ...selectedEvidence(selected, 'highest valid TypeSafe score among hard-eligible providers'),
+        decisionSource: 'provider-gateway',
+        semanticScores: scores,
+        providerRouteId: providerResult.routeId,
+        providerUsage: providerResult.usage,
+        ...selectedEvidence(selected, 'highest valid Provider Gateway score among hard-eligible nodes'),
       };
     } catch (error) {
       const selected = deterministicOrder(candidates, intent, routeOptions)[0];
@@ -138,12 +141,12 @@ class FleetRouter {
         ...base,
         nodeId: selected.id,
         decisionSource: 'deterministic-fallback',
-        typesafeScores: null,
-        typesafeError: fallbackReason,
+        semanticScores: null,
+        providerGatewayError: fallbackReason,
         ...selectedEvidence(selected, 'deterministic order among hard-eligible providers', fallbackReason),
       };
     }
   }
 }
 
-module.exports = { FleetRouter, validateScores, typesafeOrder };
+module.exports = { FleetRouter, validateScores, providerGatewayOrder };

@@ -10,24 +10,21 @@ function createProductionRailwayProvider({ env = process.env, provider } = {}) {
   return new RailwayAnonymousProvider();
 }
 
-function createProductionFleetRouter({ env = process.env, fleetConfig, fleetStore, railwayProvider, clock = () => new Date() } = {}) {
+function createProductionFleetRouter({ env = process.env, fleetConfig, fleetStore, providerGateway = null, railwayProvider, clock = () => new Date() } = {}) {
   if (String(env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') !== '1') return null;
   const { FleetRouter } = require('./fleet/router');
-  const { TypeSafeFleetRouter } = require('./fleet/typesafe-router');
-  const typesafeRouter = new TypeSafeFleetRouter({
-    apiKey: env.TYPESAFE_API_KEY,
-    endpoint: env.TYPESAFE_ENDPOINT,
-    model: env.TYPESAFE_MODEL,
-  });
+  const providerGatewayRouter = providerGateway
+    ? new (require('./fleet/provider-gateway-router').ProviderGatewayFleetRouter)({ providerGateway, env })
+    : null;
   return new FleetRouter({
-    fleetConfig, fleetStore, typesafeRouter,
+    fleetConfig, fleetStore, providerGatewayRouter,
     railwayProvider: railwayProvider || createProductionRailwayProvider({ env }),
     railwayEnabled: String(env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') === '1',
     clock,
   });
 }
 
-function startWeb() {
+function startWeb({ providerGateway } = {}) {
   const {
     createServer,
     createProductionStore,
@@ -45,7 +42,7 @@ function startWeb() {
   const ephemeralEnabled = String(process.env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') === '1'
     && String(process.env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') === '1';
   const ephemeralProvider = createProductionRailwayProvider({ env: process.env });
-  const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore, railwayProvider: ephemeralProvider });
+  const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore, providerGateway, railwayProvider: ephemeralProvider });
   const server = createServer({
     store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetRouter,
     ephemeralProvider, ephemeralEnabled,

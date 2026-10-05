@@ -12,6 +12,29 @@ const readContract = (relativePath) => JSON.parse(fs.readFileSync(contractPath(r
 const ajv = new Ajv2020({ allErrors: true, strict: false });
 addFormats(ajv);
 
+const knownProviderEdges = [
+  /api\.(?:openai|anthropic|groq|mistral)\.com/i,
+  /api\.x\.ai/i,
+  /api\.deepseek\.com/i,
+  /openrouter\.ai\/api/i,
+  /generativelanguage\.googleapis\.com/i,
+  /aiplatform\.googleapis\.com/i,
+  /bedrock-runtime\.[a-z0-9-]+\.amazonaws\.com/i,
+  /api\.cohere\.(?:ai|com)/i,
+  /api\.typesafe\.ai/i,
+  /api\.fireworks\.ai/i,
+  /api\.together\.xyz/i,
+  /api\.perplexity\.ai/i,
+  /[a-z0-9-]+\.openai\.azure\.com/i,
+  /@ai-sdk\/[a-z0-9][a-z0-9._/-]*/i,
+  /(?:from\s+|require\s*\(\s*|import\s*\(\s*)['"](?:openai|@openai\/[^'"]+|@anthropic-ai\/sdk|@google\/(?:generative-ai|genai)|@mistralai\/mistralai|@aws-sdk\/client-bedrock-runtime|@google-cloud\/vertexai|cohere-ai)['"]/i,
+  /^\s*(?:from|import)\s+(?:openai|anthropic|google\.generativeai|mistralai|cohere)\b/im,
+];
+
+function hasKnownProviderEdge(source) {
+  return knownProviderEdges.some((pattern) => pattern.test(source));
+}
+
 const contextSchema = readContract('modules/context-gateway/contracts/v1/context.schema.json');
 const contextStoreSchema = readContract('modules/context-store/contracts/v1/manifest.schema.json');
 const providerSchema = readContract('modules/provider-gateway/contracts/v1/inference.schema.json');
@@ -110,6 +133,15 @@ test('Provider Gateway contract is provider-neutral and excludes conversation/ru
   assert.equal(valid(providerSchema.$id, 'inferenceResult', result), true);
   assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, provider: 'raw-provider' }), false);
   assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, conversation_id: 'authority' }), false);
+  assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, freshness_required: true }), true);
+  assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, freshness_required: false }), true);
+  assert.equal(valid(providerSchema.$id, 'inferenceRequest', { ...request, freshness_required: 'true' }), false);
+  assert.equal(valid(providerSchema.$id, 'inferenceRequest', {
+    ...request, budget: { max_output_tokens: Number.MAX_SAFE_INTEGER + 1 },
+  }), false);
+  assert.equal(valid(providerSchema.$id, 'inferenceResult', {
+    ...result, usage: { input_tokens: Number.MAX_SAFE_INTEGER + 1, output_tokens: 5 },
+  }), false);
 });
 
 test('Execution Plane client is versioned, uses JSON, and refuses a mutation without an idempotency key', async () => {
@@ -195,4 +227,61 @@ test('forbidden-edge architecture checks guard only the new producer modules and
     const columns = line.split('|').map((column) => column.trim());
     assert.ok(columns[2], `authority row has one writer: ${line}`);
   }
+});
+
+test('AG-014 source guard recognizes provider endpoints and common provider SDKs', () => {
+  const directProviderSamples = [
+    "import OpenAI from 'openai';",
+    "const provider = { npm: '@ai-sdk/openai-compatible' };",
+    "const provider = { npm: '@ai-sdk/google' };",
+    "const provider = { npm: '@ai-sdk/xai' };",
+    "import { GoogleGenAI } from '@google/genai';",
+    'const endpoint = "https://project.openai.azure.com/openai/v1";',
+    'const endpoint = "https://api.together.xyz/v1";',
+    'const endpoint = "https://api.x.ai/v1/responses";',
+    'const endpoint = "https://api.deepseek.com/chat/completions";',
+  ];
+  for (const source of directProviderSamples) assert.equal(hasKnownProviderEdge(source), true, source);
+  assert.equal(hasKnownProviderEdge('const cache = require("node:cache");'), false);
+});
+
+test('AG-014 source guard keeps known model-provider endpoints and SDK imports inside Gateway adapters', () => {
+  const sourceRoots = [
+    '.github/workflows',
+    'clients',
+    'config',
+    'global',
+    'modules',
+    'persistd/src',
+    'persistd/scripts',
+    'persistd/config',
+    'scripts',
+    'skills',
+    'ego-windows-host',
+  ];
+  const sourceExtension = /\.(?:c|m)?js$|\.tsx?$|\.py$|\.ps1$|\.sh$|\.cmd$|\.bat$|\.ya?ml$|\.jsonc?$|\.toml$/i;
+  const skippedDirectories = new Set(['.git', 'dist', 'node_modules', 'tests', '__tests__']);
+  const sourceFiles = [];
+  function visit(directory) {
+    if (!fs.existsSync(directory)) return;
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory() && skippedDirectories.has(entry.name)) continue;
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(target);
+      else if (sourceExtension.test(entry.name)) sourceFiles.push(target);
+    }
+  }
+  sourceRoots.forEach((relativePath) => visit(contractPath(relativePath)));
+  sourceFiles.push(contractPath('server.js'));
+
+  const approvedAdapterRoot = 'modules/provider-gateway/src/adapters/';
+  const violations = [];
+  for (const sourceFile of sourceFiles) {
+    const relativePath = path.relative(root, sourceFile).replaceAll(path.sep, '/');
+    if (relativePath.startsWith(approvedAdapterRoot)) continue;
+    const source = fs.readFileSync(sourceFile, 'utf8');
+    if (hasKnownProviderEdge(source)) violations.push(relativePath);
+  }
+
+  assert.deepEqual(violations, [], `Known direct model-provider edge outside Gateway adapters: ${violations.join(', ')}`);
 });
