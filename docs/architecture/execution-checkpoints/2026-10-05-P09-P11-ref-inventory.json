@@ -1,13 +1,13 @@
 {
   "checkpoint_id": "P09-P11-REF-SNAPSHOT-2026-10-05",
-  "capture_started_at_utc": "2026-10-05T03:54:53.588Z",
-  "capture_completed_at_utc": "2026-10-05T03:55:01.018Z",
+  "capture_started_at_utc": "2026-10-05T03:59:24.185Z",
+  "capture_completed_at_utc": "2026-10-05T03:59:33.379Z",
   "source": "git ls-remote --heads --tags",
   "scope": "Exact refs visible to the authenticated GitHub client per-repository capture time; this does not prove external deployment/caller dependencies or global inventory completeness.",
   "repositories": [
     {
       "repository": "menezes-platform/ops-dev-orquestra",
-      "captured_at_utc": "2026-10-05T03:54:54.964Z",
+      "captured_at_utc": "2026-10-05T03:59:25.510Z",
       "branch_count": 51,
       "tag_ref_count": 0,
       "refs": [
@@ -219,7 +219,7 @@
     },
     {
       "repository": "menezes-platform/ops-persistflow-sandbox",
-      "captured_at_utc": "2026-10-05T03:54:56.409Z",
+      "captured_at_utc": "2026-10-05T03:59:26.957Z",
       "branch_count": 4,
       "tag_ref_count": 0,
       "refs": [
@@ -243,7 +243,7 @@
     },
     {
       "repository": "menezes-platform/ops-codex-os",
-      "captured_at_utc": "2026-10-05T03:54:56.953Z",
+      "captured_at_utc": "2026-10-05T03:59:27.478Z",
       "branch_count": 52,
       "tag_ref_count": 0,
       "refs": [
@@ -268,7 +268,7 @@
           "ref": "refs/heads/consolidation/p06-provider-policy-20261005"
         },
         {
-          "sha": "23a215ca5ca41c02ae52d03d065cf707525b86d5",
+          "sha": "06bbbd399b176155f088dcb61150c6052916a027",
           "ref": "refs/heads/consolidation/p08-caller-inventory-20261005"
         },
         {
@@ -459,7 +459,7 @@
     },
     {
       "repository": "menezes-platform/ops-site-ops",
-      "captured_at_utc": "2026-10-05T03:54:58.332Z",
+      "captured_at_utc": "2026-10-05T03:59:28.858Z",
       "branch_count": 21,
       "tag_ref_count": 3,
       "refs": [
@@ -563,7 +563,7 @@
     },
     {
       "repository": "menezesx2k26-byte/ops-gabriel-ops",
-      "captured_at_utc": "2026-10-05T03:54:59.629Z",
+      "captured_at_utc": "2026-10-05T03:59:30.770Z",
       "branch_count": 117,
       "tag_ref_count": 0,
       "refs": [
@@ -1039,7 +1039,7 @@
     },
     {
       "repository": "menezesx2k26-byte/resident-node",
-      "captured_at_utc": "2026-10-05T03:55:01.017Z",
+      "captured_at_utc": "2026-10-05T03:59:32.058Z",
       "branch_count": 14,
       "tag_ref_count": 0,
       "refs": [
@@ -1098,6 +1098,26 @@
         {
           "sha": "68a6ae81a831b11b2b0d596b21aeb4de1a57c828",
           "ref": "refs/heads/migration/platform-consolidation-p02"
+        }
+      ]
+    },
+    {
+      "repository": "menezesx2k26-byte/Memory",
+      "captured_at_utc": "2026-10-05T03:59:33.379Z",
+      "branch_count": 3,
+      "tag_ref_count": 0,
+      "refs": [
+        {
+          "sha": "885b4fa6d416533c65bfc82ad04e9bcaf10067c2",
+          "ref": "refs/heads/feat/agent-cognitive-memory-20260927"
+        },
+        {
+          "sha": "373b0cf87ed5800e63d8c6aa7b22e75921e74d31",
+          "ref": "refs/heads/feat/project-scoped-memory-candidates-v2"
+        },
+        {
+          "sha": "2f43e8d1b20f6325c44e7a3174e80e00e3a809b7",
+          "ref": "refs/heads/main"
         }
       ]
     }
