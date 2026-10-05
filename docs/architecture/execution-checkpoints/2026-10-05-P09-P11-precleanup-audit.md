@@ -1,9 +1,9 @@
 # P09–P11 — pre-cleanup repository readiness checkpoint
 
 - `phase_id`: `P09-P11_PREPARATION`
-- `checkpoint_id`: `P09-P11-ARCHIVE-DEPENDENCY-2026-10-05T04:24:00Z`
-- `recorded_at`: `2026-10-05T04:24:00Z`
-- `status`: `READ_ONLY_SEVEN_REPO_REF_AND_29_OPEN_PR_HEAD_INVENTORY_P10_HOSTINGER_DEPLOYMENT_CANDIDATE_UNRESOLVED_DESTRUCTIVE_GATES_CLOSED`
+- `checkpoint_id`: `P09-P11-ARCHIVE-DEPENDENCY-2026-10-05T04:29:00Z`
+- `recorded_at`: `2026-10-05T04:29:00Z`
+- `status`: `READ_ONLY_REFS_OPEN_PR_HEADS_AND_GITHUB_DEPLOYMENTS_P10_HOSTINGER_CANDIDATE_UNRESOLVED_DESTRUCTIVE_GATES_CLOSED`
 - `P09`: `NOT_PASSED`
 - `P10`: `NOT_PASSED`
 - `P11`: `NOT_PASSED`
@@ -42,13 +42,19 @@ Read-only source and deployment metadata were checked against immutable default-
 
 The active Hostinger connection's read-only website inventory at `2026-10-05T04:23:17Z–04:23:18Z` returned two entries in that account: the current Node.js site `darkslategrey-raccoon-448222.hostingersite.com` and Builder site `consertoeletroled.com`. No separate deployment site appeared in this account's inventory. This does not cover another Hostinger account, a separately shared account, or a site without a listed website asset; it therefore narrows the search but does not resolve the second-site candidate described by Sandbox main.
 
+## Additional GitHub deployment-registry evidence for P11
+
+Read-only `GITHUB_LIST_DEPLOYMENTS` calls covered the seven repositories around `2026-10-05T04:26Z–04:28Z`, with pagination through the end of the only non-empty repository. Orquestra, PersistFlow Sandbox, Agent Platform, Site Ops, Resident Node, and Memory returned no GitHub deployment records. Gabriel Ops returned 347 records across four pages (100 + 100 + 100 + 47); page five was empty. The recorded range is `2026-09-17` through `2026-10-02`.
+
+The latest record, deployment `6799661032`, was created `2026-10-02T02:12:51Z` by the Railway GitHub App for SHA `8dfcca2d544655b7317671fbc0d007c8d961c674` (`ops-gabriel-ops` main), with environment label `gabriel-ops / production`. Its latest status is `success` at `2026-10-02T02:13:35Z` ([deployments](https://github.com/menezesx2k26-byte/ops-gabriel-ops/deployments)). GitHub's `production_environment` flag on this record is false despite the environment label. This is a historical GitHub/Railway deployment record, not a live-service, installed-caller, or current-configuration proof. Preserve the retained Gabriel Ops deployment path for mapping; do not treat empty GitHub records in the other repos as proof of deployment-zero outside GitHub.
+
 The 29 exact open PR heads in the dated inventory remain live review/ref candidates. Their presence alone does not prove production execution, but archive readiness cannot be inferred while the P09 entry gate and external dependency checks remain unmet. Refresh PR state and head SHAs immediately before any future cleanup decision.
 
 ## Phase disposition
 
 - **P09 duplicate-authority deletion remains closed.** This inventory is not an exhaustive authority/writer/caller scan. It establishes no deletion eligibility, no zero-bypass condition, and no current preservation receipt.
 - **P10 repository archive remains blocked.** Both archive candidates have open PRs. Sandbox main documents a second Hostinger deployment path, while the GitHub deployment registry is empty for both repositories; external deployment/caller/state dependency-zero evidence is absent. No archive or PR closure was attempted.
-- **P11 branch/deployment cleanup remains blocked.** Exact visible ref SHAs are recorded for seven repositories, and the 29 open PR head SHAs are captured in a dated companion inventory. Preserve those PR heads while reviewing branch candidates; refresh metadata before cleanup. The site-ops main deployment remains a live dependency candidate. Deployment/caller relationships and preservation decisions are still missing.
+- **P11 branch/deployment cleanup remains blocked.** Exact visible ref SHAs are recorded for seven repositories, and the 29 open PR head SHAs are captured in a dated companion inventory. Preserve those PR heads while reviewing branch candidates; refresh metadata before cleanup. GitHub records 347 Railway deployments for Gabriel Ops, including a successful Oct 2 deployment on main; Site Ops main also remains a live deployment candidate. External runtime/caller relationships and preservation decisions are still missing.
 - **P12 / frozen DoD remains `NOT_MET`.** This is readiness preparation only; no destructive gate was passed.
 
 The ref, PR, deployment-metadata, and source reads were read-only. No branch or tag was created or deleted, no repository was archived, and no deployment, production configuration, or production data was changed. The Spec Kit was not edited.
