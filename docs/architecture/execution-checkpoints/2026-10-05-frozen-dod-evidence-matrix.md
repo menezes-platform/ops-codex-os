@@ -181,3 +181,7 @@ GitHub checks for exact PR #82 documentation head `b8d1aa6cb13435bc19f83e4a6c4fd
 ## P09 touched-PR head/ref reconciliation — 2026-10-05T08:51:39Z
 
 After the P06/P08 documentation updates, current GitHub PR metadata and read-only `git ls-remote` checks confirm that PRs **#30**, **#31**, and **#82** are open drafts and each PR head SHA matches both its same-repository branch ref and `refs/pull/<number>/head`. The exact refs are in [the delta snapshot](2026-10-05-P09-P11-head-ref-delta-0851.json). This closes the association question only for those three changed PRs; the broader 07:58Z 29-PR join remains the last full association, and no deletion/archive is eligible. P09 remains `NOT_PASSED`.
+
+## P03 public endpoint refresh — 2026-10-05T08:53Z
+
+Unauthenticated checks of the P03 Hostinger origin returned HTTP 200 from `/healthz` (`service=persistflow`, `authority=file`, `durable=true`) and OAuth authorization-server metadata (issuer matched the origin and expected endpoint fields were present); unauthenticated `GET /mcp` returned 401. See [P03 Hostinger post-apply refresh](2026-10-05-P03-hostinger-post-apply-refresh.md). This confirms only the public endpoints. It does not show the process consumed the corrected fleet secret, refresh authenticated fleet/cache status, identify state roots/global callers, or verify a current rollback snapshot. P03/HG-001 remains `NOT_PASSED`.
