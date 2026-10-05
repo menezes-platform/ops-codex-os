@@ -1,0 +1,105 @@
+{
+  "checkpoint_id": "P09-P11-OPEN-PR-HEADS-2026-10-05T04:45Z",
+  "captured_window_utc": "2026-10-05T04:43Z/2026-10-05T04:45Z",
+  "source": "GitHub GITHUB_FIND_PULL_REQUESTS(state=open) plus GITHUB_GET_A_PULL_REQUEST for each result",
+  "repository_scope": "seven named repositories; GitHub search incomplete_results=false for all",
+  "open_pull_request_count": 29,
+  "repositories": [
+    {
+      "owner": "menezes-platform",
+      "repo": "ops-dev-orquestra",
+      "open_pull_request_count": 9,
+      "branch_count_at_capture": 51,
+      "tag_count_at_capture": 0,
+      "pull_requests": [
+        {"number": 8, "title": "ci: compile Contrito 0.4.0", "draft": false, "base_ref": "main", "head_ref": "build/contrito-0.4.0", "head_sha": "51049aba78440c600bb6cf28706fca11a03538f2", "updated_at": "2026-08-23T21:47:16Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/8"},
+        {"number": 9, "title": "docs: prepare Serena and Context7 local intelligence pilot", "draft": false, "base_ref": "main", "head_ref": "local/intelligence-pilot-prep", "head_sha": "264333416045e2af5761b59d79553ec8a44772bd", "updated_at": "2026-08-24T02:10:06Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/9"},
+        {"number": 10, "title": "Integrate Gabriel-Codex-OS as cognitive control plane", "draft": false, "base_ref": "main", "head_ref": "codex/codex-os-integration", "head_sha": "08015852df13a7603d58087c90bc2d99b7097b2a", "updated_at": "2026-08-28T22:49:48Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/10"},
+        {"number": 17, "title": "P1-001: close Codex-only discipline and isolation gate", "draft": false, "base_ref": "main", "head_ref": "p1/P1-001-codex-only", "head_sha": "bd5c467d9e09260d18cd38f68d2cee879a397cee", "updated_at": "2026-09-26T23:35:12Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/17"},
+        {"number": 18, "title": "Require observable frontend tool use", "draft": false, "base_ref": "main", "head_ref": "feat/UI-REFERENCE-LAYER-001", "head_sha": "ebba425396abfce914c6a073122f31477827a793", "updated_at": "2026-08-30T13:28:10Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/18"},
+        {"number": 20, "title": "feat: integrate resident computer control into main", "draft": false, "base_ref": "main", "head_ref": "integrate/computer-control-main", "head_sha": "2ae56e18d5691eacfdc59343f06df64561686b9a", "updated_at": "2026-09-03T08:45:02Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/20"},
+        {"number": 22, "title": "HYDRA-001 foundation", "draft": true, "base_ref": "main", "head_ref": "hydra/HYDRA-001-foundation", "head_sha": "69e549a6cfd7c1a86bddb5fb537758a8ca905f47", "updated_at": "2026-09-13T11:23:34Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/22"},
+        {"number": 23, "title": "feat: enforce control-plane quota guard", "draft": false, "base_ref": "main", "head_ref": "hardening/control-plane-quota-guard-20260919", "head_sha": "48ba962b7dd9691e0302ef76dd6020a9fdd0dd40", "updated_at": "2026-09-19T16:11:35Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/23"},
+        {"number": 24, "title": "Semantic Cache CI verification", "draft": true, "base_ref": "main", "head_ref": "feat/SEMANTIC-CACHE-001-ci", "head_sha": "4da4475ac8d86c9434fb5485ec1d3fca35fb5df1", "updated_at": "2026-09-20T23:08:48Z", "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/24"}
+      ]
+    },
+    {
+      "owner": "menezes-platform",
+      "repo": "ops-persistflow-sandbox",
+      "open_pull_request_count": 1,
+      "branch_count_at_capture": 4,
+      "tag_count_at_capture": 0,
+      "pull_requests": [
+        {"number": 1, "title": "feat: build PersistFlow Sandbox v1", "draft": true, "base_ref": "main", "head_ref": "feat/sandbox-v1", "head_sha": "9c1767debdb6db958aff8bcdc5403d2f3035b56c", "updated_at": "2026-09-23T19:43:49Z", "url": "https://github.com/menezes-platform/ops-persistflow-sandbox/pull/1"}
+      ]
+    },
+    {
+      "owner": "menezes-platform",
+      "repo": "ops-codex-os",
+      "open_pull_request_count": 9,
+      "branch_count_at_capture": 52,
+      "tag_count_at_capture": 0,
+      "pull_requests": [
+        {"number": 1, "title": "Enforce observable frontend tool activation", "draft": false, "base_ref": "main", "head_ref": "feat/frontend-ui-orchestration", "head_sha": "a6a0ac14cfef354afd73ccfe1cf4b1de7ba6a298", "updated_at": "2026-08-30T13:26:26Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/1"},
+        {"number": 13, "title": "feat: add quota/context circuit breaker", "draft": false, "base_ref": "main", "head_ref": "hardening/quota-context-circuit-breaker-20260919", "head_sha": "3669de446fee80ea86e83067a8160a6684f6c9df", "updated_at": "2026-09-19T17:08:18Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/13"},
+        {"number": 14, "title": "fix(persistd): stop retry loop at authentication boundary", "draft": false, "base_ref": "main", "head_ref": "fix/persistd-auth-preflight-20260919", "head_sha": "f7ddbada067b7a27cb838538b493f8f911bbb17d", "updated_at": "2026-09-19T17:54:27Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/14"},
+        {"number": 17, "title": "feat: add Drive-backed fleet storage and TypeSafe routing", "draft": false, "base_ref": "agent/drive-fleet-plan/20260924-1353", "head_ref": "agent/drive-fleet-exec/20260924", "head_sha": "97a356d89ed9ec5553f4d5cd5df60938c693e6c0", "updated_at": "2026-09-25T02:49:36Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/17"},
+        {"number": 20, "title": "docs(plan): MCP reliability and Railway worker integration", "draft": true, "base_ref": "main", "head_ref": "plans/mcp-reliability-railway-2026-09-27", "head_sha": "9b46946fc4e8109a6e1103b78e2c90e5dde6934b", "updated_at": "2026-09-27T13:21:25Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/20"},
+        {"number": 25, "title": "docs(incident): correct PersistFlow runtime target audit", "draft": false, "base_ref": "main", "head_ref": "fix/railway-runtime-target-audit-2026-09-28", "head_sha": "720aa6759a4cd3ea3d6bc7329025514274d7b4b4", "updated_at": "2026-09-28T10:21:12Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/25"},
+        {"number": 30, "title": "Prepare Provider Gateway fallback, budgets and freshness-aware exact cache", "draft": true, "base_ref": "migration/platform-consolidation-p03", "head_ref": "consolidation/p06-provider-policy-20261005", "head_sha": "114e781baed6ac30f9c63d6e923363e73213bc13", "updated_at": "2026-10-05T03:32:39Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/30"},
+        {"number": 31, "title": "docs: record P08 caller and worker inventory", "draft": true, "base_ref": "main", "head_ref": "consolidation/p08-caller-inventory-20261005", "head_sha": "0ac965bee9d3c12ddc17b7f27b492b2a23fe20ab", "updated_at": "2026-10-05T04:31:04Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/31"},
+        {"number": 32, "title": "P05 prep: plan scoped index generation publication and rollback", "draft": true, "base_ref": "migration/platform-consolidation-p03", "head_ref": "consolidation/p05-generation-contract-20261005", "head_sha": "a56de48ba3c037e228fabe51662e1608b06b1565", "updated_at": "2026-10-05T03:52:27Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/32"}
+      ]
+    },
+    {
+      "owner": "menezes-platform",
+      "repo": "ops-site-ops",
+      "open_pull_request_count": 0,
+      "branch_count_at_capture": 21,
+      "tag_count_at_capture": 3,
+      "tags": [
+        {"name": "conthabil-source-a8569c429a38", "commit_sha": "6ddf403735d579ddf0f4ebef2bfc44952deae01d"},
+        {"name": "conthabil-source-155e4ebcb101", "commit_sha": "32719091c4100add0d180a3b506a7f7765e2b7f7"},
+        {"name": "conthabil-source-10dd9e669f00", "commit_sha": "b7f655eabb9a93d66dee21e9307b7614ddbdc7be"}
+      ],
+      "pull_requests": []
+    },
+    {
+      "owner": "menezesx2k26-byte",
+      "repo": "ops-gabriel-ops",
+      "open_pull_request_count": 8,
+      "branch_count_at_capture": 117,
+      "tag_count_at_capture": 0,
+      "pull_requests": [
+        {"number": 26, "title": "fix(sync): recover truthful private-source pipeline", "draft": false, "base_ref": "main", "head_ref": "recovery/sync-pipeline", "head_sha": "8e7520d29371333d1a5fa84f7cc10f83d9438365", "updated_at": "2026-09-18T18:10:14Z", "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/26"},
+        {"number": 28, "title": "feat(verifier): add fail-closed Gabriel Ops release harness", "draft": false, "base_ref": "main", "head_ref": "recovery/release-verifier", "head_sha": "586d51deabd67c921598960520b955321fa8222f", "updated_at": "2026-09-18T17:59:19Z", "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/28"},
+        {"number": 29, "title": "fix: harden GitHub snapshot collector connectivity", "draft": false, "base_ref": "main", "head_ref": "fix/github-snapshot-connection-hardening-20260918", "head_sha": "356894e57d577e0a09f0fe9ded86b2975abd25b0", "updated_at": "2026-09-18T18:14:10Z", "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/29"},
+        {"number": 34, "title": "docs: record secret setup recovery failures", "draft": false, "base_ref": "main", "head_ref": "chore/secret-setup-log", "head_sha": "711289d43a62a9c75de1a8dfd2e80bbaea362b23", "updated_at": "2026-09-19T01:16:55Z", "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/34"},
+        {"number": 57, "title": "Fix production auth readiness propagation race", "draft": false, "base_ref": "main", "head_ref": "fix/auth-readiness-propagation", "head_sha": "c7f315cb3c4bc303b357952cf25496ec1cba8525", "updated_at": "2026-09-21T17:25:57Z", "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/57"},
+        {"number": 58, "title": "refactor(catalog): reconcile 40 repos into 33 logical projects", "draft": false, "base_ref": "main", "head_ref": "reconcile/catalog-2026-09-21", "head_sha": "ac3d668dd3db25a97942c59bda15d8cfacd10444", "updated_at": "2026-09-21T19:06:19Z", "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/58"},
+        {"number": 69, "title": "docs(mcp): add evidence-based reliability audit", "draft": true, "base_ref": "main", "head_ref": "audit/mcp-reliability-2026-09-27", "head_sha": "53ee5f5db40224b74a4780fbef38e6029a92792d", "updated_at": "2026-09-27T05:19:32Z", "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/69"},
+        {"number": 82, "title": "P07 source audit: document state writers and guard read-only routes", "draft": true, "base_ref": "main", "head_ref": "consolidation/p07-source-audit-20261005", "head_sha": "cbf039bb020a5628a4b3e44fe9f007729618f4a5", "updated_at": "2026-10-05T02:48:22Z", "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/82"}
+      ]
+    },
+    {
+      "owner": "menezesx2k26-byte",
+      "repo": "resident-node",
+      "open_pull_request_count": 1,
+      "branch_count_at_capture": 14,
+      "tag_count_at_capture": 0,
+      "pull_requests": [
+        {"number": 1, "title": "[P04 draft] Fence worker results by lease and security epoch", "draft": true, "base_ref": "main", "head_ref": "consolidation/p04-fenced-worker-results-20261005", "head_sha": "2fc86be578b898e5e8302c214b8b06cf81f2f15c", "updated_at": "2026-10-05T03:43:38Z", "url": "https://github.com/menezesx2k26-byte/resident-node/pull/1"}
+      ]
+    },
+    {
+      "owner": "menezesx2k26-byte",
+      "repo": "Memory",
+      "open_pull_request_count": 1,
+      "branch_count_at_capture": 3,
+      "tag_count_at_capture": 0,
+      "pull_requests": [
+        {"number": 4, "title": "feat(memory): add explicit project candidate v2 validation", "draft": false, "base_ref": "main", "head_ref": "feat/project-scoped-memory-candidates-v2", "head_sha": "373b0cf87ed5800e63d8c6aa7b22e75921e74d31", "updated_at": "2026-09-27T14:16:33Z", "url": "https://github.com/menezesx2k26-byte/Memory/pull/4"}
+      ]
+    }
+  ]
+}

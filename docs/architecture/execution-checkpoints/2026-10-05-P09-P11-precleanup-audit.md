@@ -1,8 +1,8 @@
 # P09–P11 — pre-cleanup repository readiness checkpoint
 
 - `phase_id`: `P09-P11_PREPARATION`
-- `checkpoint_id`: `P09-P11-ARCHIVE-DEPENDENCY-2026-10-05T04:29:00Z`
-- `recorded_at`: `2026-10-05T04:29:00Z`
+- `checkpoint_id`: `P09-P11-ARCHIVE-DEPENDENCY-2026-10-05T04:45:00Z`
+- `recorded_at`: `2026-10-05T04:45:00Z`
 - `status`: `READ_ONLY_REFS_OPEN_PR_HEADS_AND_GITHUB_DEPLOYMENTS_P10_HOSTINGER_CANDIDATE_UNRESOLVED_DESTRUCTIVE_GATES_CLOSED`
 - `P09`: `NOT_PASSED`
 - `P10`: `NOT_PASSED`
@@ -50,11 +50,26 @@ The latest record, deployment `6799661032`, was created `2026-10-02T02:12:51Z` b
 
 The 29 exact open PR heads in the dated inventory remain live review/ref candidates. Their presence alone does not prove production execution, but archive readiness cannot be inferred while the P09 entry gate and external dependency checks remain unmet. Refresh PR state and head SHAs immediately before any future cleanup decision.
 
+## Paginated GitHub Actions, current PR heads, refs, and tags
+
+At approximately `2026-10-05T04:40Z–04:45Z`, the read-only GitHub Actions history query was fully paginated for every repository, filtering runs created on or after `2026-09-05T00:00:00Z`. All pages completed without tool errors: **2,127 runs across 118 currently listed workflow definitions**. Per-repository totals were Orquestra 452 runs/8 workflows, Sandbox 217/2, Agent Platform 126/4, Site Ops 492/16, Gabriel Ops 790/85, Resident Node 50/3, and Memory 0/0. This is a bounded Actions-history census, not a complete external deployment registry.
+
+The history confirms active Site Ops deployment and scheduled paths despite the empty GitHub deployment registry:
+
+- `Conthabil - Gated Production Deploy` ran eight times on `main` in the window (seven successes, one failure). Its latest success, [run #36818002655](https://github.com/menezes-platform/ops-site-ops/actions/runs/36818002655), completed `2026-10-01T05:05:03Z` and records exact-source download, Cloudflare Pages deployment, production-domain/indexability checks, and mail-DNS checks. This is deployment evidence from the Actions job, not proof of current live configuration.
+- `AWS MCP Edge - Deploy stable Worker` ran 16 times (eight successes, eight failures). Its latest success, [run #36642671264](https://github.com/menezes-platform/ops-site-ops/actions/runs/36642671264), completed `2026-09-29T23:02:13Z` and records service-worker deployment, route enablement, propagation, and an acceptance test. This is another retained Site Ops deployment candidate.
+- `Site Ops - Concursos Worker` had 102 runs and all 102 concluded `failure`. In [run #36936769417](https://github.com/menezes-platform/ops-site-ops/actions/runs/36936769417), the job failed at `Create or reuse KV binding`; its sanitized log records Cloudflare token verification and KV list requests returning HTTP 401, with `Invalid API Token`/`Authentication error`. The subsequent dry-run, Worker deploy, URL discovery, smoke, and signature steps were skipped. No credential value was captured.
+- Site Ops recorded 31 scheduled runs with conclusion `startup_failure` on run records whose path is `BuildFailed`, with no jobs exposed. The corresponding workflow ID is absent from the current 16-workflow listing. These records establish recurring failed scheduled activity, not its exact cause or workload; keep it as an unresolved cleanup candidate.
+- `Site Ops - Media MCP Poll` had 174 runs (164 successes, 10 failures), latest success on `main` at `2026-10-01T21:19:58Z`; scheduled activity remains present.
+- The successful P03 installed-caller metadata run [#37232828291](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37232828291) ran on one self-hosted Windows host. Its results and limits are recorded in [P03 desktop authority and fleet refresh](2026-10-05-P03-desktop-authority-and-fleet-refresh.md).
+
+Read-only GitHub ref queries returned current counts of Orquestra 51 branches/0 tags, Sandbox 4/0, Agent Platform 52/0, Site Ops 21/3, Gabriel Ops 117/0, Resident Node 14/0, and Memory 3/0. Only Site Ops has tags in this inventory, all three on Conthabil source commits; none is an archive-candidate preservation tag. Current open-PR searches returned 29 PRs with `incomplete_results=false`; each was hydrated for its exact base/head SHA. Preserve the entries in [current open-PR head snapshot](2026-10-05-P09-P11-current-open-pr-heads.json). Counts remain 9, 1, 9, 0, 8, 1, and 1 respectively. This snapshot is dated and does not itself establish mergeability, deployment use, or cleanup eligibility.
+
 ## Phase disposition
 
-- **P09 duplicate-authority deletion remains closed.** This inventory is not an exhaustive authority/writer/caller scan. It establishes no deletion eligibility, no zero-bypass condition, and no current preservation receipt.
-- **P10 repository archive remains blocked.** Both archive candidates have open PRs. Sandbox main documents a second Hostinger deployment path, while the GitHub deployment registry is empty for both repositories; external deployment/caller/state dependency-zero evidence is absent. No archive or PR closure was attempted.
-- **P11 branch/deployment cleanup remains blocked.** Exact visible ref SHAs are recorded for seven repositories, and the 29 open PR head SHAs are captured in a dated companion inventory. Preserve those PR heads while reviewing branch candidates; refresh metadata before cleanup. GitHub records 347 Railway deployments for Gabriel Ops, including a successful Oct 2 deployment on main; Site Ops main also remains a live deployment candidate. External runtime/caller relationships and preservation decisions are still missing.
+- **P09 duplicate-authority deletion remains closed.** The new one-host Windows evidence finds both a running local PersistFlow authority task and a healthy loopback file-authority endpoint while Hostinger also reports a healthy file-authority endpoint. Fleet and cache projections remain empty. The global writer/caller scan, unique-primary proof, zero-bypass condition, and current preservation receipt remain absent.
+- **P10 repository archive remains blocked.** Both archive candidates have open PRs and no tags. Sandbox main documents a second Hostinger deployment path; no caller/deployment/state dependency-zero evidence exists. The fully paginated Actions census additionally confirms production deployments and scheduled activity under Site Ops; empty GitHub deployment objects alone cannot be used as a zero-deployment result. No archive or PR closure was attempted.
+- **P11 branch/deployment cleanup remains blocked.** Current branch/tag counts and exact open-PR heads are recorded in the refreshed snapshots. Preserve all current PR heads; no archive-candidate preservation tags exist. GitHub deployment records still include 347 Railway deployments for Gabriel Ops, and Site Ops Actions prove recent successful Cloudflare Pages and Worker deployments alongside failing scheduled workers. Current external runtime/dependency mapping and preservation decisions remain missing.
 - **P12 / frozen DoD remains `NOT_MET`.** This is readiness preparation only; no destructive gate was passed.
 
 The ref, PR, deployment-metadata, and source reads were read-only. No branch or tag was created or deleted, no repository was archived, and no deployment, production configuration, or production data was changed. The Spec Kit was not edited.
