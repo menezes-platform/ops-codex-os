@@ -1,7 +1,8 @@
 {
-  "checkpoint_id": "P09-P11-OPEN-PR-HEADS-2026-10-05T04:45Z",
-  "captured_window_utc": "2026-10-05T04:43Z/2026-10-05T04:45Z",
-  "source": "GitHub GITHUB_FIND_PULL_REQUESTS(state=open) plus GITHUB_GET_A_PULL_REQUEST for each result",
+  "checkpoint_id": "P09-P11-OPEN-PR-HEADS-2026-10-05T05:42Z",
+  "captured_window_utc": "2026-10-05T05:42Z/2026-10-05T05:42Z",
+  "repo_ref_counts_captured_window_utc": "2026-10-05T04:43Z/2026-10-05T04:45Z",
+  "source": "GitHub GITHUB_LIST_PULL_REQUESTS(state=open,page=1,per_page=100) for each of the seven repositories; GITHUB_GET_A_PULL_REQUEST rechecked PR #31 head metadata",
   "repository_scope": "seven named repositories; GitHub search incomplete_results=false for all",
   "open_pull_request_count": 29,
   "repositories": [
@@ -47,7 +48,7 @@
         {"number": 20, "title": "docs(plan): MCP reliability and Railway worker integration", "draft": true, "base_ref": "main", "head_ref": "plans/mcp-reliability-railway-2026-09-27", "head_sha": "9b46946fc4e8109a6e1103b78e2c90e5dde6934b", "updated_at": "2026-09-27T13:21:25Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/20"},
         {"number": 25, "title": "docs(incident): correct PersistFlow runtime target audit", "draft": false, "base_ref": "main", "head_ref": "fix/railway-runtime-target-audit-2026-09-28", "head_sha": "720aa6759a4cd3ea3d6bc7329025514274d7b4b4", "updated_at": "2026-09-28T10:21:12Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/25"},
         {"number": 30, "title": "Prepare Provider Gateway fallback, budgets and freshness-aware exact cache", "draft": true, "base_ref": "migration/platform-consolidation-p03", "head_ref": "consolidation/p06-provider-policy-20261005", "head_sha": "114e781baed6ac30f9c63d6e923363e73213bc13", "updated_at": "2026-10-05T03:32:39Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/30"},
-        {"number": 31, "title": "docs: record P08 caller and worker inventory", "draft": true, "base_ref": "main", "head_ref": "consolidation/p08-caller-inventory-20261005", "head_sha": "0ac965bee9d3c12ddc17b7f27b492b2a23fe20ab", "updated_at": "2026-10-05T04:31:04Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/31"},
+        {"number": 31, "title": "docs: record P08 caller and worker inventory", "draft": true, "base_ref": "main", "head_ref": "consolidation/p08-caller-inventory-20261005", "head_sha": "5ffb80ec7149d298fcee02064196b68e7cf7f389", "updated_at": "2026-10-05T05:41:38Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/31"},
         {"number": 32, "title": "P05 prep: plan scoped index generation publication and rollback", "draft": true, "base_ref": "migration/platform-consolidation-p03", "head_ref": "consolidation/p05-generation-contract-20261005", "head_sha": "a56de48ba3c037e228fabe51662e1608b06b1565", "updated_at": "2026-10-05T03:52:27Z", "url": "https://github.com/menezes-platform/ops-codex-os/pull/32"}
       ]
     },
