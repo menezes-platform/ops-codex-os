@@ -52,3 +52,7 @@ The frozen target was compared with the Sandbox README on default `main` and exi
 ## Historical design and plan labeling — 2026-10-05T07:30Z
 
 Draft PR #1 head `dba5f9cd54f2c70c9765b3f832876d2da9b7c195` also labels the prior v2 architecture design and v1 implementation plan as historical, while preserving their original contents. Those files previously described their design as approved and assigned the controller/run-state boundary to the old Gabriel-Codex-OS/Hostinger layout; the new note says the frozen consolidation Spec Kit governs current target ownership and does not prove deployed behavior. This changes documentation on the draft branch only. No CI, deployment, data, or runtime source was changed or checked. P10 remains NOT_PASSED; no live dependency is eligible for archive or deletion.
+
+## Public version endpoint confirmation — 2026-10-05T11:16Z
+
+An unauthenticated GET to `https://olivedrab-weasel-504267.hostingersite.com/api/version.php` returned HTTP `200` with `application/json`, `project=persistflow-sandbox`, source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`, `built_at=2026-09-18T00:25:02.755Z`, and `build_time=null`. The same legacy release is still publicly live. This does not establish collector last-success, successful upstream dashboard retrieval, archive eligibility, or current rollback. No authenticated dashboard/state, secret-bearing response, deployment, or configuration was accessed or changed; P10 remains `NOT_PASSED` and its archive gate stays closed.
