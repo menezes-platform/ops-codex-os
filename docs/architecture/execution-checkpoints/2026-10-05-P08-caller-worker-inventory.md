@@ -1,9 +1,9 @@
 # P08 — caller and worker inventory checkpoint
 
 - `phase_id`: `P08`
-- `checkpoint_id`: `P08-CALLERS-2026-10-05T01:55:51Z`
-- `recorded_at`: `2026-10-05T01:55:51Z`
-- `status`: `READ_ONLY_INVENTORY_HOSTINGER_HEALTH_RECOVERED_CALLERS_UNRESOLVED`
+- `checkpoint_id`: `P08-CALLERS-2026-10-05T01:57:31Z`
+- `recorded_at`: `2026-10-05T01:57:31Z`
+- `status`: `READ_ONLY_INVENTORY_HOSTINGER_HEALTH_RECOVERED_WORKER_FENCE_CI_GREEN_CALLERS_UNRESOLVED`
 - `P08_entry`: `NOT_SATISFIED`
 - `P08_exit`: `NOT_PASSED`
 - `DoD`: `NOT_MET`
@@ -26,7 +26,7 @@ Read-only GitHub inventory on 2026-10-05:
 | [`ops-codex-os` `main`](https://github.com/menezes-platform/ops-codex-os/tree/f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8) | `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8` | Frozen Agent Platform spec reference. |
 | [`ops-codex-os` draft PR #30](https://github.com/menezes-platform/ops-codex-os/pull/30) | head `ac0108bc22bb81d17d55edc253e26ea70b852712`, base `migration/platform-consolidation-p03`; open draft. | Offline Provider Gateway policy preparation; zero production caller/bypass proof is still absent. |
 | [`resident-node` `main`](https://github.com/menezesx2k26-byte/resident-node/tree/14b4cb2f94227d918c42564447f50f28e4763c88) | `14b4cb2f94227d918c42564447f50f28e4763c88` | Small Rust local-runtime baseline; main remains unchanged. |
-| [`resident-node` draft PR #1](https://github.com/menezesx2k26-byte/resident-node/pull/1) | head `128671f0937c861cb43c57d716614b9a76ba02fc`, base `main`; open draft. CI run [#43](https://github.com/menezesx2k26-byte/resident-node/actions/runs/37253188898) was queued at 01:55:51 UTC. | Offline lease/epoch fencing and regression preparation; it does not certify authenticated worker identity, production migration, or rollback. |
+| [`resident-node` draft PR #1](https://github.com/menezesx2k26-byte/resident-node/pull/1) | head `128671f0937c861cb43c57d716614b9a76ba02fc`, base `main`; open draft. CI run [#43](https://github.com/menezesx2k26-byte/resident-node/actions/runs/37253188898) passed `fmt`, Clippy, and tests on Linux/macOS/Windows. | Offline lease/epoch fencing and regression preparation; CI is green, but authenticated worker identity, runtime integration, production migration, and rollback are unproven. |
 | [`ops-persistflow-sandbox` `main`](https://github.com/menezes-platform/ops-persistflow-sandbox/tree/bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65) | `bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65`; main contains README/spec only. | Canonical sandbox repo remains unimplemented on `main`. |
 | [`ops-persistflow-sandbox` draft PR #1](https://github.com/menezes-platform/ops-persistflow-sandbox/pull/1) | head `9c1767debdb6db958aff8bcdc5403d2f3035b56c`, base `main`; open draft, 86 files, 89 commits, 7,225 additions. | Substantial broker/worker implementation exists only on the draft branch. Its three SHA-specific CI/Devcontainer runs passed on 2026-09-23; that does not prove production deployment or current fencing. |
 | [`ops-dev-orquestra` `main`](https://github.com/menezes-platform/ops-dev-orquestra/tree/26c8e80dd6bacd9abc938af8a7da51b3d1abede2) | `26c8e80dd6bacd9abc938af8a7da51b3d1abede2`; nine open PRs, including Semantic Cache CI #24 and computer-control integration #20. | Legacy integrations and callers remain live candidates; no archive decision follows from inactivity or age. |
@@ -42,7 +42,7 @@ Read-only GitHub inventory on 2026-10-05:
 | Cloudflare Worker `gabriel-aws-mcp-edge` | `OBSERVED` | Read-only Cloudflare API returned latest deployment `8b6416f6-1e22-4cf7-92e9-ac616f3c2fcf`, created `2026-09-29T23:02:02Z`, version `690b9a53-c6a1-4fcb-8c3a-8daad24060c7` at 100% traffic, and zero bindings. Prior authenticated source comparison matched deployed version to [`aws-mcp-edge-worker.js`](https://github.com/menezes-platform/ops-site-ops/blob/65e17e37915b283a3b3c8cb8de907f60b38331a5/mcp-edge/aws-mcp-edge-worker.js); the older cutover runbook's decommissioned-VM origin is historical and is not used as current source evidence. |
 | Semantic Cache in Orquestra | `DOCUMENTED_ONLY` | Current main config has `exact.mode=serve`, `semantic.mode=shadow`, `semantic.promotion.approved=false`. `codex_proxy.py` is a local Codex Responses proxy backed by Redis and guarded by freshness/side-effect/sensitivity checks. Its installer would create user-level systemd services; a separate script can reconfigure Codex after `/healthz` passes. No host service, health result, Codex config, live request, metrics, or cache data was observed. Treat this as an unresolved possible model-path caller and retain the required Provider Gateway review. |
 | OmniRoute MCP in Orquestra | `DOCUMENTED_ONLY` | Local MCP server exposes health/models/chat and its client makes authenticated model calls through an external OpenAI-compatible endpoint. No live invocation/deployment evidence was found. Whether it is a platform-owned model path, a project-specific integration, or unused is `UNRESOLVED`; do not classify it as a proven bypass or delete it yet. |
-| Resident Node | `DOCUMENTED_ONLY` | `main` contains SQLite/WAL-backed jobs, audit, capability registry and lockdown security epoch, but no job-result fence. Draft PR #1 adds source-level leases and regression cases; no production deployment or caller was found in the source inventory. |
+| Resident Node | `DOCUMENTED_ONLY` | `main` contains SQLite/WAL-backed jobs, audit, capability registry and lockdown security epoch, but no job-result fence. Draft PR #1 adds source-level leases and regression cases; CI run #43 passed across three OSes. No production deployment or caller was found in the source inventory. |
 | PersistFlow Sandbox draft workers | `DOCUMENTED_ONLY` | PR #1 contains PHP broker, lease/reconciliation services and GitHub/Railway/owned workers, but remains an open draft off `main`; SHA-specific checks last passed on Sep 23. The sandbox design says execution only and leaves run/generation authority in PersistFlow. No live deployment or enrolled worker was established from this PR metadata. |
 | Email triage / Notebook Outreach / fleet command workflows | `DOCUMENTED_ONLY` / `UNRESOLVED` | P07 source audit found a scheduled email-triage workflow, Supabase campaign/state writers, fleet/SSH command helpers and task-runner flows. These include distinct business and host-control domains. Source and Actions metadata do not identify all installed callers or effective host configs. No mailbox, remote host, or campaign action was read or performed in this phase. |
 | `ops-site-ops` scheduled workflows | `OBSERVED` | GitHub metadata listed 49 runs from Oct 1 onward, including 32 `startup_failure`, 4 `failure`, 12 `success`, and one queued run. The workflows and resources remain dependencies to inventory; these counts are not a caller-zero result. |
@@ -61,7 +61,7 @@ Static source review of draft PR #1 found:
 | Gate | Status | Reason |
 | --- | --- | --- |
 | P03 / AG-001 / authority-zero | `NOT_PASSED` | Hostinger startup is now healthy after the human-applied config correction, but the VM services/callers, global caller census, sole-primary status, and current rollback mapping remain unresolved. Existing direct storage/authority paths were not removed. |
-| P04 / AG-011, AG-012, SG-003, SG-004 | `NOT_PASSED` | No verified single primary/migration receipt/rollback snapshot. Resident Node main still lacks a job-result fence; draft PR #1 is source-only with CI pending and no authenticated worker binding. Sandbox draft also lacks epoch/expired-lease commit rejection. |
+| P04 / AG-011, AG-012, SG-003, SG-004 | `NOT_PASSED` | No verified single primary/migration receipt/rollback snapshot. Resident Node main still lacks a job-result fence; draft PR #1's source fence and regression suite pass CI on three OSes, but worker identity is not authenticated and runtime integration is absent. Sandbox draft also lacks epoch/expired-lease commit rejection. |
 | P05 | `NOT_PASSED` | Drive corpus, isolated BM25+FAISS runtime, manifests, incremental/full rebuild and rollback remain unverified. |
 | P06 | `PREPARATION_ONLY` | Provider Gateway draft PR #30 and local tests exist; actual adapter/caller/secret path scan and zero bypass proof remain incomplete. |
 | P07 | `PREPARATION_ONLY` | Draft PR #82 tests the dashboard read-only routes and records source writers; live writer/deployment/caller census and production command/read acceptance remain incomplete. |
@@ -72,7 +72,7 @@ Static source review of draft PR #1 found:
 ## Next safe actions
 
 1. Keep P03 pending: Hostinger health and authenticated read-only status recovered, but VM services/callers, sole-primary mapping, and a current rollback snapshot are still missing. Removing or redirecting the observed PersistFlow storage path remains gated; advance independent work meanwhile.
-2. Continue review of Resident Node draft PR #1 and its cross-platform CI; add authenticated worker identity/transport and restart/external-effect recovery evidence before treating the fence as complete. Do not deploy the source change as an authority store.
+2. Continue review of Resident Node draft PR #1; cross-platform CI is green, while authenticated worker identity/transport and restart/external-effect recovery evidence remain open. Do not deploy the source change as an authority store.
 3. Continue P05/P06 offline work only behind the frozen producer-owned interfaces; keep live retrieval/provider state out of cache-derived evidence.
 4. Resume host/caller classification only through already-authorized read-only routes when the required VM/filesystem evidence becomes available. Keep P09–P11 destructive gates pending until the evidence ledger proves zero dependencies and rollback/preservation.
 
