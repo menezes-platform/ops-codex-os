@@ -1,8 +1,8 @@
 # P03 — desktop authority metadata and production fleet refresh
 
 - `phase_id`: `P03`
-- `checkpoint_id`: `P03-DESKTOP-AUTHORITY-FLEET-2026-10-05T05:14:00Z`
-- `recorded_at`: `2026-10-05T05:14:00Z`
+- `checkpoint_id`: `P03-DESKTOP-AUTHORITY-FLEET-2026-10-05T09:27:00Z`
+- `recorded_at`: `2026-10-05T09:27:00Z`
 - `status`: `BLOCKED / TWO_AUTHORITY_CANDIDATES / FLEET_EMPTY`
 - `frozen_spec`: `unchanged`
 - `work_scope`: read-only GitHub Actions metadata/log review and read-only production fleet/cache status
@@ -52,3 +52,11 @@ The same metadata-only workflow completed successfully again as [run #3726639330
 The refreshed projection again lists `PERSISTFLOW_FLEET_NODE_ID` and `PERSISTFLOW_FLEET_NODE_SECRET` in the `User` registry scope, with no matching names in `Machine`; the workflow did not read their values. The persisted `Gabriel PersistFlow Authority` task is `Running`, while `Gabriel Fleet Agent`, `GabrielFleet-Relay`, `GabrielFleet-AKIMCP`, and `GabrielOps-PrivateSourceSync` are `Ready`; the `persistd` tasks are `Disabled`. The `GabrielOps-ActionsRunner` task is `Running`, but its separate Windows service is `Stopped` with `Auto` start mode. This is scheduler/service metadata only and does not establish the process environment or an active Fleet Agent.
 
 Loopback `/healthz` again returned `200`, `authority=file`, `durable=true`. The launcher configuration remains `static_only_not_runtime_environment`; four directories were enumerated as candidates, not verified as the process's effective state root. In one known candidate directory, the report found zero run-candidate files, no OAuth state file, and one `desktop-primary` fleet record with `observedAt=2026-09-27T00:50:14Z` and `activeJobs=0`; this is stale metadata and the directory is not proven to be the running process's effective root. Tailscale reported 32 peers/26 online; peer names are omitted. The refreshed authenticated fleet and cache calls at approximately `05:08Z` again returned `fleet.nodes=[]` and `cache.nodes=[]`. Public Hostinger `/healthz` and edge OAuth metadata returned `200`; unauthenticated edge `/mcp` returned `401`. These observations still leave two healthy file-authority candidates and do not validate the desktop secret, prove a duplicate writer, or establish global caller coverage.
+
+## Additional installed-caller metadata run — 2026-10-05T05:26Z
+
+The successful [metadata workflow run #37267825113](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37267825113) ran on `DESKTOP-L6CITUI` (`gabriel-ops-desktop`). Its bounded report identifies the `Gabriel Fleet Agent` task as `Ready` with a `node-agent.js` action at the installed Gabriel Ops path, and `Gabriel PersistFlow Authority` as `Running` with `run-authority.ps1`. The task action and scheduler states do not establish that the agent was executing or reveal its process environment.
+
+The runner's own process-scope projection reports `PERSISTFLOW_BASE_URL` origin `http://127.0.0.1:39091`; the user-scope registry projection reports the Hostinger origin and the names `PERSISTFLOW_FLEET_NODE_ID` and `PERSISTFLOW_FLEET_NODE_SECRET`. The workflow intentionally did not collect process-scope variable names and did not read any secret values. These scopes do not identify the scheduled agent's effective environment or prove that Hostinger's corrected JSON was consumed. The local `/healthz` projection returned `200`, `authority=file`, `durable=true`, confirming a second reachable file-authority candidate on the desktop.
+
+This report is one-host metadata, not a global caller census. It strengthens the evidence that a desktop Fleet Agent task and local file-backed authority remain installed, while leaving active invocation, exact runtime roots, accepted credentials, sole-primary ownership, global callers, and current rollback unresolved. `P03 / HG-001` remains `NOT_PASSED`; no production operation was performed.

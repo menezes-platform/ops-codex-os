@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T06:42:11Z`
-- `recorded_at`: `2026-10-05T06:42:11Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T09:27:00Z`
+- `recorded_at`: `2026-10-05T09:27:00Z`
 - `github_check_status_observed_at`: `2026-10-05T05:25:36Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
@@ -199,3 +199,11 @@ Fresh unauthenticated `GET /healthz` returned HTTP 200 with `service=persistflow
 ## P03 authenticated projection refresh — 2026-10-05T09:20Z
 
 Through the existing read-only connection, `persist_fleet_status` and `persist_cache_status` succeeded and returned `fleet.nodes=[]` and `cache.nodes=[]`. No job/inspect, run, heartbeat, enrollment, mutation, or ephemeral execution tool was called. These bounded projections do not prove fleet-secret consumption or global host/caller zero. P03/HG-001 remains `NOT_PASSED`; see [P03 Hostinger post-apply refresh](2026-10-05-P03-hostinger-post-apply-refresh.md).
+
+## P03 desktop metadata evidence refresh — 2026-10-05T05:26Z
+
+The successful one-host metadata workflow [#37267825113](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37267825113) ran on `DESKTOP-L6CITUI`. It reports the `Gabriel Fleet Agent` task `Ready` with a `node-agent.js` action and the `Gabriel PersistFlow Authority` task `Running`. The runner process-scope `PERSISTFLOW_BASE_URL` origin is `http://127.0.0.1:39091`, while the user-scope origin is Hostinger; the registry projection lists the user-scope ID/secret variable names but does not read values. The local health projection is `200`, `authority=file`, `durable=true`. This does not inspect the task's process, validate the Hostinger fleet-secret JSON, prove an active agent, or establish one global primary. P03/HG-001 remains `NOT_PASSED`; the frozen DoD remains `NOT_MET`.
+
+## Local verification refresh — 2026-10-05T09:29Z
+
+On the exact current P08 documentation tree before this checkpoint commit (`450a4cc0d27b8a4fba3c9865fc007b27395359d6`), the full Node suite passed **285/285**, the Spec Kit validator passed, `git diff --check` passed, and `git diff --exit-code -- docs/architecture/spec-kit` confirmed the frozen Spec Kit is unchanged. These checks validate the local tree; they do not satisfy missing CI, production, migration, rollback, or phase-exit evidence.
