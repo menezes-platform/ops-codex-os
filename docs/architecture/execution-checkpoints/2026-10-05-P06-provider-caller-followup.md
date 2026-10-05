@@ -30,3 +30,9 @@ Next safe proof is an owner-approved inventory of which of these model paths are
 - A read of Orquestra workflow-run history was not available through the permitted GitHub read endpoint in this session. No negative claim about live invocation is made.
 - Credential values, provider API responses, deployed host configuration and live invocation telemetry were not accessed.
 - This is source and metadata evidence only. It does not change the frozen Spec Kit or authorize merge, deployment, migration, deletion or archival.
+
+## Draft Provider Gateway accounting fix — 2026-10-05T06:54Z
+
+The existing draft PR #30 was advanced from `114e781baed6ac30f9c63d6e923363e73213bc13` to `4f5077292ffcec0ef26ea6b943d741983e630fdb`. Review found that `Number.isInteger` accepted unsafe JavaScript token counts from a provider response. The gateway now requires safe integers for both input and output usage; the versioned inference schema also caps `max_output_tokens` and both usage fields at `Number.MAX_SAFE_INTEGER`. Regression tests cover the unsafe usage receipt and schema bounds.
+
+The exact draft head passed the complete Agent Platform Node suite, **317/317**, and the focused Provider Gateway policy/contract tests, **23/23**. `git diff --check` and frozen Spec Kit validation passed. No provider was called, and no CI result was checked in this refresh. The PR remains open and draft, unmerged and undeployed. P06 remains `NOT_PASSED`: production Gateway composition, broker-backed adapter, Gabriel Ops direct-provider ownership/use, the global caller census and zero-bypass proof remain open.
