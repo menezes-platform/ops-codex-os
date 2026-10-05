@@ -182,3 +182,13 @@ test('an inherited adapter cannot be invoked as a configured provider', async ()
   const gateway = setup(route(), Object.create({ primary: { infer: async () => result() } }));
   await assert.rejects(gateway.infer(request()), /PROVIDER_ADAPTER_UNAVAILABLE/);
 });
+
+test('unsafe input-token usage is rejected instead of becoming an accounting receipt', async () => {
+  const gateway = setup(route(), {
+    primary: { infer: async () => ({
+      ...result(),
+      usage: { input_tokens: Number.MAX_SAFE_INTEGER + 1, output_tokens: 2 },
+    }) },
+  });
+  await assert.rejects(gateway.infer(request()), /PROVIDER_USAGE_INVALID/);
+});

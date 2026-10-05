@@ -50,7 +50,8 @@ function normalizeResult(routeId, result, maxOutputTokens) {
   });
   const usage = result.usage;
   assertRecord(usage, 'PROVIDER_USAGE_INVALID');
-  if (!Number.isInteger(usage.input_tokens) || usage.input_tokens < 0 || !Number.isInteger(usage.output_tokens) || usage.output_tokens < 0) {
+  if (!Number.isSafeInteger(usage.input_tokens) || usage.input_tokens < 0
+    || !Number.isSafeInteger(usage.output_tokens) || usage.output_tokens < 0) {
     throw new Error('PROVIDER_USAGE_INVALID');
   }
   if (usage.output_tokens > maxOutputTokens) throw new Error('PROVIDER_RESULT_OVER_BUDGET');
