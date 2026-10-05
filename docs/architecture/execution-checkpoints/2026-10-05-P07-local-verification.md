@@ -1,0 +1,35 @@
+# P07 — local verification and remaining authority gaps
+
+- `phase_id`: `P07`
+- `checkpoint_id`: `P07-LOCAL-VERIFY-2026-10-05T06:19:00Z`
+- `recorded_at`: `2026-10-05T06:19:00Z`
+- `source_ref`: `ops-gabriel-ops@cbf039bb020a5628a4b3e44fe9f007729618f4a5`
+- `status`: `SOURCE_TESTS_AND_TYPECHECK_PASS / PRODUCTION_GATES_OPEN / EXIT_NOT_PASSED`
+- `P07_exit`: `NOT_PASSED`
+- `DoD`: `NOT_MET`
+- `work_scope`: `LOCAL_TESTS_AND_READ_ONLY_SOURCE_REVIEW`
+- `frozen_spec`: `unchanged`
+
+## Checks
+
+- The P07 worktree's complete Vitest suite passed: 35 files, 229 tests.
+- TypeScript checks passed for the base, server and worker configs after running Wrangler's local type generator. The generated `worker-configuration.d.ts` was Git-ignored and removed after the checks; the P07 worktree's tracked status remained clean.
+- The Wrangler type generator renders configured variable values when it creates the local type declaration. A tracked Wrangler config includes a salted PBKDF2 password-verifier record in its `vars`; this checkpoint does not repeat the value. Its production provenance and approval as a deploy-time setting have not been verified. This is authentication-sensitive material, not plaintext. Review its storage and generation/logging path before claiming credential-handling closure; no value or auth setting was changed.
+- No production build/deploy, external mailbox action, SSH command, or scheduled workflow was run as part of these checks.
+
+## P07 scope findings
+
+The source audit in [`p07-authority-writer-inventory.md`](https://github.com/menezesx2k26-byte/ops-gabriel-ops/blob/cbf039bb020a5628a4b3e44fe9f007729618f4a5/docs/operations/p07-authority-writer-inventory.md) classifies dashboard `/api/v1` operational routes as GET-only and the snapshot coordinator/KV path as derived projections. The durable dashboard Auth Coordinator owns password/session state, which is a separate dashboard security domain rather than platform run authority.
+
+The same checkout contains durable Supabase Notebook Outreach campaign/prospect/event state, a local SQLite queue candidate, workflows that can label/archive mailbox messages, and SSH/task command helpers. Those paths appear to concern campaign/business state, mailbox effects, or machine operations; source evidence does not establish their current callers, deployed configuration, or an official command client. Preserve them until their owners and replacement interfaces are verified.
+
+P07 remains `NOT_PASSED`: the target command/read interfaces are not verified, commands have not been shown to use official clients, unavailable-provider behavior and production smoke remain open, and the deployment mapping is incomplete. Passing source tests and typechecks does not prove zero authority-like writers or safe production behavior.
+
+## Next safe proof
+
+1. Identify the owner and live deployment for the campaign, mailbox and SSH paths; classify business-domain state separately from platform execution authority.
+2. Map each allowed command to a producer-owned client and test its unavailable-provider response without dispatching real mailbox or machine effects.
+3. Have the auth/config owner review the tracked password-verifier setting and its Wrangler type-generation output without copying the verifier into logs or generated artifacts.
+4. Complete the required production smoke/build evidence only after the target command/read interfaces and rollback path are identified.
+
+No source-system state changed in this checkpoint. The source-only rollback is the previous P07 branch ref and no production configuration was modified.
