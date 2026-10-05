@@ -40,12 +40,20 @@ The existing injected Provider Gateway gains explicit configured fallback, finit
 
 No SDK, cache/database backend, credential storage, broker protocol, authority, service registration, deployment or live provider call is added. Real adapters must enforce monetary caps and use the approved broker/capability path; this module does not measure remote provider charges. Semantic-cache integration and actual production callers remain unverified.
 
+## Follow-up source caller audit — 2026-10-05T02:39:53Z
+
+Source review of Agent Platform main `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8` found a concrete platform-owned bypass: `persistd/src/fleet/typesafe-router.js` POSTs directly to TypeSafe System One with `TYPESAFE_API_KEY`. `persistd/src/start-entrypoint.js` wires that scorer when `PERSISTFLOW_FLEET_ROUTER_ENABLED=1`; `FleetRouter.route()` calls it when more than one candidate is eligible and falls back deterministically when the key is absent or scoring fails. The production flag, key presence and invocation count were not inspected. The source-level P06 zero-bypass condition is therefore **NOT MET**; this audit did not change that caller or any live configuration.
+
+The existing TypeSafe protocol sends `{state, model, questions}` and consumes an `answers` map. The Provider Gateway v1 boundary currently exposes generic messages and requires normalized token usage; the TypeSafe caller tests do not establish that the remote response supplies those usage fields. A production adapter therefore still needs a verified vendor translation, a broker-backed credential source, and enforceable token/cost behavior before the caller can move without changing its deterministic fallback semantics. A wrapper that forwards the current key or fabricates usage would not close the gate.
+
+The P07 source inventory also found direct provider routes in Gabriel Ops dashboard-swarm and TypeSafe guardrail/email-triage flows. Their platform ownership and live execution remain unresolved; they are additional caller candidates, not a zero-count result. No provider was invoked and no secret values were read in this source audit.
+
 RED: node --test tests/provider-gateway-policy.test.js, exit 1, 14 tests: 3 passed, 11 failed before implementation.
 
 GREEN: node --test tests/provider-gateway-policy.test.js tests/platform-modules.test.js tests/platform-contracts.test.js tests/spec-kit-validator.test.js, exit 0, 40 tests passed, 0 failed, 0 skipped. Existing dev dependencies were reused from the prior checkout via process-only NODE_PATH; no package install occurred. All inference/cache adapters in these tests are synthetic and local.
 
 - completed_gate_evidence: changed-scope FG-001 and FG-002 tests pass; AG-008 freshness behavior and AG-018 neutral contract have local module evidence only; Spec Kit validator tests pass.
-- pending_gate_ids: full AG-008, AG-013, AG-014 production caller/secret/cache-policy evidence; P06 routing/fallback/budget policy in actual adapters; zero model-call bypasses; P03 AG-001 and authority-zero exit; all dependent phase production/migration/security/archive gates.
+- pending_gate_ids: full AG-008, AG-013, AG-014 production caller/secret/cache-policy evidence; broker-backed provider adapters and the direct PersistFlow TypeSafe caller migration; Gabriel Ops/Orquestra caller ownership and live-use reconciliation; zero model-call bypasses; P03 AG-001 and authority-zero exit; all dependent phase production/migration/security/archive gates.
 - authority_audit: no new writer/store introduced by this patch; known Agent Platform/PersistFlow legacy authority mismatch remains pending.
 - architecture_drift_audit: changes are inside the approved Provider Gateway seam, with injected derived cache; no Spec Kit edit. Offline preparation does not satisfy production topology.
 - blockers: VM current configuration access still unresolved as previously evidenced (Actions startup billing failure, SSM AWS_AUTH_UNAVAILABLE); current global callers, broker/adapters and cutover backup unavailable.
