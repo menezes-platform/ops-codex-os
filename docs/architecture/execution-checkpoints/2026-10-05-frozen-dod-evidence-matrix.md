@@ -256,3 +256,7 @@ Fresh unauthenticated requests at `09:52:02Z` returned HTTP `200` from `/healthz
 ## P10 public version refresh — 2026-10-05T09:53:15Z
 
 The unauthenticated Sandbox version endpoint again returned HTTP `200`, project `persistflow-sandbox`, source SHA `decb89a031fdbe4cca464c50676fed8ea1073e61`, and `built_at=2026-09-18T00:25:02.755Z`. The 09:31Z response had a null `build_time` field; this response includes `built_at`. The live legacy release and configured collector keep the P10 archive gate closed; no authenticated state, deployment, or configuration was touched. P10 remains `NOT_PASSED`.
+
+## P06 current-head package-suite refresh — 2026-10-05T10:01Z
+
+At the exact current documentation-only PR #30 head `5ffe57937af75680f458746aaaa0a2255265d96f`, the repository's declared package test command, `node --test tests/*.test.js`, passed **57/57 tests**. The checked-out validation dependency tree had the identical `package-lock.json` SHA-256; a temporary junction supplied ESM resolution and was removed after the run. No dependency was installed, and the P06 checkout remained clean. This package-scoped local result does not establish hosted CI, broker-backed provider adapters, production Gateway composition, global zero-bypass, or P06 exit; P06 remains `NOT_PASSED` and the frozen DoD remains `NOT_MET`.
