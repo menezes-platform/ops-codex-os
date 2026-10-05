@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:09:07Z`
-- `recorded_at`: `2026-10-05T02:09:07Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:10:15Z`
+- `recorded_at`: `2026-10-05T02:10:15Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -99,7 +99,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | Repository tests pass | `PARTIAL` | Resident Node CI #43 passed Linux/macOS/Windows; ops-gabriel-ops CI and TypeSafe PR Guardrail passed for P07 head; memory-cognition retrieval suite passed 30/30. A direct full Agent Platform Node-suite run here was incomplete: 14/18 top-level tests passed and 4 could not start/pass because `@modelcontextprotocol/server` is absent and the server did not start. P06/P08 query returned no recorded combined statuses/workflow runs; absence of status is not a pass. |
 | Architecture gates pass | `NOT_MET` | P03, P04, P05, P06, P07 and P08 exit evidence is incomplete; P09–P11 have not started destructive actions. |
 | Integration/E2E tests pass | `UNRESOLVED` | No full consolidated production-path E2E result exists. |
-| Production smoke passes | `PARTIAL` | P03 recovery probes showed Hostinger `/healthz` 200, metadata 200, and unauthenticated MCP 401; this is bounded endpoint evidence, not the DoD smoke suite. |
+| Production smoke passes | `PARTIAL` | P03 probes showed Hostinger `/healthz` 200, metadata 200, and unauthenticated MCP 401; hPanel also marked its latest deployment `Concluído` and `Atual` at displayed time `2026-10-04 23:44:46` (timezone unlabeled). These are bounded health/deployment observations, not the DoD smoke suite. |
 | Migration receipts exist for stateful moves | `NOT_MET` | No authorized stateful migration or corresponding receipt has been performed. |
 | Rollback artifacts are verified | `PARTIAL` | The Oct 3 fenced capture/restore is mechanically valid for its recorded bytes; it predates current Hostinger config and is not a current cutover snapshot. |
 | Final architecture graph matches `02-target-architecture.md` | `TARGET_ONLY` | Target doc exists; no final graph or conformance result exists. |
@@ -119,4 +119,4 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | P09–P11 | `DESTRUCTIVE_GATES_CLOSED` | Continue preservation and dependency evidence only; no deletion/archive/cleanup until zero-caller/deployment/state receipts and rollback proof exist. |
 | P12 / DoD | `PRE_AUDIT_ONLY / NOT_MET` | Refresh this matrix as phase receipts arrive; run final audits only after all prerequisite gates are passed. |
 
-Evidence references: [`P03 Hostinger recovery`](2026-10-05-P03-hostinger-recovery.md), [`P08 caller/worker inventory`](2026-10-05-P08-caller-worker-inventory.md), frozen Spec Kit `11-definition-of-done.md`, `02-target-architecture.md`, `03-authority-matrix.md`, current draft PR/check metadata recorded in P08, and read-only timestamped probes noted there. This checkpoint records evidence boundaries; it does not reclassify or amend the frozen Spec Kit.
+Evidence references: [`P03 Hostinger recovery`](2026-10-05-P03-hostinger-recovery.md), [`P03 Hostinger deployment-list read`](2026-10-05-P03-hostinger-deployment-read.md), [`P05 retrieval preparation`](2026-10-05-P05-retrieval-preparation.md), [`P08 caller/worker inventory`](2026-10-05-P08-caller-worker-inventory.md), frozen Spec Kit `11-definition-of-done.md`, `02-target-architecture.md`, `03-authority-matrix.md`, current draft PR/check metadata recorded in P08, and read-only timestamped probes noted there. This checkpoint records evidence boundaries; it does not reclassify or amend the frozen Spec Kit.
