@@ -70,7 +70,7 @@ Static source review of draft PR #1 found:
 
 ## Next safe actions
 
-1. Continue fixing automatic source gates where a bounded, reversible change is available (starting with the P03 PersistFlow storage edge); preserve formal P03 status until its exact conditions pass.
+1. Keep P03 blocked: removing or redirecting the observed PersistFlow storage path depends on verified deployment/caller mapping and a readable current rollback snapshot. Advance independent offline work meanwhile; preserve formal P03 status until its exact conditions pass.
 2. Prepare a fenced-worker correction with regression cases for expired-lease completion, stale epoch, worker identity binding and renewal, then run applicable CI before considering the sandbox draft usable. Do not deploy it as an authority store.
 3. Continue P05/P06 offline work only behind the frozen producer-owned interfaces; keep live retrieval/provider state out of cache-derived evidence.
 4. Resume host/caller classification only through already-authorized read-only routes when the required VM/filesystem evidence becomes available. Keep P09–P11 destructive gates pending until the evidence ledger proves zero dependencies and rollback/preservation.
