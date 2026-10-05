@@ -1,9 +1,10 @@
 # P08 — caller and worker inventory checkpoint
 
 - `phase_id`: `P08`
-- `checkpoint_id`: `P08-CALLERS-2026-10-05T02:40:55Z`
-- `recorded_at`: `2026-10-05T02:40:55Z`
-- `status`: `READ_ONLY_INVENTORY_P06_SOURCE_BYPASS_P04_RECOVERY_EPOCH_GAP_PRODUCTION_CALLERS_UNRESOLVED`
+- `checkpoint_id`: `P08-CALLERS-2026-10-05T02:44:18Z`
+- `recorded_at`: `2026-10-05T02:44:18Z`
+- `github_check_status_observed_at`: `2026-10-05T02:43:45Z`
+- `status`: `READ_ONLY_INVENTORY_P06_SOURCE_BYPASS_P04_RECOVERY_EPOCH_GAP_P08_CHECKS_BLOCKED_BY_BILLING`
 - `P08_entry`: `NOT_SATISFIED`
 - `P08_exit`: `NOT_PASSED`
 - `DoD`: `NOT_MET`
@@ -66,7 +67,7 @@ Static source review of draft PR #1 found:
 | P03 / AG-001 / authority-zero | `NOT_PASSED` | Hostinger startup is now healthy after the human-applied config correction, but the VM services/callers, global caller census, sole-primary status, and current rollback mapping remain unresolved. Existing direct storage/authority paths were not removed. |
 | P04 / AG-011, AG-012, SG-003, SG-004 | `NOT_PASSED` | No verified single primary/migration receipt/rollback snapshot. Resident Node main still lacks a job-result fence; draft PR #1's source fence and regression suite pass CI on three OSes, but worker identity is not authenticated and runtime integration is absent. Sandbox draft also lacks epoch/expired-lease commit rejection. |
 | P05 | `NOT_PASSED` | Drive corpus, isolated BM25+FAISS runtime, manifests, incremental/full rebuild and rollback remain unverified. |
-| P06 | `PREPARATION_ONLY / SOURCE_BYPASS_PRESENT` | Provider Gateway policy and 28 focused local tests pass, including the existing fleet router mock tests. Agent Platform source still has a direct TypeSafe fleet scorer; Gabriel Ops source adds direct dashboard-swarm/TypeSafe candidates. Broker-backed adapters, secret paths and live caller/configuration remain unverified. |
+| P06 | `PREPARATION_ONLY / SOURCE_BYPASS_PRESENT` | Provider Gateway policy and 28 focused local tests pass, including existing fleet-router mock tests. Agent Platform source still has a direct TypeSafe fleet scorer; Gabriel Ops source adds direct dashboard-swarm/TypeSafe candidates. Broker-backed adapters, secret paths and live caller/configuration remain unverified. GitHub reports no check runs for current PR #30 head `f3d06aa`. |
 | P07 | `PREPARATION_ONLY` | Draft PR #82 tests the dashboard read-only routes and records source writers; live writer/deployment/caller census and production command/read acceptance remain incomplete. |
 | P08 entry/exit | `NOT_SATISFIED` / `NOT_PASSED` | No global legacy-caller count, no complete installed worker/config map, and no live-worker fencing proof. |
 | P09–P11 | `NOT_STARTED_FOR_DESTRUCTIVE_ACTIONS` | Required zero-caller/deploy/state evidence, preservation refs, archive gates and branch dependency audit are absent. No delete/archive/cleanup action is authorized by this checkpoint. |
