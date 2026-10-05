@@ -1,9 +1,9 @@
 # P08 — caller and worker inventory checkpoint
 
 - `phase_id`: `P08`
-- `checkpoint_id`: `P08-CALLERS-2026-10-05T02:44:18Z`
-- `recorded_at`: `2026-10-05T02:44:18Z`
-- `github_check_status_observed_at`: `2026-10-05T02:43:45Z`
+- `checkpoint_id`: `P08-CALLERS-2026-10-05T02:45:59Z`
+- `recorded_at`: `2026-10-05T02:45:59Z`
+- `github_check_status_observed_at`: `2026-10-05T02:45:11Z`
 - `status`: `READ_ONLY_INVENTORY_P06_SOURCE_BYPASS_P04_RECOVERY_EPOCH_GAP_P08_CHECKS_BLOCKED_BY_BILLING`
 - `P08_entry`: `NOT_SATISFIED`
 - `P08_exit`: `NOT_PASSED`

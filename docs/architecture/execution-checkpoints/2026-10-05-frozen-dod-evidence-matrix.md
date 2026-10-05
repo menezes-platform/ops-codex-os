@@ -1,8 +1,8 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:44:18Z`
-- `recorded_at`: `2026-10-05T02:44:18Z`
-- `github_check_status_observed_at`: `2026-10-05T02:43:45Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:45:59Z`
+- `recorded_at`: `2026-10-05T02:45:59Z`
+- `github_check_status_observed_at`: `2026-10-05T02:45:11Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -97,7 +97,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | Frozen criterion | Status | Evidence and remaining proof |
 | --- | --- | --- |
 | Forbidden dependency edges = 0 | `UNRESOLVED` | No final architecture graph/checker result covers all repositories and production dependencies. |
-| Repository tests pass | `PARTIAL` | Resident Node PR #1 current head `915154e` has successful Linux/macOS/Windows Rust checks and CodeRabbit status; ops-gabriel-ops PR #82 head `cbf039b` has successful `verify`, `guardrail`, and CodeRabbit checks. `memory-cognition` retrieval suite passed 30/30. P05 PR #32 passed 28/28 targeted generation/module/spec-validator tests locally and P06 PR #30 passed 28/28 focused Provider Gateway/module/fleet-router tests locally with provider calls mocked; GitHub reports no check runs on current P05/P06 heads. P08 PR #31 head `afceea4` reports failed Python and JavaScript/TypeScript CodeQL jobs because the jobs were not started while the account is locked due to a billing issue; no source analysis ran, and these are not code findings or a pass. A direct full Agent Platform Node-suite run here was incomplete: 14/18 top-level tests passed and 4 could not start/pass because `@modelcontextprotocol/server` is absent and the server did not start. |
+| Repository tests pass | `PARTIAL` | Resident Node PR #1 head `915154e` has successful Linux/macOS/Windows Rust checks and CodeRabbit status; ops-gabriel-ops PR #82 head `cbf039b` has successful `verify`, `guardrail`, and CodeRabbit checks. `memory-cognition` retrieval suite passed 30/30. P05 PR #32 passed 28/28 targeted generation/module/spec-validator tests locally and P06 PR #30 passed 28/28 focused Provider Gateway/module/fleet-router tests locally with provider calls mocked; GitHub reports no check runs on current P05/P06 heads. P08 PR #31's immediately preceding docs-only head `b20a7ff` reports failed Python and JavaScript/TypeScript CodeQL jobs because the jobs were not started while the account is locked due to a billing issue; no source analysis ran, and these are not code findings or a pass. Status on the new docs-only commit has not been observed yet. A direct full Agent Platform Node-suite run here was incomplete: 14/18 top-level tests passed and 4 could not start/pass because `@modelcontextprotocol/server` is absent and the server did not start. |
 | Architecture gates pass | `NOT_MET` | P03, P04, P05, P06, P07 and P08 exit evidence is incomplete; P09–P11 have not started destructive actions. |
 | Integration/E2E tests pass | `UNRESOLVED` | No full consolidated production-path E2E result exists. |
 | Production smoke passes | `PARTIAL` | P03 probes showed Hostinger `/healthz` 200, metadata 200, and unauthenticated MCP 401; hPanel also marked its latest deployment `Concluído` and `Atual` at displayed time `2026-10-04 23:44:46` (timezone unlabeled). These are bounded health/deployment observations, not the DoD smoke suite. |
