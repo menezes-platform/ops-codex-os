@@ -12,6 +12,7 @@ const MANIFEST_FIELDS = new Set([
   'created_at',
 ]);
 const DIGEST = /^sha256:[a-f0-9]{64}$/;
+const PROFILE_REF = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}(?:-v|@v)[1-9][0-9]*(?:\.[0-9]+){0,2}$/;
 const DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
 function fail(code) {
@@ -61,7 +62,7 @@ function assertIndexManifest(value) {
   if (value.role !== 'current' && value.role !== 'previous') fail('INDEX_MANIFEST_INVALID');
   if (typeof value.corpus_manifest_ref !== 'string' || !DIGEST.test(value.corpus_manifest_ref)) fail('INDEX_MANIFEST_INVALID');
   for (const field of ['lexical_profile', 'vector_profile', 'embedding_profile', 'chunking_profile']) {
-    if (typeof value[field] !== 'string' || !value[field].trim()) fail('INDEX_MANIFEST_INVALID');
+    if (typeof value[field] !== 'string' || !PROFILE_REF.test(value[field])) fail('INDEX_MANIFEST_INVALID');
   }
   if (!isDateTime(value.created_at)) fail('INDEX_MANIFEST_INVALID');
 

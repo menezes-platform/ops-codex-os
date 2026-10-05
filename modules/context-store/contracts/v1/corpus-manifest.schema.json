@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://platform.menezes.dev/contracts/context-store/v1/corpus-manifest.schema.json",
+  "title": "Context Store Corpus Manifest v1",
+  "$ref": "#/$defs/corpusManifest",
+  "$defs": {
+    "corpusManifest": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "const": 1 },
+        "scope": { "type": "string", "pattern": "^project/[A-Za-z0-9][A-Za-z0-9._-]{0,99}/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$" },
+        "source_revision": { "type": "string", "minLength": 1 },
+        "documents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "source_ref": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "content_sha256": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+        },
+        "required": ["source_ref", "path", "content_sha256"],
+        "additionalProperties": false
+      }
+        },
+        "corpus_manifest_ref": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      },
+      "required": ["schema_version", "scope", "source_revision", "documents", "corpus_manifest_ref"],
+      "additionalProperties": false
+    }
+  }
+}

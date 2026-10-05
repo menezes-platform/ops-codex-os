@@ -1,5 +1,6 @@
 const PROJECT_SCOPE = /^project\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const generationPolicy = require('./generation-policy');
+const corpusManifest = require('./corpus-manifest');
 
 function assertProjectScope(scope) {
   if (typeof scope !== 'string' || !PROJECT_SCOPE.test(scope)) throw new Error('INVALID_PROJECT_SCOPE');
@@ -104,4 +105,4 @@ function createContextStore({ driver } = {}) {
   });
 }
 
-module.exports = { createContextStore, assertProjectScope, ...generationPolicy };
+module.exports = { createContextStore, assertProjectScope, ...generationPolicy, ...corpusManifest };

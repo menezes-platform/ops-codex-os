@@ -14,8 +14,9 @@ addFormats(ajv);
 
 const contextSchema = readContract('modules/context-gateway/contracts/v1/context.schema.json');
 const contextStoreSchema = readContract('modules/context-store/contracts/v1/manifest.schema.json');
+const corpusManifestSchema = readContract('modules/context-store/contracts/v1/corpus-manifest.schema.json');
 const providerSchema = readContract('modules/provider-gateway/contracts/v1/inference.schema.json');
-for (const schema of [contextSchema, contextStoreSchema, providerSchema]) ajv.addSchema(schema);
+for (const schema of [contextSchema, contextStoreSchema, corpusManifestSchema, providerSchema]) ajv.addSchema(schema);
 
 function valid(schemaId, definition, value) {
   return ajv.validate({ $ref: `${schemaId}#/$defs/${definition}` }, value);
@@ -92,6 +93,27 @@ test('Context Store manifest identifies rebuildable current/previous project gen
   assert.equal(valid(contextStoreSchema.$id, 'indexManifest', validManifest), true);
   assert.equal(valid(contextStoreSchema.$id, 'indexManifest', { ...validManifest, role: 'latest' }), false);
   assert.equal(valid(contextStoreSchema.$id, 'indexManifest', { ...validManifest, scope: 'global' }), false);
+  assert.equal(valid(contextStoreSchema.$id, 'indexManifest', { ...validManifest, embedding_profile: 'local-embed' }), false);
+});
+
+test('Context Store corpus manifest is project-scoped, content-free, and closed', () => {
+  const corpusManifest = {
+    schema_version: 1,
+    scope: 'project/menezes-platform/ops-codex-os',
+    source_revision: 'f4e31b4',
+    documents: [{
+      source_ref: 'git:f4e31b4:README.md',
+      path: 'README.md',
+      content_sha256: `sha256:${'b'.repeat(64)}`,
+    }],
+    corpus_manifest_ref: `sha256:${'a'.repeat(64)}`,
+  };
+  assert.equal(valid(corpusManifestSchema.$id, 'corpusManifest', corpusManifest), true);
+  assert.equal(valid(corpusManifestSchema.$id, 'corpusManifest', { ...corpusManifest, scope: 'global' }), false);
+  assert.equal(valid(corpusManifestSchema.$id, 'corpusManifest', {
+    ...corpusManifest,
+    documents: [{ ...corpusManifest.documents[0], content: 'source text' }],
+  }), false);
 });
 
 test('Provider Gateway contract is provider-neutral and excludes conversation/run/project authority', () => {
@@ -140,6 +162,7 @@ test('new Agent Platform contracts contain no vendor/framework-specific public t
   const schemaPaths = [
     'modules/context-gateway/contracts/v1/context.schema.json',
     'modules/context-store/contracts/v1/manifest.schema.json',
+    'modules/context-store/contracts/v1/corpus-manifest.schema.json',
     'modules/provider-gateway/contracts/v1/inference.schema.json',
   ];
   const forbidden = /langchain|faiss|mcp|openai|anthropic|google\.generative|sqlite|\bwal\b/i;

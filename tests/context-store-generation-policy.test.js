@@ -44,6 +44,7 @@ test('index manifest validation is strict, project-bound, and immutable', () => 
   assert.throws(() => assertIndexManifest({ ...input, scope: 'global' }), /INVALID_PROJECT_SCOPE/);
   assert.throws(() => assertIndexManifest({ ...input, corpus_manifest_ref: 'sha256:not-a-digest' }), /INDEX_MANIFEST_INVALID/);
   assert.throws(() => assertIndexManifest({ ...input, generation: 0 }), /INDEX_MANIFEST_INVALID/);
+  assert.throws(() => assertIndexManifest({ ...input, embedding_profile: 'local-embed' }), /INDEX_MANIFEST_INVALID/);
   assert.throws(() => assertIndexManifest({ ...input, created_at: '2026-02-30T12:00:00Z' }), /INDEX_MANIFEST_INVALID/);
   assert.throws(() => assertIndexManifest({ ...input, created_at: 'yesterday' }), /INDEX_MANIFEST_INVALID/);
 });
