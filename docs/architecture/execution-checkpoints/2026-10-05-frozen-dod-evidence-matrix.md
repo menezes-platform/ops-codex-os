@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:10:15Z`
-- `recorded_at`: `2026-10-05T02:10:15Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:15:42Z`
+- `recorded_at`: `2026-10-05T02:15:42Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -56,7 +56,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 
 | Frozen criterion | Status | Evidence and remaining proof |
 | --- | --- | --- |
-| Context Store is Drive-backed with normalized corpus + provenance/manifests | `TARGET_ONLY` | No corpus/manifest implementation or deployed proof was found in the inspected source. Four targeted Drive metadata searches for `Context Store`, `retrieval`, `BM25`, and `ops-codex-os` returned no results; this narrow search does not prove global absence. |
+| Context Store is Drive-backed with normalized corpus + provenance/manifests | `PARTIAL` | P03 migration branch contains a Context Store interface and current/previous manifest schema, but no Drive driver or deployed corpus proof. Four targeted Drive metadata searches for `Context Store`, `retrieval`, `BM25`, and `ops-codex-os` returned no results; this narrow search does not prove global absence. |
 | Project indexes are physically isolated | `PARTIAL` | Scope and foreign-dataset rejection tests exist in the optional RAGFlow adapter; no physically isolated target index topology is implemented or verified. |
 | BM25 + FAISS hybrid retrieval is active behind Context Gateway | `PARTIAL` | A local Git/docs BM25 pilot exists; no FAISS path, target Context Gateway, or active production hybrid runtime was found. |
 | One global local embedding profile is versioned | `TARGET_ONLY` | No profile artifact or versioned runtime configuration was verified. |
@@ -112,7 +112,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 | --- | --- | --- |
 | P03 / HG-001 | `BLOCKED / NOT_PASSED` | Preserve healthy-service evidence; obtain VM service/origin/caller mapping, global caller census, sole-primary proof, and a fresh verified rollback snapshot before any cutover. |
 | P04 | `FORMAL_ENTRY_NOT_SATISFIED` | Continue source review of the draft fence and design authenticated identity/transport plus restart/external-effect recovery; no production migration. |
-| P05 | `PREPARATION_ONLY / ENTRY_NOT_SATISFIED` | P04 indexing runtime is absent from Resident Node `main`; retain and extend source-level scope/manifest contracts only until the execution-plane interface is available. |
+| P05 | `PREPARATION_ONLY / ENTRY_NOT_SATISFIED` | P04 indexing runtime is absent from Resident Node `main`. Draft Context Gateway/Store seams exist on the P03 migration branch; preserve and extend source-level scope/manifest contracts only until the execution-plane interface is available. |
 | P06 | `PREPARATION_ONLY` | Continue provider adapter/interface/test work and source-level caller/secret-path scan; no live routing switch. |
 | P07 | `PREPARATION_ONLY` | Complete the read-only writer/caller inventory and distinguish business-domain state from platform authority; no source-system mutation. |
 | P08 | `ENTRY_NOT_SATISFIED` | Continue read-only caller and worker inventory; no migration or archive claim. |
