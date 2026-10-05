@@ -1,13 +1,13 @@
 # P05 — retrieval preparation checkpoint
 
 - `phase_id`: `P05`
-- `checkpoint_id`: `P05-RETRIEVAL-PREP-2026-10-05T02:04:00Z`
-- `recorded_at`: `2026-10-05T02:04:00Z`
+- `checkpoint_id`: `P05-RETRIEVAL-PREP-2026-10-05T02:09:07Z`
+- `recorded_at`: `2026-10-05T02:09:07Z`
 - `status`: `SOURCE_PREPARATION_ONLY`
 - `P05_formal_entry`: `NOT_SATISFIED`
 - `DoD`: `NOT_MET`
 - `frozen_spec`: `unchanged`
-- `evidence_scope`: local tracked source and test inspection; no live retrieval, Drive, provider, or Hostinger calls
+- `evidence_scope`: local tracked source/test inspection plus four targeted Drive metadata-only searches; no file-content fetch, live retrieval, provider, or Hostinger call
 
 ## Entry gate
 
@@ -21,6 +21,7 @@ The frozen migration plan requires P04's indexing runtime to be available before
 | Project scope and shadow isolation | `SOURCE_AND_TESTS_OBSERVED` | `canonicalProjectScope` and the optional RAGFlow adapter map explicit projects to host-configured dataset allowlists; returned foreign dataset/repository rows are filtered. RAGFlow tests also verify an unallowlisted scope fails closed. | These are source-level filters and tests, not proof of physically separate production indexes or zero leakage across the complete target corpus. |
 | RAGFlow serving | `SOURCE_AND_TESTS_OBSERVED` | The skill and README describe RAGFlow as optional shadow evaluation; serving is hard-coded false, and a regression test confirms setting `RAGFLOW_SERVING_ENABLED=true` cannot turn it on. | No deployed dependency inventory proves RAGFlow is absent from every live required path. |
 | BM25 pilot regression suite | `TESTS_OBSERVED` | `node --test skills/memory-cognition/tests/*.test.js` passed **30/30** tests on this checkout, including scope allowlists, foreign-result rejection, derived-only behavior, and shadow-not-serving behavior. | These tests do not cover target FAISS, Drive corpus, incremental/full rebuild, generation promotion/rollback, or production integration. |
+| Drive artifact discovery | `METADATA_SEARCH_ONLY` | Targeted folder searches for `Context Store`, `retrieval`, and `ops-codex-os`, plus a document search for `BM25`, returned no matches. | Searches were limited to names/metadata and these exact terms. They do not prove that no corpus exists under another name, in an unsearched drive, or outside the connected account's visibility. No file content was fetched. |
 | Drive storage code | `DOCUMENTED/IMPLEMENTED_FOR_OTHER_DOMAIN` | `persistd/src/storage/` has Drive client/object storage modules for fleet storage. | Fleet object storage does not establish the Context Store corpus contract; do not infer that it can be safely reused as a project retrieval store. |
 | Target retrieval modules | `NOT_FOUND_IN_SCANNED_REPO_REFS` | No target `context-store`, `retrieval`, `context-gateway`, or Resident Node `indexing-runtime` implementation appeared in the bounded tracked-source scan. | The scan is limited to these checked-out repository refs; it is not a global deployment or account inventory. |
 
@@ -40,6 +41,6 @@ Source anchors: `skills/memory-cognition/SKILL.md:16,19`; `skills/memory-cogniti
 
 ## Safe disposition
 
-Keep P05 `PREPARATION_ONLY` until the P04-owned indexing runtime and producer-owned interface exist. Preserve the tested local scope/provenance/shadow guards as candidate contracts. Continue independent P06/P07 source and policy preparation while P04/P05 entry gates remain explicit. No Drive data was read or written; no credential, deployment, provider, index, corpus, or canonical state was changed.
+Keep P05 `PREPARATION_ONLY` until the P04-owned indexing runtime and producer-owned interface exist. Preserve the tested local scope/provenance/shadow guards as candidate contracts. Continue independent P06/P07 source and policy preparation while P04/P05 entry gates remain explicit. Only Drive file/folder metadata was searched; no file content was fetched and no Drive file was written. No credential, deployment, provider, index, corpus, or canonical state was changed.
 
 The frozen DoD matrix is in [`2026-10-05-frozen-dod-evidence-matrix.md`](2026-10-05-frozen-dod-evidence-matrix.md). This checkpoint does not modify the Spec Kit or claim any P05 exit criterion passed.

@@ -1,7 +1,7 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:04:53Z`
-- `recorded_at`: `2026-10-05T02:04:53Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T02:09:07Z`
+- `recorded_at`: `2026-10-05T02:09:07Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -56,7 +56,7 @@ No row is `PASS`. A passing unit/CI result or a healthy endpoint is not a substi
 
 | Frozen criterion | Status | Evidence and remaining proof |
 | --- | --- | --- |
-| Context Store is Drive-backed with normalized corpus + provenance/manifests | `TARGET_ONLY` | No deployed corpus, provenance ledger, or manifest evidence was recorded. |
+| Context Store is Drive-backed with normalized corpus + provenance/manifests | `TARGET_ONLY` | No corpus/manifest implementation or deployed proof was found in the inspected source. Four targeted Drive metadata searches for `Context Store`, `retrieval`, `BM25`, and `ops-codex-os` returned no results; this narrow search does not prove global absence. |
 | Project indexes are physically isolated | `PARTIAL` | Scope and foreign-dataset rejection tests exist in the optional RAGFlow adapter; no physically isolated target index topology is implemented or verified. |
 | BM25 + FAISS hybrid retrieval is active behind Context Gateway | `PARTIAL` | A local Git/docs BM25 pilot exists; no FAISS path, target Context Gateway, or active production hybrid runtime was found. |
 | One global local embedding profile is versioned | `TARGET_ONLY` | No profile artifact or versioned runtime configuration was verified. |
