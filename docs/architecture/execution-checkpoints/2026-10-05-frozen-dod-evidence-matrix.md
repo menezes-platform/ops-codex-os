@@ -145,3 +145,7 @@ A source-only scan on draft PR #30 found no known provider endpoint/key path in 
 ## P11 Sandbox documentation follow-up — 2026-10-05T07:25Z
 
 Sandbox `main` remains at `bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65` with stale README identity/status language. Existing draft PR #1 head `c03c9bea2c7d36021d4aebd37ecf091e8d0d36a8` now updates README.md and docs/hostinger.md to state the frozen target ownership boundaries, mark the Hostinger guide as an earlier deployment contract, and separately identify the live Hostinger service/collector as an unresolved P10 dependency. The PR remains draft; its current head was not CI-checked, and no live service/data changed. This is preparation only. P10 archival and P11 global documentation/adoption/preservation gates remain NOT_PASSED; frozen DoD remains NOT_MET.
+
+## P11 Sandbox design-history refresh — 2026-10-05T07:30Z
+
+Draft PR #1 now also labels its v2 design and v1 implementation plan as historical under the frozen consolidation Spec Kit, retaining both documents' original text. Current head is `dba5f9cd54f2c70c9765b3f832876d2da9b7c195`; no CI result was checked. Sandbox `main` is unchanged, P10 remains NOT_PASSED, formal P11 entry is not satisfied, and the frozen DoD remains NOT_MET.
