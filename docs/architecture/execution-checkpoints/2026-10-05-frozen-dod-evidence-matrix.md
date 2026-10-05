@@ -1,8 +1,8 @@
 # Frozen DoD evidence matrix — 2026-10-05
 
-- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:54:57Z`
-- `recorded_at`: `2026-10-05T10:54:57Z`
-- `github_check_status_observed_at`: `2026-10-05T10:52Z`
+- `checkpoint_id`: `DOD-EVIDENCE-MATRIX-2026-10-05T10:59:22Z`
+- `recorded_at`: `2026-10-05T10:59:22Z`
+- `github_check_status_observed_at`: `2026-10-05T10:55Z`
 - `source_of_truth`: frozen [`11-definition-of-done.md`](../spec-kit/11-definition-of-done.md) at Agent Platform `main` `f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8`
 - `frozen_spec`: `unchanged`
 - `overall_DoD`: `NOT_MET`
@@ -292,3 +292,7 @@ The successful one-host metadata workflow [#37298998726](https://github.com/mene
 ## P09 exact PR/ref reconciliation — 2026-10-05T10:54Z
 
 The open draft PR #31 reports head `9c400a0b003577fe0a51e48bdc45829be6c49b1d`; read-only `git ls-remote` at 10:54Z returned the same SHA for both `consolidation/p08-caller-inventory-20261005` and `refs/pull/31/head`. This closes the head-association check for PR #31 only. The 09:08Z seven-repository preservation inventory remains the latest full census; no repository, branch, PR, deployment, or production state was deleted or changed by this check. P09 remains `NOT_PASSED`.
+
+## P09 full preservation census refresh — 2026-10-05T10:55Z
+
+The [current preservation snapshot](2026-10-05-P09-P11-current-preservation-recheck-1055.json) re-read all seven frozen-scope repositories through GitHub metadata and `git ls-remote`. It reports 29 open PRs, 262 branch refs, 3 tags, 154 GitHub pull-head refs, all 29 PR heads matching both their same-repository branch and `refs/pull/<number>/head`, and all seven repositories `archived=false`. The 226 non-default branches without an exact open-PR head match remain preservation-review items only. No refs or repositories were modified. This does not prove caller/deployment zero or archive eligibility; P09 remains `NOT_PASSED` and destructive gates stay closed.
