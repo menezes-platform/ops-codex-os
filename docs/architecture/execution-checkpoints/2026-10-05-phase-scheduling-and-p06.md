@@ -92,3 +92,9 @@ Read-only GitHub Actions-run and combined-status lookups for exact PR #30 head `
 ## P06 documentation-head CI lookup — 2026-10-05T08:47Z
 
 After commit `34ccdf1c8bd54e0568e0d5095e316a73a47a0ab0` added only this CI-evidence note, read-only workflow-run and combined-status lookups for the exact current PR #30 head again returned no PR-triggered runs and no commit statuses. The tested code remains `8cc5bd669b87d5809e005e388b383015d3aed1b5`; the current documentation-only head was not tested. No run was dispatched or rerun, and P06 remains **NOT_PASSED**.
+
+## P06 short-secret redaction boundary — 2026-10-05T11:08Z
+
+Review found that `collectSecretValues` dropped configured values shorter than six characters even though the fleet scorer serializes task and candidate text into a Provider Gateway request. The draft now collects every nonempty, non-whitespace configured value and redacts short values only at token boundaries; long values retain exact substring redaction. This avoids passing an exact short secret to an injected provider without replacing ordinary substrings throughout the prompt. A regression covers direct and JSON-map configuration, regex metacharacters, and non-matching longer words.
+
+Validation passed: `node --check persistd/src/fleet/provider-gateway-router.js` and **43/43** tests across the fleet-router, Provider Gateway policy, platform-module and platform-contract suites. The contract tests reused the existing validation dependency directory only after its `package-lock.json` SHA-256 matched this checkout (`54E4CDB1C169EC5605262724A6B0B3E594D6C8DD350802B4B030434AD5CA9252`); no dependency was installed. `git diff --check` passed. Only synthetic test literals were used; no real secret was read, provider request made, or live configuration changed. P06 remains **NOT_PASSED**: broker-backed adapters, production composition, global caller-zero, and deployed routing are still unproven.

@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { eligibleNodes, deterministicOrder } = require('./src/fleet/eligibility');
-const { ProviderGatewayFleetRouter } = require('./src/fleet/provider-gateway-router');
+const { ProviderGatewayFleetRouter, collectSecretValues, redactText } = require('./src/fleet/provider-gateway-router');
 const { FleetRouter } = require('./src/fleet/router');
 const { MemoryAuthorityStore } = require('./src/persistflow/authority-store');
 const { PersistFlowService } = require('./src/persistflow/service');
@@ -52,6 +52,17 @@ const baseIntent = {
   parallelSafe: false,
   pinnedNodeId: null,
 };
+
+test('short configured secrets are redacted as whole tokens without matching substrings', () => {
+  const secrets = collectSecretValues({
+    PERSISTFLOW_FLEET_NODE_SECRET: 'xy',
+    PERSISTFLOW_FLEET_NODE_SECRETS_JSON: JSON.stringify({ node: 'a.b', empty: '  ' }),
+  });
+
+  assert.deepEqual(secrets, ['xy', 'a.b']);
+  assert.equal(redactText('credentials=xy; node=a.b', secrets), 'credentials=[REDACTED]; node=[REDACTED]');
+  assert.equal(redactText('word=xylo; token=a.bed', secrets), 'word=xylo; token=a.bed');
+});
 
 test('hard eligibility excludes stale, drained, missing capability, disk pressure, concurrency and pin mismatch', () => {
   let rows = eligibleNodes({

@@ -104,6 +104,8 @@ PERSISTFLOW_FLEET_ROUTER_ENABLED=1
 
 The feature flag alone does not enable semantic model calls. A Provider Gateway client must be injected by the approved composition root; with multiple eligible nodes and no client, routing uses deterministic fallback. With a single eligible node the single-candidate fallback is used.
 
+Before scoring, the fleet router redacts configured secret values from task and candidate text. Values shorter than six characters are redacted only when they appear as whole tokens, avoiding both a short-secret leak and broad replacement of ordinary substrings.
+
 ## Local cache policy
 
 Default roots:

@@ -25,13 +25,22 @@ function collectSecretValues(env = {}, extras = []) {
     }
   } catch {}
   return [...new Set(values
-    .filter((value) => typeof value === 'string' && value.length >= 6)
+    .filter((value) => typeof value === 'string' && value.length > 0 && value.trim().length > 0)
     .map(String))];
 }
 
 function redactText(value, secrets = []) {
   let output = String(value ?? '');
-  for (const secret of secrets) output = output.split(secret).join('[REDACTED]');
+  for (const secret of secrets) {
+    if (typeof secret !== 'string' || secret.length === 0 || secret.trim().length === 0) continue;
+    if (secret.length >= 6) {
+      output = output.split(secret).join('[REDACTED]');
+      continue;
+    }
+    const escaped = secret.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const token = new RegExp(`(^|[^A-Za-z0-9_])${escaped}(?=$|[^A-Za-z0-9_])`, 'g');
+    output = output.replace(token, (_match, prefix) => `${prefix}[REDACTED]`);
+  }
   return output
     .replace(/\b(?:sk|ghp|github_pat|xox[baprs])-[-A-Za-z0-9_]{12,}\b/g, '[REDACTED]')
     .replace(/Bearer\s+[A-Za-z0-9._~+\/-]{12,}/gi, 'Bearer [REDACTED]');
