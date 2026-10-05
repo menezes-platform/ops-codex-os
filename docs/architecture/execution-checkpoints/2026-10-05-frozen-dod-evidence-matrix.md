@@ -244,3 +244,7 @@ Read-only inspection of the current hPanel deployment details shows deployment `
 ## P07 local test refresh — 2026-10-05T09:47Z
 
 At exact PR #82 documentation head `b8d1aa6cb13435bc19f83e4a6c4fd43c15f77acd`, the local Vitest suite passed **35/35 files and 232/232 tests** using the checkout's installed dependencies (Node 24.19.0, Vitest 4.1.11). This supplies test evidence on the documentation-only head while CI run #382 remains failed before tests at the GitHub runner physical-memory gate. It does not establish production ownership, caller completeness, smoke, rollback, or P07 exit; P07 remains `NOT_PASSED` and the frozen DoD remains `NOT_MET`.
+
+## P03 runtime-log refresh — 2026-10-05T09:49Z
+
+After refresh, Hostinger's runtime-log panel reported `Problemas: 0`, `Erros: 0`, and `Última implantação: 2026-10-04 23:44`, but returned **Nenhum log de execução encontrado**. This means the panel supplied no startup diagnostic to confirm or reject parsing of the corrected fleet-secret JSON. The prior-source deployment is healthy on the 09:31Z public probe, but secret consumption remains unproven; P03/HG-001 remains `NOT_PASSED`.
