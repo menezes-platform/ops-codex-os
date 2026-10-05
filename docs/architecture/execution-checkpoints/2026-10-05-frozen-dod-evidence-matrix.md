@@ -125,3 +125,7 @@ Evidence references: [`P03 Hostinger recovery`](2026-10-05-P03-hostinger-recover
 ## Evidence refresh — P06 draft head — 2026-10-05T06:54Z
 
 The earlier P06 test row and gate summary describe the state captured at `06:42Z`. Current draft PR #30 head is `4f5077292ffcec0ef26ea6b943d741983e630fdb`; it rejects unsafe token-count integers in the Provider Gateway and contract, and its exact source tree passed **317/317** full-suite and **23/23** focused Gateway policy/contract tests locally. Spec Kit validation and `git diff --check` passed. The PR remains unmerged/un-deployed, production Gateway composition and broker-backed adapter are absent, and the Gabriel Ops/Orquestra caller candidates plus zero-bypass proof remain unresolved. No provider call or CI check was made in this refresh. This update does not change `overall_DoD=NOT_MET` or any phase gate.
+
+## Evidence refresh — P07 source regression — 2026-10-05T07:02Z
+
+Draft Gabriel Ops PR #82 head `89bf21cc3cfffe5e2fb5fbb907a8fc857080642e` removes an infrastructure collector fallback that invented a healthy node when Tailscale status was unavailable. Empty or unrecognized infrastructure/deployment states now surface as unknown. Its full local Vitest suite passed **230/230** and app/server typechecks passed; no CI result was checked for this head. P07 remains `NOT_PASSED` because deployment ownership/configuration, official command clients, production smoke and rollback evidence are incomplete. The earlier 229-test source result is superseded; the frozen DoD remains `NOT_MET`.
