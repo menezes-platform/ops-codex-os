@@ -1,0 +1,74 @@
+# P03 — desktop authority metadata and production fleet refresh
+
+- `phase_id`: `P03`
+- `checkpoint_id`: `P03-DESKTOP-AUTHORITY-FLEET-2026-10-05T09:27:00Z`
+- `recorded_at`: `2026-10-05T09:27:00Z`
+- `status`: `BLOCKED / TWO_AUTHORITY_CANDIDATES / FLEET_EMPTY`
+- `frozen_spec`: `unchanged`
+- `work_scope`: read-only GitHub Actions metadata/log review and read-only production fleet/cache status
+
+## Windows host evidence
+
+The private self-hosted Windows runner in `ops-gabriel-ops` completed [P03 installed caller metadata run #37232828291](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37232828291) on `2026-10-04T20:37:00.5736599Z` (job completed successfully at `20:38:03Z`). It ran workflow source at commit `af355080ae27df6c77613e792efd025ef958e000`, file `.github/workflows/fleet-ssh-diagnostics.yml`, blob `13025d808a758ca6d0ec3ce2bdf0c2b823017e6b`. The workflow explicitly limits itself to one Windows host, metadata only, and is not a global caller census. It declares that it does not execute launcher scripts or read secret files; its environment projection records selected variable names and safe URL origins, never the fleet ID or secret values.
+
+Observed from that one host:
+
+- Registry metadata in `User` scope lists both `PERSISTFLOW_FLEET_NODE_ID` and `PERSISTFLOW_FLEET_NODE_SECRET`. The workflow did not read either value or establish that either value is non-empty or accepted by the server. No fleet-node variables were listed in `Machine` scope. Process-scope variable names are intentionally not collected; it did observe `GABRIEL_OPS_URL` and `PERSISTFLOW_BASE_URL` origins there.
+- Eight matching scheduled tasks were found. Their static action metadata was:
+
+  | Task | State | Executable / script basename |
+  | --- | --- | --- |
+  | `Gabriel PersistFlow Authority` | `Running` | `powershell.exe` / `run-authority.ps1` |
+  | `Gabriel Fleet Agent` | `Ready` | `node.exe` / `node-agent.js` |
+  | `GabrielFleet-Relay` | `Ready` | `powershell.exe` / `start-relay.ps1` |
+  | `GabrielFleet-AKIMCP` | `Ready` | `powershell.exe` / `start-akimcp.ps1` |
+  | `GabrielOps-ActionsRunner` | `Running` | `cmd.exe` / no script path in the projection |
+  | `GabrielOps-PrivateSourceSync` | `Ready` | `wscript.exe` / `run-private-source-sync-hidden.vbs` |
+  | `persistd` | `Disabled` | `node.exe` / `daemon.js` |
+  | `persistd-tiktok-live-dungeon` | `Disabled` | `node.exe` / `daemon.js` |
+
+  These are scheduled-task states and static action basenames; `Ready` does not mean a task is currently executing. The workflow did not run these scripts. This is installed-host evidence, not proof of which component is writing authoritative state.
+- `http://127.0.0.1:39091/healthz` returned a successful metadata projection with `authority=file` and `durable=true`.
+- One candidate authority data directory existed; the launcher projection was `static_only_not_runtime_environment`, so its configured paths are not verified runtime resolution.
+- The host reported 32 Tailscale peers, 26 online. Peer names were not copied into this checkpoint. This remains one-host topology only.
+- A matching Windows service for the self-hosted Actions runner was observed `Stopped` with `Automatic` start mode, despite this completed workflow run. Current runner service state requires a fresh check.
+
+## PersistFlow service state
+
+At approximately `2026-10-05T04:40Z`, the authenticated read-only production fleet and cache status operations again returned `fleet.nodes=[]` and `cache.nodes=[]`. The empty projections do not show that the configured ID or secret is wrong. They also do not explain why a Windows host with the two variable names present and a running Fleet Agent task has not appeared in the server registry.
+
+The separately observed Hostinger service also returned `authority=file` and `durable=true` on `/healthz` in the P03 smoke follow-up. The Windows loopback and Hostinger endpoints are therefore two healthy file-authority candidates. Their storage identity, write activity, replication relationship, and primary/failover roles remain unverified; this is not yet proof of duplicate writes, but it prevents a sole-primary claim.
+
+## Disposition
+
+`P03 / HG-001` remains `BLOCKED / NOT_PASSED`. Required evidence still includes mapping the local Windows and Hostinger endpoints to their state roots and writers, proving exactly one authoritative primary, establishing the deployed worker identity/enrollment/transport, completing the global production-caller census, and verifying a current rollback artifact. Do not infer a bad secret from empty fleet status; its value was never read. No secret was changed or copied by the agent, and no service, task, data, or deployment was modified.
+
+Evidence boundaries: a successful metadata workflow does not prove global coverage or runtime invocation; environment-variable names do not validate values; a health endpoint does not prove uniqueness; online Tailscale peers do not prove PersistFlow enrollment.
+
+## Fresh Windows host refresh
+
+The same metadata-only workflow completed successfully again as [run #37266393300](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37266393300) on commit `af355080ae27df6c77613e792efd025ef958e000`. Its host-reported `observedAt` is `2026-10-05T05:06:56.8747934Z`; GitHub reports the job started at `05:07:44Z`, about 47 seconds later. Treat the host clock as unsynchronized and use the GitHub run for the capture window.
+
+The refreshed projection again lists `PERSISTFLOW_FLEET_NODE_ID` and `PERSISTFLOW_FLEET_NODE_SECRET` in the `User` registry scope, with no matching names in `Machine`; the workflow did not read their values. The persisted `Gabriel PersistFlow Authority` task is `Running`, while `Gabriel Fleet Agent`, `GabrielFleet-Relay`, `GabrielFleet-AKIMCP`, and `GabrielOps-PrivateSourceSync` are `Ready`; the `persistd` tasks are `Disabled`. The `GabrielOps-ActionsRunner` task is `Running`, but its separate Windows service is `Stopped` with `Auto` start mode. This is scheduler/service metadata only and does not establish the process environment or an active Fleet Agent.
+
+Loopback `/healthz` again returned `200`, `authority=file`, `durable=true`. The launcher configuration remains `static_only_not_runtime_environment`; four directories were enumerated as candidates, not verified as the process's effective state root. In one known candidate directory, the report found zero run-candidate files, no OAuth state file, and one `desktop-primary` fleet record with `observedAt=2026-09-27T00:50:14Z` and `activeJobs=0`; this is stale metadata and the directory is not proven to be the running process's effective root. Tailscale reported 32 peers/26 online; peer names are omitted. The refreshed authenticated fleet and cache calls at approximately `05:08Z` again returned `fleet.nodes=[]` and `cache.nodes=[]`. Public Hostinger `/healthz` and edge OAuth metadata returned `200`; unauthenticated edge `/mcp` returned `401`. These observations still leave two healthy file-authority candidates and do not validate the desktop secret, prove a duplicate writer, or establish global caller coverage.
+
+## Additional installed-caller metadata run — 2026-10-05T05:26Z
+
+The successful [metadata workflow run #37267825113](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37267825113) ran on `DESKTOP-L6CITUI` (`gabriel-ops-desktop`). Its bounded report identifies the `Gabriel Fleet Agent` task as `Ready` with a `node-agent.js` action at the installed Gabriel Ops path, and `Gabriel PersistFlow Authority` as `Running` with `run-authority.ps1`. The task action and scheduler states do not establish that the agent was executing or reveal its process environment.
+
+The runner's own process-scope projection reports `PERSISTFLOW_BASE_URL` origin `http://127.0.0.1:39091`; the user-scope registry projection reports the Hostinger origin and the names `PERSISTFLOW_FLEET_NODE_ID` and `PERSISTFLOW_FLEET_NODE_SECRET`. The workflow intentionally did not collect process-scope variable names and did not read any secret values. These scopes do not identify the scheduled agent's effective environment or prove that Hostinger's corrected JSON was consumed. The local `/healthz` projection returned `200`, `authority=file`, `durable=true`, confirming a second reachable file-authority candidate on the desktop.
+
+This report is one-host metadata, not a global caller census. It strengthens the evidence that a desktop Fleet Agent task and local file-backed authority remain installed, while leaving active invocation, exact runtime roots, accepted credentials, sole-primary ownership, global callers, and current rollback unresolved. `P03 / HG-001` remains `NOT_PASSED`; no production operation was performed.
+
+## Scheduled-task last-run metadata refresh — 2026-10-05T10:48Z
+
+The metadata-only workflow [run #37298998726](https://github.com/menezesx2k26-byte/ops-gabriel-ops/actions/runs/37298998726) completed on `DESKTOP-L6CITUI`; its report timestamp is `2026-10-05T10:48:29.0014820Z`. The workflow read `Get-ScheduledTaskInfo` metadata for one Windows host and did not invoke the tasks, inspect their process environments, or read secret values. For the three relevant tasks it reported:
+
+| Task | Scheduler state | Last run (host-reported UTC) | Last task result |
+| --- | --- | --- | --- |
+| `Gabriel Fleet Agent` | `Ready` | `2026-10-04T19:36:36Z` | unavailable in report |
+| `Gabriel PersistFlow Authority` | `Running` | `2026-10-01T03:08:08Z` | `267009` (`0x00041301`, `SCHED_S_TASK_RUNNING`) |
+| `GabrielOps-PrivateSourceSync` | `Ready` | `2026-10-05T10:48:48Z` | `0` |
+
+Microsoft defines `0x00041301` as “the task is currently running” ([Task Scheduler success codes](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-error-and-success-constants)). The collector task therefore completed successfully at the scheduler level shortly after the report timestamp; that does not prove its authenticated upstream dashboard fetch succeeded, because its code can publish an unavailable fallback envelope. Likewise, the Fleet Agent's `Ready` state and prior run time do not show current execution or accepted Hostinger credentials. The authority task remains reported `Running`, but this single-host scheduler metadata does not map its effective state root or establish that it is the sole writer. Host-clock synchronization is not independently verified. No task was started/stopped and no production state changed; `P03 / HG-001` remains `NOT_PASSED`.
