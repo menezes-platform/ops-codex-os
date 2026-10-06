@@ -91,6 +91,7 @@ These are persistent cross-project operating rules for Codex.
 - Observable repository state and validated evidence outrank conversational recollection when they disagree.
 - Do not redo completed work merely because it is absent from the current context.
 - Before retrying destructive, costly, deployment, or externally mutating operations after an interruption, verify whether they already succeeded or partially completed.
+- For Cloudflare Workers deployments, resolve the exact live hostname to its `workers.dev` account subdomain/account before writing, and verify the active credential/connection controls that same account. A matching Worker script name in another account is not the same production target; stop rather than overwrite it.
 - Never store secrets or credentials in durable context.
 - Use Apache Maka (`https://github.com/apache/maka`) as an architectural reference for durable execution records, recovery, and separation of saved history from model context when relevant; do not make it a dependency unless a project explicitly requires it.
 
