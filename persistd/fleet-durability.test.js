@@ -100,6 +100,21 @@ test('unsupported Windows directory fsync is explicit; actual I/O failures are n
   assert.throws(() => syncDirectory(root, { io: faultIO('openSync', () => true), platform: 'win32' }), /injected/);
 });
 
+test('guard survives without receipt: report uncertainty for the same ID, never terminal rejection', async t => {
+  const { pollAndExecute } = require('./src/fleet/executor-client');
+  const root = fixture(t), options = workerOptions(root);
+  fs.mkdirSync(options.receiptDir);
+  fs.writeFileSync(path.join(options.receiptDir, '.execution-active.json'), JSON.stringify({ nodeId: 'fixture', requestId: 'op', pid: process.pid }));
+  const executor = new FleetExecutor(options);
+  let launches = 0, reports = 0;
+  executor.run = async () => { launches++; };
+  const client = { poll: async () => ({ runId: 'r', operationId: 'o', generation: 1, requestId: 'op', commandId: 'smoke' }),
+    report: async (_job, receipt) => { reports++; assert.equal(receipt.status, 'RUNNING'); } };
+  await pollAndExecute({ executor, client });
+  await pollAndExecute({ executor, client });
+  assert.equal(launches, 0); assert.equal(reports, 2); assert.equal(executor.activeJobs, 1);
+});
+
 test('real worker processes sharing receipts fence different IDs with only one command launch', { timeout: 10000 }, async t => {
   const { spawn } = require('node:child_process');
   const root = fixture(t), marker = path.join(root, 'launches.txt');

@@ -89,6 +89,14 @@ class FleetExecutor {
 
   get activeJobs() { return Math.max(this.activeCount, this.unresolved.size, this.guardHeld ? 1 : 0); }
 
+  guardConflict(request) {
+    try {
+      const guard = JSON.parse(fs.readFileSync(this.guardPath, 'utf8'));
+      if (!ID.test(guard.requestId || '') || guard.nodeId !== this.nodeId || guard.requestId === request.requestId) return 'EXECUTION_STATE_UNCERTAIN';
+      return 'EXECUTOR_BUSY';
+    } catch { return 'EXECUTION_STATE_UNCERTAIN'; }
+  }
+
   async execute(input) {
     const request = executionRequest(input);
     const command = this.commands.get(request.commandId);
@@ -102,7 +110,7 @@ class FleetExecutor {
     };
     try { return readExisting(); }
     catch (error) { if (error.code !== 'ENOENT') throw error; }
-    if (this.activeJobs >= 1) throw new Error('EXECUTOR_BUSY');
+    if (this.activeJobs >= 1) throw new Error(this.guardHeld ? this.guardConflict(request) : 'EXECUTOR_BUSY');
     this.activeCount += 1;
     try {
       const disk = await this.statfs(command.cwd);
@@ -121,7 +129,7 @@ class FleetExecutor {
         if (error.code === 'EEXIST') {
           try { return readExisting(); }
           catch (readError) { if (readError.code !== 'ENOENT') throw readError; }
-          throw new Error('EXECUTOR_BUSY');
+          throw new Error(this.guardConflict(request));
         }
         throw error;
       }
