@@ -11,7 +11,7 @@ const { createPersistFlowMcpNodeHandler, sameToken } = require('./mcp-handler');
 const { createOAuthHttpHandler, requestOrigin } = require('./oauth-server');
 const { FileFleetStore } = require('../fleet/store');
 const { loadFleetConfig } = require('../fleet/contracts');
-const { verifyNodeRequest, parseNodeSecrets } = require('../fleet/auth');
+const { verifyNodeRequest, parseNodeSecrets, signNodeRequest } = require('../fleet/auth');
 const { createDriveTokenProviderFromEnv } = require('../storage/drive-auth');
 const { DriveClient } = require('../storage/drive-client');
 const { DriveObjectStore } = require('../storage/object-store');
@@ -42,6 +42,9 @@ async function readJson(req, maxBytes = 64 * 1024) {
 function errorStatus(error) {
   const code = error?.message || 'INTERNAL_ERROR';
   if (code === 'RUN_NOT_FOUND') return 404;
+  if (code === 'FLEET_EXECUTION_DISABLED' || code === 'EXECUTOR_NODE_NOT_CONFIGURED' || code === 'NO_ELIGIBLE_NODE' || code === 'FLEET_ROUTER_NOT_CONFIGURED') return 503;
+  if (code === 'EXECUTION_ID_CONFLICT') return 409;
+  if (code === 'INVALID_EXECUTION_REQUEST') return 400;
   if (code === 'DRIVE_AUTH_UNAVAILABLE') return 503;
   if (['RUN_ALREADY_EXISTS', 'STALE_GENERATION', 'CLAIM_NOT_PENDING', 'CLAIM_TARGET_MISMATCH', 'CLAIM_NONCE_MISMATCH'].includes(code)) return 409;
   if (['RUN_ID_REQUIRED', 'INVALID_GENERATION', 'CLAIM_SECRET_REQUIRED', 'INVALID_JSON', 'BODY_TOO_LARGE', 'INVALID_RUN_UPDATE'].includes(code)) return 400;
@@ -106,6 +109,7 @@ function createServer({
   fleetConfig = { nodes: [] },
   fleetNodeSecrets = {},
   fleetRouter = null,
+  fleetExecutorEnabled = false,
   ephemeralProvider = null,
   ephemeralEnabled = false,
   driveAuth = createDriveTokenProviderFromEnv(),
@@ -123,6 +127,7 @@ function createServer({
     fleetStore,
     fleetConfig,
     fleetRouter,
+    fleetExecutorEnabled,
     ephemeralProvider,
     ephemeralEnabled,
     driveAuth,
@@ -152,6 +157,35 @@ function createServer({
       }
       if (req.method === 'GET' && url.pathname === '/healthz') {
         return sendJson(res, 200, { ok: true, service: 'persistflow', authority: store.kind, durable: store.kind !== 'memory' });
+      }
+      const executionWorker = /^\/v1\/fleet\/nodes\/([^/]+)\/executions\/(poll|report)$/.exec(url.pathname);
+      if (req.method === 'POST' && executionWorker) {
+        const nodeId = decodeURIComponent(executionWorker[1]);
+        const { raw, value } = await readJsonWithRaw(req, 4096);
+        const authorized = fleetConfig.nodes.some(node => node.id === nodeId)
+          && req.headers['x-persistflow-node-id'] === nodeId
+          && verifyNodeRequest({ nodeId, timestamp: req.headers['x-persistflow-node-timestamp'],
+            signature: req.headers['x-persistflow-node-signature'], method: req.method, path: url.pathname,
+            rawBody: raw, secrets: fleetNodeSecrets, nowMs: () => clock().getTime(), maxSkewMs: 60_000 });
+        if (!authorized) return sendJson(res, 401, { error: 'unauthorized' });
+        const reply = (status, result) => {
+          const body = JSON.stringify(result), timestamp = clock().toISOString();
+          res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store',
+            'x-persistflow-node-timestamp': timestamp,
+            'x-persistflow-node-signature': signNodeRequest({ nodeId, secret: fleetNodeSecrets[nodeId], timestamp,
+              method: 'RESPONSE-' + status, path: url.pathname, body }) });
+          res.end(body);
+        };
+        try {
+          if (executionWorker[2] === 'poll') {
+            if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length) throw new Error('INVALID_EXECUTION_REQUEST');
+            return reply(200, service.pollFleetExecution(nodeId));
+          }
+          return reply(200, service.reportFleetExecution(nodeId, value));
+        } catch (error) {
+          const status = errorStatus(error);
+          return reply(status, { error: status === 500 ? 'internal_error' : error.message });
+        }
       }
       const fleetHeartbeat = /^\/v1\/fleet\/nodes\/([^/]+)\/heartbeat$/.exec(url.pathname);
       if (req.method === 'POST' && fleetHeartbeat) {
@@ -211,6 +245,11 @@ function createServer({
       if (req.method === 'GET' && runMatch) {
         const run = service.inspectRun(decodeURIComponent(runMatch[1]));
         return sendJson(res, 200, { run });
+      }
+      const fleetExecution = /^\/v1\/runs\/([^/]+)\/fleet\/execute$/.exec(url.pathname);
+      if (req.method === 'POST' && fleetExecution) {
+        if (!ownerBearerAuthorized(req, mcpToken, mcpTokenDigest)) return sendJson(res, 401, { error: 'unauthorized' });
+        return sendJson(res, 200, await service.executeFleetTask(decodeURIComponent(fleetExecution[1]), await readJson(req)));
       }
       const bridgeSync = /^\/v1\/runs\/([^/]+)\/bridge\/sync$/.exec(url.pathname);
       if (req.method === 'POST' && bridgeSync) {

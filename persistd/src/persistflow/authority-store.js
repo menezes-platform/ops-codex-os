@@ -58,6 +58,8 @@ class MemoryAuthorityStore {
     return clone(this.runs.get(runId) || null);
   }
 
+  list() { return [...this.runs.values()].map(clone); }
+
   update(runId, updater) {
     const current = this.runs.get(runId);
     if (!current) throw new Error('RUN_NOT_FOUND');
@@ -116,6 +118,13 @@ class FileAuthorityStore {
 
   get(runId) {
     return clone(this.read(runId));
+  }
+
+  list() {
+    try {
+      return fs.readdirSync(this.directory).filter(name => /^[0-9a-f]{64}\.json$/.test(name))
+        .map(name => JSON.parse(fs.readFileSync(path.join(this.directory, name), 'utf8')));
+    } catch (error) { if (error.code === 'ENOENT') return []; throw error; }
   }
 
   update(runId, updater) {

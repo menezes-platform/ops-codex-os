@@ -129,13 +129,44 @@ async function postHeartbeat({
   }
 }
 
+async function startConfiguredExecutor({ env = process.env } = {}) {
+  if (env.PERSISTFLOW_FLEET_EXECUTOR_ENABLED !== '1') return null;
+  if (!env.PERSISTFLOW_FLEET_EXECUTOR_CONFIG) throw new Error('EXECUTOR_CONFIG_REQUIRED');
+  const { FleetExecutor } = require('./executor');
+  const { FleetAuthorityClient } = require('./executor-client');
+  const config = JSON.parse(fs.readFileSync(env.PERSISTFLOW_FLEET_EXECUTOR_CONFIG, 'utf8'));
+  const executor = new FleetExecutor({ nodeId: env.PERSISTFLOW_FLEET_NODE_ID, secret: env.PERSISTFLOW_FLEET_NODE_SECRET,
+    receiptDir: config.receiptDir, commands: config.commands });
+  const client = new FleetAuthorityClient({ baseUrl: env.PERSISTFLOW_BASE_URL, nodeId: executor.nodeId, secret: executor.secret });
+  return { executor, client };
+}
+
+async function runExecutorLoop(remoteExecutor) {
+  const { pollAndExecute } = require('./executor-client');
+  let lastError = null;
+  for (;;) {
+    try {
+      const receipt = await pollAndExecute(remoteExecutor);
+      if (receipt && receipt.status !== 'RUNNING') process.stdout.write('[fleet-executor] ' + JSON.stringify(receipt) + '\n');
+      lastError = null;
+    } catch (error) {
+      const code = /^[A-Z_0-9]+$/.test(error.message || '') ? error.message : 'EXECUTOR_TRANSPORT_ERROR';
+      if (code !== lastError) process.stderr.write('[fleet-executor] ' + code + '\n');
+      lastError = code;
+    }
+    await sleep(5000);
+  }
+}
+
 async function runAgent({ env = process.env, intervalMs = 30_000 } = {}) {
   const baseUrl = env.PERSISTFLOW_BASE_URL;
   const nodeId = env.PERSISTFLOW_FLEET_NODE_ID;
   const secret = env.PERSISTFLOW_FLEET_NODE_SECRET;
+  const remoteExecutor = await startConfiguredExecutor({ env });
+  if (remoteExecutor) void runExecutorLoop(remoteExecutor);
   for (;;) {
     try {
-      const heartbeat = await collectHeartbeat();
+      const heartbeat = await collectHeartbeat(remoteExecutor ? { activeJobs: () => remoteExecutor.executor.activeJobs } : {});
       await postHeartbeat({ baseUrl, nodeId, secret, heartbeat });
     } catch (error) {
       process.stderr.write('[fleet-agent] ' + String(error?.message || error) + '\n');
@@ -158,4 +189,5 @@ module.exports = {
   sampleCpuPercent,
   readCacheInventory,
   defaultCacheRoot,
+  startConfiguredExecutor,
 };
