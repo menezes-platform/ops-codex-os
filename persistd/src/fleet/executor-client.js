@@ -1,5 +1,5 @@
 const { signNodeRequest, verifyNodeRequest } = require('./auth');
-const { executionRequest } = require('./executor');
+const { executionRequest, TERMINATION_CODES } = require('./executor');
 
 function authorityUrl(value) {
   const url = new URL(value);
@@ -69,7 +69,8 @@ async function pollAndExecute({ executor, client }) {
     receipt = { status: rejected.includes(error.message) ? 'REJECTED' : 'RUNNING' };
   }
   await client.report(job, receipt);
-  return { requestId: job.requestId, commandId: job.commandId, status: receipt.status, exitCode: receipt.exitCode ?? null };
+  return { requestId: job.requestId, commandId: job.commandId, status: receipt.status, exitCode: receipt.exitCode ?? null,
+    terminationCode: TERMINATION_CODES.includes(receipt.terminationCode) ? receipt.terminationCode : null };
 }
 
 module.exports = { FleetAuthorityClient, authorityUrl, pollAndExecute };

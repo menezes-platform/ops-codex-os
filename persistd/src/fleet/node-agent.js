@@ -144,10 +144,13 @@ async function startConfiguredExecutor({ env = process.env, readFile = fs.readFi
 async function runExecutorLoop(remoteExecutor) {
   const { pollAndExecute } = require('./executor-client');
   let lastError = null;
+  let lastReceipt = null;
   for (;;) {
     try {
       const receipt = await pollAndExecute(remoteExecutor);
-      if (receipt && receipt.status !== 'RUNNING') process.stdout.write('[fleet-executor] ' + JSON.stringify(receipt) + '\n');
+      const event = receipt && JSON.stringify(receipt);
+      if (event && event !== lastReceipt) process.stdout.write('[fleet-executor] ' + event + '\n');
+      if (event) lastReceipt = event;
       lastError = null;
     } catch (error) {
       const code = /^[A-Z_0-9]+$/.test(error.message || '') ? error.message : 'EXECUTOR_TRANSPORT_ERROR';
