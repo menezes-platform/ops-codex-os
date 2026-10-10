@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { evictionReserves } = require('../storage/cache-manager');
+const { syncDirectory, ensureDurableDirectory, writeExclusiveJson, writeAtomicJson } = require('../durable-file');
 
 const ID = /^[a-zA-Z0-9_-]{1,128}$/;
 function executionRequest(value) {
@@ -45,13 +46,16 @@ function killTree(child) {
 }
 
 class FleetExecutor {
-  constructor({ nodeId, secret, receiptDir, commands, statfs = fs.promises.statfs } = {}) {
+  constructor({ nodeId, secret, receiptDir, commands, statfs = fs.promises.statfs, io = fs } = {}) {
     if (!ID.test(nodeId || '') || !secret || !path.isAbsolute(receiptDir || '')) throw new Error('EXECUTOR_CONFIG_REQUIRED');
     this.nodeId = nodeId;
     this.secret = secret;
     this.receiptDir = receiptDir;
     this.commands = normalizeCommands(commands);
     this.statfs = statfs;
+    this.io = io;
+    this.guardPath = path.join(receiptDir, '.execution-active.json');
+    this.guardHeld = fs.existsSync(this.guardPath);
     this.activeCount = 0;
     this.unresolved = new Set();
     try {
@@ -62,7 +66,7 @@ class FleetExecutor {
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
 
-  get activeJobs() { return Math.max(this.activeCount, this.unresolved.size); }
+  get activeJobs() { return Math.max(this.activeCount, this.unresolved.size, this.guardHeld ? 1 : 0); }
 
   async execute(input) {
     const request = executionRequest(input);
@@ -85,24 +89,34 @@ class FleetExecutor {
       const free = Number(disk.bsize) * Number(disk.bavail);
       if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(free)
         || free - command.estimatedScratchBytes < evictionReserves(total).startReserve) throw new Error('INSUFFICIENT_LOCAL_CAPACITY');
-      fs.mkdirSync(this.receiptDir, { recursive: true, mode: 0o700 });
-      const receipt = { ...request, nodeId: this.nodeId, status: 'RUNNING', startedAt: new Date().toISOString() };
-      let fd;
-      try { fd = fs.openSync(target, 'wx', 0o600); }
-      catch (error) { if (error.code === 'EEXIST') return readExisting(); throw error; }
-      try { fs.writeFileSync(fd, JSON.stringify(receipt)); fs.fsyncSync(fd); }
-      finally { fs.closeSync(fd); }
+      ensureDurableDirectory(this.receiptDir, { io: this.io });
+      // This guard fences different IDs across processes using the same receipt
+      // directory. It is never broken by age/PID: uncertain work needs inspection.
+      try {
+        writeExclusiveJson(this.guardPath, { nodeId: this.nodeId, requestId: request.requestId, pid: process.pid }, { io: this.io });
+        this.guardHeld = true;
+      } catch (error) {
+        this.guardHeld = fs.existsSync(this.guardPath);
+        if (error.code === 'EEXIST') {
+          try { return readExisting(); }
+          catch (readError) { if (readError.code !== 'ENOENT') throw readError; }
+          throw new Error('EXECUTOR_BUSY');
+        }
+        throw error;
+      }
       this.unresolved.add(request.requestId);
+      const receipt = { ...request, nodeId: this.nodeId, status: 'RUNNING', startedAt: new Date().toISOString() };
+      try { this.directorySyncSupported = writeExclusiveJson(target, receipt, { io: this.io }); }
+      catch (error) { if (error.code === 'EEXIST') return readExisting(); throw error; }
       const result = await this.run(command);
       const completed = { ...receipt, ...result, finishedAt: new Date().toISOString() };
       // Persist metadata only: command output may contain private project data.
       const { stdout, stderr, ...durable } = completed;
-      const temp = target + '.' + crypto.randomUUID() + '.tmp';
-      const finalFd = fs.openSync(temp, 'wx', 0o600);
-      try { fs.writeFileSync(finalFd, JSON.stringify(durable)); fs.fsyncSync(finalFd); }
-      finally { fs.closeSync(finalFd); }
-      fs.renameSync(temp, target);
+      this.directorySyncSupported = writeAtomicJson(target, durable, { io: this.io });
       this.unresolved.delete(request.requestId);
+      this.io.unlinkSync(this.guardPath);
+      syncDirectory(this.receiptDir, { io: this.io });
+      this.guardHeld = false;
       return { ...completed, replayed: false };
     } finally { this.activeCount -= 1; }
   }

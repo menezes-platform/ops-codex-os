@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { writeAtomicJson } = require('../durable-file');
 
 function clone(value) {
   return value == null ? value : structuredClone(value);
@@ -79,10 +80,11 @@ class MemoryAuthorityStore {
 }
 
 class FileAuthorityStore {
-  constructor(directory) {
+  constructor(directory, { io = fs } = {}) {
     this.directory = String(directory || '').trim();
     if (!this.directory) throw new Error('AUTHORITY_STORE_DIR_REQUIRED');
     this.kind = 'file';
+    this.io = io;
   }
 
   filePath(runId) {
@@ -103,11 +105,8 @@ class FileAuthorityStore {
   }
 
   write(state) {
-    fs.mkdirSync(this.directory, { recursive: true });
     const target = this.filePath(state.runId);
-    const temp = `${target}.${process.pid}.${crypto.randomUUID()}.tmp`;
-    fs.writeFileSync(temp, `${JSON.stringify(state)}\n`, { encoding: 'utf8', mode: 0o600 });
-    fs.renameSync(temp, target);
+    this.directorySyncSupported = writeAtomicJson(target, state, { io: this.io });
   }
 
   create(state) {
