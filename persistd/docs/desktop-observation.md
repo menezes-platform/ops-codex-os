@@ -1,5 +1,7 @@
 # Gabriel MCP Remote — Desktop observation
 
+Latest hardening and release disposition: [2026-10-11 continuation](desktop-observation-hardening.md). Images now require valid PNG chunks/CRC, bounded exact decompression, request-time freshness (two-second clock tolerance), and no untyped bounds fields. Reports bind the stored generation and recheck node eligibility. Canonical file reads pin directories/ancestors for the complete operation and derive metadata from validated handles. Publication authorization is conditional on the recovery gates; those gates remain unproven.
+
 TASK_ID DESKTOP-OBSERVATION-001. Implementation role IMPLEMENT/VERIFY. This feature is subordinate to the existing Spec Kit constitution, authority matrix and executor gates. It adds no authority, local executor, generic shell or desktop agent. Dev-Orquestra owns Windows implementation; PersistFlow owns canonical operation metadata. PR #33 remains the executor review boundary; Dev-Orquestra PR #20 remains the selective integration boundary and excludes unfinished relay components.
 
 ## Contract

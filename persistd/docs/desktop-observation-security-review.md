@@ -1,5 +1,7 @@
 # DESKTOP-OBSERVATION-001 — security review
 
+2026-10-11 continuation supersedes the original review disposition below: [hardening findings and verification](desktop-observation-hardening.md). Additional generation, directory-race, node freshness, image validation and argument-type findings were reproduced and corrected. Final independent approval remains pending; the earlier statement of no known code blockers was a historical snapshot, not current release approval.
+
 Scope: observation adapter in ops-codex-os on PR33 base and canonical Windows Host extensions in Dev-Orquestra on PR20 base. Root-agent source review and adversarial local tests; independent human PR review remains required. CodeQL was unavailable due to GitHub billing and is not claimed to have run. No extra AI reviewer or paid service was used.
 
 | Boundary | Evidence / outcome |

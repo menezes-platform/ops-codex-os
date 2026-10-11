@@ -1,5 +1,6 @@
 const crypto = require('node:crypto');
 const { eligibleNodes } = require('./eligibility');
+const { validatePng } = require('./observation-png');
 
 const OPERATIONS = Object.freeze({
   'desktop.status': [], 'desktop.screenshot': ['kind', 'ref'], 'desktop.windows.list': [],
@@ -32,6 +33,7 @@ function validateResult(operation,result,now=Date.now()) {
   if (operation==='desktop.screenshot') {
     if(Object.keys(result).some(k=>!['mimeType','data','width','height','sourceBounds','capturedAt','expiresAt','evidenceId','coordinateSpace'].includes(k))
       || result.coordinateSpace!=='physical_pixels' || !result.sourceBounds || typeof result.sourceBounds!=='object'
+      || Object.keys(result.sourceBounds).some(k=>!['X','Y','Width','Height'].includes(k))
       || !['X','Y','Width','Height'].every(k=>Number.isInteger(result.sourceBounds[k]))
       || result.sourceBounds.Width<1 || result.sourceBounds.Height<1 || result.sourceBounds.Width*result.sourceBounds.Height>16000000) throw Error('INVALID_OBSERVATION_RESULT');
     if (result.mimeType!=='image/png' || typeof result.data!=='string' || result.data.length>1398104 || !/^[A-Za-z0-9+/]+={0,2}$/.test(result.data)) throw Error('INVALID_OBSERVATION_RESULT');
@@ -41,9 +43,10 @@ function validateResult(operation,result,now=Date.now()) {
       || !Number.isInteger(result.width) || !Number.isInteger(result.height) || result.width<1 || result.height<1 || result.width>1600 || result.height>1600
       || bytes.toString('ascii',bytes.length-8,bytes.length-4)!=='IEND'
       || typeof result.capturedAt!=='string' || typeof result.expiresAt!=='string' || !Number.isFinite(Date.parse(result.expiresAt))
-      || !Number.isFinite(Date.parse(result.capturedAt)) || Math.abs(now-Date.parse(result.capturedAt))>30000
+      || !Number.isFinite(Date.parse(result.capturedAt)) || now-Date.parse(result.capturedAt)>30000 || Date.parse(result.capturedAt)>now+2000
       || Date.parse(result.expiresAt)<=now || Date.parse(result.expiresAt)>Date.parse(result.capturedAt)+30000
       || typeof result.evidenceId!=='string' || !/^[a-f0-9]{32}$/.test(result.evidenceId)) throw Error('INVALID_OBSERVATION_RESULT');
+    validatePng(bytes,result.width,result.height);
   } else {
     const object=value=>value && typeof value==='object' && !Array.isArray(value);
     const keys=(value,allowed)=>object(value) && Object.keys(value).every(k=>allowed.includes(k));
@@ -155,13 +158,16 @@ class ObservationQueue {
     if (!input || Object.keys(input).some(k=>!['runId','generation','operationId','nodeId','operation','arguments','requestId','expiresAt','result','error'].includes(k)) || (!!input.result===!!input.error)) throw Error('INVALID_OBSERVATION_RESULT');
     const run=this.service.assertRunGeneration(input.runId,input.generation);
     const op=Object.hasOwn(run.desktopObservations||{},input.operationId) ? run.desktopObservations[input.operationId] : null;
-    if(!op || op.nodeId!==nodeId || op.nodeId!==input.nodeId || op.requestId!==input.requestId || op.operation!==input.operation
+    if(!op || op.generation!==input.generation || op.nodeId!==nodeId || op.nodeId!==input.nodeId || op.requestId!==input.requestId || op.operation!==input.operation
       || JSON.stringify(op.arguments)!==JSON.stringify(input.arguments) || op.expiresAt!==input.expiresAt || op.expiresAt<=this.clock()
       || op.status!=='CLAIMED') throw Error('OBSERVATION_REPLAY');
     const key=this.key(input.runId,input.operationId),waiter=this.waiters.get(key);
     if(!waiter) throw Error('OBSERVATION_REPLAY');
+    this.fresh(nodeId);
     if(input.error && !CODES.has(input.error)) throw Error('INVALID_OBSERVATION_RESULT');
     if(input.result) validateResult(op.operation,input.result,this.clock());
+    if(input.result && op.operation==='desktop.status' && input.result.hostname!==this.nodes[nodeId].hostname) throw Error('INVALID_OBSERVATION_RESULT');
+    if(input.result && op.operation==='desktop.screenshot' && Date.parse(input.result.capturedAt)<op.expiresAt-this.waitMs-2000) throw Error('INVALID_OBSERVATION_RESULT');
     this.service.store.update(input.runId,r=>({...r,desktopObservations:{...r.desktopObservations,[input.operationId]:{...op,status:input.error?'FAILED':'COMPLETED',finishedAt:this.clock()}}}));
     const expires=input.result?.expiresAt ? Date.parse(input.result.expiresAt) : this.clock()+30000;
     this.results.set(key,{result:input.result,error:input.error,expires});

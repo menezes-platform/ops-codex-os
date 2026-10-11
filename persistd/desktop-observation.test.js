@@ -72,3 +72,34 @@ test('storage failure during timeout rejects safely and preserves replay fencing
   await assert.rejects(pending,/OBSERVATION_STORAGE_UNAVAILABLE/);
   assert.equal(f.queue.poll('desktop-primary').job,null);
 });
+
+test('a claimed observation cannot release content after node eligibility is lost',async()=>{
+  const f=fixture({waitMs:30});const pending=f.queue.observe(f.request);
+  const {job}=f.queue.poll('desktop-primary');
+  f.service.fleetStatus=()=>({nodes:[{nodeId:'desktop-primary',fresh:false}]});
+  try {assert.throws(()=>f.queue.report('desktop-primary',{...job,result:STATUS}),/OBSERVATION_NODE_UNAVAILABLE/);}
+  finally {await pending.catch(()=>{});}
+});
+
+test('status identity is bound to the configured node hostname',async()=>{
+  const f=fixture({waitMs:30});const pending=f.queue.observe(f.request);
+  const {job}=f.queue.poll('desktop-primary');
+  try {assert.throws(()=>f.queue.report('desktop-primary',{...job,result:{...STATUS,hostname:'OTHER'}}),/INVALID_OBSERVATION_RESULT/);}
+  finally {await pending.catch(()=>{});}
+});
+
+test('PNG signature and dimensions alone do not establish a consumable image',()=>{
+  const {validateResult}=require('./src/fleet/observation');
+  const bytes=Buffer.alloc(45);Buffer.from('89504e470d0a1a0a','hex').copy(bytes);
+  bytes.write('IHDR',12);bytes.writeUInt32BE(1,16);bytes.writeUInt32BE(1,20);bytes.write('IEND',37);
+  assert.throws(()=>validateResult('desktop.screenshot',{mimeType:'image/png',data:bytes.toString('base64'),width:1,height:1,
+    sourceBounds:{X:0,Y:0,Width:1,Height:1},coordinateSpace:'physical_pixels',capturedAt:new Date().toISOString(),
+    expiresAt:new Date(Date.now()+30000).toISOString(),evidenceId:'a'.repeat(32)}),/INVALID_OBSERVATION_RESULT/);
+});
+
+test('a successor generation cannot complete the prior generation claim',async()=>{
+  const f=fixture({waitMs:30});const pending=f.queue.observe(f.request);
+  const {job}=f.queue.poll('desktop-primary');f.store.update('desktop-run',r=>({...r,generation:2}));
+  try {assert.throws(()=>f.queue.report('desktop-primary',{...job,generation:2,result:STATUS}),/OBSERVATION_REPLAY/);}
+  finally {await pending.catch(()=>{});}
+});
