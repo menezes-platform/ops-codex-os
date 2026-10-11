@@ -25,7 +25,8 @@ function assertProjectScopes(input) {
 function assertRetrievalRequest(input) {
   const scopes = assertProjectScopes(input);
   if (typeof input.query !== 'string' || !input.query.trim()) throw new Error('QUERY_REQUIRED');
-  if (!input.filters || typeof input.filters !== 'object' || Array.isArray(input.filters)) {
+  if (!input.filters || typeof input.filters !== 'object' || Array.isArray(input.filters)
+    || Object.keys(input.filters).some((key) => !['source_types', 'revision', 'after', 'before'].includes(key))) {
     throw new Error('FILTERS_INVALID');
   }
   return scopes;
