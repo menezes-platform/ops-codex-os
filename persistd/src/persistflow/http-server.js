@@ -15,6 +15,7 @@ const { verifyNodeRequest, parseNodeSecrets, signNodeRequest } = require('../fle
 const { createDriveTokenProviderFromEnv } = require('../storage/drive-auth');
 const { DriveClient } = require('../storage/drive-client');
 const { DriveObjectStore } = require('../storage/object-store');
+const { ObservationQueue } = require('../fleet/observation');
 
 function sendJson(res, statusCode, body) {
   const payload = JSON.stringify(body);
@@ -110,6 +111,8 @@ function createServer({
   fleetNodeSecrets = {},
   fleetRouter = null,
   fleetExecutorEnabled = false,
+  desktopObservationEnabled = false,
+  desktopObservationNodes = {},
   ephemeralProvider = null,
   ephemeralEnabled = false,
   driveAuth = createDriveTokenProviderFromEnv(),
@@ -134,12 +137,13 @@ function createServer({
     objectStore: resolvedObjectStore || null,
   });
   const resolvedOwnerTokenDigest = ownerTokenDigest || mcpTokenDigest;
+  const observationQueue = new ObservationQueue({service,enabled:desktopObservationEnabled,nodes:desktopObservationNodes,clock:()=>clock().getTime()});
   if (oauthStore && typeof oauthStore.synchronizeOwnerTokenDigest === 'function') {
     oauthStore.synchronizeOwnerTokenDigest(resolvedOwnerTokenDigest);
   }
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
   const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;
-  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl });
+  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, observationQueue, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl });
   const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore, ownerTokenDigest: resolvedOwnerTokenDigest }) : null;
   return http.createServer(async (req, res) => {
     try {
@@ -159,6 +163,33 @@ function createServer({
         return sendJson(res, 200, { ok: true, service: 'persistflow', authority: store.kind, durable: store.kind !== 'memory' });
       }
       const executionWorker = /^\/v1\/fleet\/nodes\/([^/]+)\/executions\/(poll|report)$/.exec(url.pathname);
+      const observationWorker = /^\/v1\/fleet\/nodes\/([^/]+)\/observations\/(poll|report)$/.exec(url.pathname);
+      if (req.method==='POST' && observationWorker) {
+        const nodeId=decodeURIComponent(observationWorker[1]);
+        // Reject unsigned traffic before buffering an observation body.
+        if (!Object.hasOwn(fleetNodeSecrets,nodeId) || req.headers['x-persistflow-node-id']!==nodeId
+          || !/^[0-9a-f]{64}$/i.test(req.headers['x-persistflow-node-signature']||'')
+          || !Number.isFinite(Date.parse(req.headers['x-persistflow-node-timestamp']))
+          || Math.abs(clock().getTime()-Date.parse(req.headers['x-persistflow-node-timestamp']))>60000) return sendJson(res,401,{error:'unauthorized'});
+        const {raw,value}=await readJsonWithRaw(req,observationWorker[2]==='poll' ? 4096 : 2*1024*1024);
+        if (!fleetConfig.nodes.some(n=>n.id===nodeId) || req.headers['x-persistflow-node-id']!==nodeId
+          || !verifyNodeRequest({nodeId,timestamp:req.headers['x-persistflow-node-timestamp'],signature:req.headers['x-persistflow-node-signature'],method:req.method,path:url.pathname,rawBody:raw,secrets:fleetNodeSecrets,nowMs:()=>clock().getTime(),maxSkewMs:60000})) return sendJson(res,401,{error:'unauthorized'});
+        const reply=(status,result)=>{
+          const body=JSON.stringify(result),timestamp=clock().toISOString();
+          res.writeHead(status,{'content-type':'application/json','cache-control':'no-store','x-persistflow-node-timestamp':timestamp,
+            'x-persistflow-node-signature':signNodeRequest({nodeId,secret:fleetNodeSecrets[nodeId],timestamp,method:'RESPONSE-'+status,path:url.pathname,body})});res.end(body);
+        };
+        try {
+          if (observationWorker[2]==='poll') {
+            if(!value || typeof value!=='object' || Array.isArray(value) || Object.keys(value).length) throw Error('INVALID_OBSERVATION_REQUEST');
+            return reply(200,observationQueue.poll(nodeId));
+          }
+          return reply(200,observationQueue.report(nodeId,value));
+        } catch(error) {
+          const code=/^(OBSERVATION_|INVALID_OBSERVATION_|STALE_GENERATION|RUN_NOT_FOUND)/.test(error.message||'') ? error.message : 'OBSERVATION_FAILED';
+          return reply(code==='OBSERVATION_DISABLED'?503:400,{error:code});
+        }
+      }
       if (req.method === 'POST' && executionWorker) {
         const nodeId = decodeURIComponent(executionWorker[1]);
         const { raw, value } = await readJsonWithRaw(req, 4096);

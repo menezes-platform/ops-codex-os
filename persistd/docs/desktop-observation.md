@@ -1,0 +1,54 @@
+# Gabriel MCP Remote — Desktop observation
+
+TASK_ID DESKTOP-OBSERVATION-001. Implementation role IMPLEMENT/VERIFY. This feature is subordinate to the existing Spec Kit constitution, authority matrix and executor gates. It adds no authority, local executor, generic shell or desktop agent. Dev-Orquestra owns Windows implementation; PersistFlow owns canonical operation metadata. PR #33 remains the executor review boundary; Dev-Orquestra PR #20 remains the selective integration boundary and excludes unfinished relay components.
+
+## Contract
+
+Authenticated MCP `tools/list` advertises these read-only tools, even while disabled:
+
+| Tool | `arguments` | Returned observation |
+|---|---|---|
+| `desktop.status` | `{}` | verified session, host/user SID, physical monitor bounds |
+| `desktop.screenshot` | optional `kind`: virtual_desktop/monitor/window, exact `ref` for monitor/window | PNG MCP image block plus dimensions, physical source bounds, timestamp, expiry and evidence ID |
+| `desktop.windows.list` | `{}` | up to 100 visible top-level windows with exact refs |
+| `desktop.window.inspect` | `ref` | one current window; stale or missing ref fails |
+| `desktop.ui.inspect` | `window_ref`, optional `max_depth` 0..5, `max_nodes` 1..100 | visible UI labels/types; no ValuePattern, password controls or clipboard extraction |
+| `desktop.files.list` | optional `offset` 0..1000, `limit` 1..100 | immediate Desktop children: name, file/directory/shortcut, size, modification time, nextOffset |
+| `desktop.files.stat` | immediate child `name` | same bounded metadata, no shortcut following |
+| `desktop.files.preview` | immediate child `name` | only small UTF-8 .txt/.md, at most 16 KiB; protected names/content denied |
+
+All tool calls require `runId`, current positive `generation`, unique `operationId`, `nodeId: desktop-primary`, and operation `arguments`. Owner MCP authentication uses the existing bearer/OAuth validation. Authority and local node each independently allowlist operations. No wire field grants authority. Default is disabled in Authority, Fleet agent and Windows host.
+
+The existing Fleet node polls `POST /v1/fleet/nodes/desktop-primary/observations/poll` with `{}`. It receives `{job:null}` or a job containing runId, generation, operationId, nodeId, operation, arguments, random requestId and expiresAt. Poll/report reuse node HMAC over node, timestamp, method, exact path/body; HTTPS required except explicit loopback test origin. Skew at most 60 seconds; responses are signed using `RESPONSE-<status>`. No redirect is followed. `report` takes that exact job plus either `result` or a typed `error`, returns acknowledged/requestId. One claim only; report must match the claimed node/job/generation and deadline. Replayed reports are rejected. Header authentication preflight rejects unsigned traffic before buffering.
+
+The client calls the canonical host's bearer-authenticated loopback `POST /v1/observe`, using the existing v1 DesktopRequest and response envelope. This endpoint never routes to the interactive dispatcher. Existing `/v1/execute` remains for local control and is not exposed by observation. No inbound Windows port, public listener, port-forwarding or filesystem authority is added.
+
+## Limits, privacy and failure
+
+One observation at a time per node, at least 2 seconds between new requests; Authority wait 15 seconds, node HTTP 10 seconds, host request 8 seconds, UIA's existing native timeout 4 seconds. Up to 32 waits, 128 operation records per run, 4096 local replay receipts. Host accepts at most one operation at a time and at most one per second. No automatic capture rerun after timeout, restart, lost result, stale generation or replay. New owner operationId means a newly authorized observation.
+
+Screenshots are memory-only, at most 16 million source pixels and 16 MiB source PNG; rescaled to longest edge 1600 pixels and at most 1 MiB normalized PNG. Oversize fails with SCREENSHOT_TOO_LARGE; selecting a monitor/window is the safe next action. Captures expire after 30 seconds, Authority cache is cleared by expiry timer, no PNG is written to run state or node receipts. MCP returns an actual image content block, plus metadata in structuredContent; base64 is absent from the text/structured metadata. Native host normalizes/decodes PNG; Authority validates base64, PNG bounds/header/end marker and freshness. Result body limit 2 MiB; non-image observations 240 KiB. Captured screen may contain private visible material: owner opt-in and requesting a specific target are essential. This is authorized observation, not a promise of automatic screen-wide secret redaction.
+
+Current Windows user SID and hostname must equal locally configured identities. Process session must be interactive and WTS-active; input desktop must be Default. Session rechecked after operation. Locked/unavailable/mismatched/changed session fails closed. PerMonitorV2 DPI and physical sourceBounds define coordinates; returned resized image is not an input target.
+
+The process SID must also match the logged-in WTS session user SID; run-as in another user's graphical session fails closed. After UIA_TIMEOUT, further UI observation is fenced until controlled host recovery, so native provider threads cannot accumulate. If a timeout metadata write fails, Authority returns OBSERVATION_STORAGE_UNAVAILABLE without crashing or redelivering. Memory expiry governs this server; retention by the requesting MCP client belongs to that client's privacy policy.
+
+DesktopDirectory is resolved by Windows for the host's authenticated current user, including an ordinary OneDrive redirected Desktop. Root/ancestors and children with reparse points are rejected, as are traversal, separators, alternate data streams and arbitrary paths. Previews verify final open-handle path, reject hard links, hidden/system/encrypted files, protected extensions/names and secret-like content. Junction/symlink/cloud reparse directories fail closed; unsupported OneDrive placeholders must be materialized by the owner, never bypassed. Files are never written/moved/deleted. Shortcut contents and browser databases are never read. Preview supports .txt/.md only, never HTML, executable documents or arbitrary binary bytes. A filename/content heuristic is additional defense, not proof that every benign text is non-sensitive; keep private files outside the authorized Desktop scope.
+
+Authority durably records job IDs, typed arguments, fingerprint, node, generation/status/deadline; no screen, UI labels or preview content. Logs must contain only typed codes and opaque IDs, never bearer/HMAC secrets, raw HTTP bodies, window titles, file names or captured content. A requested filename is part of the durable semantic job contract, not log output; operators must retain operation metadata minimally under existing run retention. Local receipts store requestId/startedAt only, flushed before capture. Existing single-Authority-writer requirement remains mandatory.
+
+## Conditional activation and rollback
+
+Implementation is in review branches. Do not publish/merge or modify installed-agent configuration as part of this verification. Hostinger's separate `menezesx2k26/persistflow-gabriel-mcp-hostinger` repository remains inaccessible to the current GitHub identity. Previously verified provider build used a ZIP label, without a retrievable deployed SHA; effective PERSISTFLOW_DATA_DIR, one writer, consistent backup/restore and immutable old artifact still require proof. CodeQL billing does not prevent local testing; unavailable analysis is not a pass.
+
+After review and a verified Authority storage/rollback path:
+
+1. Preserve current durable data directory, run metadata, OAuth state, executor receipts/guards and existing binaries/config. Obtain consistent backup and prove isolated restore. Record exact old/new SHA/artifact digest and one writer; do not infer these from health.
+2. Publish reviewed Authority artifact with observation disabled. Verify health, existing PersistFlow flows and unsigned observation endpoints return 401. Verify authenticated `tools/list` discovers eight tools; calls must fail OBSERVATION_DISABLED. Prove existing Fleet heartbeat/router unchanged.
+3. Install the reviewed canonical Desktop Host after its PR #20 dependency is accepted, using existing staged install/recovery procedure. Independently configure host `ORQUESTRA_REMOTE_OBSERVATION_ENABLED=1`, `ORQUESTRA_OBSERVATION_USER_SID=<verified Pichau SID>`, `ORQUESTRA_OBSERVATION_HOSTNAME=DESKTOP-L6CITUI` for its limited interactive task. Do not run as SYSTEM or alter recovery services.
+4. Update existing Fleet agent to reviewed version, keep command executor setting unchanged. Local opt-in: `PERSISTFLOW_DESKTOP_OBSERVATION_ENABLED=1`, `PERSISTFLOW_DESKTOP_OBSERVATION_OPERATIONS_JSON` with only approved tool names, private absolute `PERSISTFLOW_DESKTOP_OBSERVATION_RECEIPT_DIR`. Reuse existing Fleet secret and host token; provision no new generic remote credentials.
+5. Authority opt-in `PERSISTFLOW_DESKTOP_OBSERVATION_ENABLED=1` and `PERSISTFLOW_DESKTOP_OBSERVATION_NODES_JSON={"desktop-primary":{"hostname":"DESKTOP-L6CITUI","operations":["desktop.status","desktop.screenshot","desktop.windows.list","desktop.window.inspect","desktop.ui.inspect","desktop.files.list","desktop.files.stat","desktop.files.preview"]}}`. No other node. Start with status/list and then screenshot; add preview only after owner review.
+6. Using the real authenticated MCP client, call status, screenshot and files.list with current run generation/new IDs. Consume the PNG image, verify current timestamp/evidence and actual Desktop scope. Demonstrate locked/unavailable/wrong-node/stale/auth/replay failures. Do not lock or restart the user's machine to run a smoke without a recovery window. Confirm Tailscale, RDP Commander and heartbeat afterward.
+7. On failure, disable Authority observation first, then local observation opt-in. Let in-flight read-only calls expire; never retry old IDs to recapture. Restore old reviewed binaries/config while preserving durable store and executor guards/receipts. No rollback data deletion or restoring old store over newer state. Before rolling Authority code backward, verify it preserves desktopObservations fields on run updates and all existing schema; otherwise keep reviewed compatible code with observation disabled.
+
+For local real-session verification, build Dev-Orquestra Windows tests in Release, then run `persistd/scripts/verify-desktop-observation-live.ps1 -DevOrquestraRoot <isolated canonical checkout>`. It uses a temporary loopback test instance of the canonical host and a local Authority with synthetic auth/Fleet registration; captures the real current Windows session. It stops only its own test process, restores temporary environment variables and persists metadata only. This proves local image transport, not hosted deployment or remote connector refresh.
