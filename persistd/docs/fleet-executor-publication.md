@@ -1,6 +1,6 @@
 # Gabriel Fleet Executor: Authority publication review
 
-Updated 2026-10-10 after review 5480903361 on [PR #33](https://github.com/menezes-platform/ops-codex-os/pull/33). This is a review package, not deployment authorization. No production deployment, merge, desktop configuration change, worker restart, port opening or additional paid AI tool was performed.
+Updated 2026-10-10 after review 5480903361 on [PR #33](https://github.com/menezes-platform/ops-codex-os/pull/33), and the separate 30 GiB reserve integration. This is a review package, not deployment authorization. No production deployment, PR merge to `main`, desktop configuration change, worker restart, port opening or additional paid AI tool was performed.
 
 ## Exact source and verification
 
@@ -12,6 +12,7 @@ Updated 2026-10-10 after review 5480903361 on [PR #33](https://github.com/meneze
 - Review branch: `review/gabriel-fleet-executor-20261010`; original reviewed HEAD `ef4f6f0dd1d00210608202e5d77bc130efc1bbeb`. Corrections are small follow-up commits for startup isolation, durable writes/shared guard, supervised termination and same-ID receipt-loss recovery. The original functional diff above remains the historical baseline; it is not the current full diff.
 - Verified functional hardening SHA: `3305a5458faf1c4971f115fe9ca7f091bc1eef50`; the final publication-document commit follows this source without changing executable code.
 - Final local verification: PersistFlow 270/270 (250 original plus 20 regressions), root 23/23, standalone security checks 8/8, focused regressions 20/20; no skips or failures on Windows. The complete final run follows the last receipt-loss corrective change. A previous full run passed 269/269 before that extra scenario reproduced terminal rejection of uncertain work; the regression and correction were not hidden or skipped. Syntax, Spec Kit and `git diff --check` passed before pushing the final docs commit.
+- **2026-10-10 policy integration:** [PR #34](https://github.com/menezes-platform/ops-codex-os/pull/34) was merged **only into this PR #33 review branch** via merge commit `bbf4d3d5bbc410ec429337a2a5dde2e73fb513f8`; `main` was untouched. The shared startup/eligibility minimum is now `max(30 GiB, 10%)`, applied by FleetRouter and FleetExecutor; cache eviction's target stays `max(80 GiB, 15%)`. New test file `fleet-reserve-policy.test.js` asserts 49.34 GiB free on ~223 GiB disk is eligible only for jobs leaving at least 30 GiB after estimated scratch. Two executor documentation files were updated. The historic 270/270 Windows validation **precedes** this policy merge. For the new policy, **12/12 targeted cache/eligibility tests** passed using exact GitHub sources in isolated Node, and **3/3 additional uncommitted composition tests** passed using the PR #33 executor with the 30 GiB helper. The integrated full PersistFlow/root/security suites have **not yet been rerun** and remain a gate before deployment. A GitHub API proxy restriction prevented an independent complete-source checkout in the isolated environment; no success for an unrun suite is claimed.
 - Existing remote CodeQL checks on main are failed because GitHub did not start the jobs: account locked due to a billing issue. This was confirmed from check annotations, not inferred from test failures. See [existing run](https://github.com/menezes-platform/ops-codex-os/actions/runs/37452662356). No billing setting/payment was changed; successful CodeQL analysis is not claimed.
 - Full suites run in a clean source copy matched byte-for-byte to the candidate, with real copies of existing installed dependencies. This avoids the packaging-test failure when copying Windows dependency junctions. No dependency installation, test weakening, cloud inference or secret fixture from production is needed.
 
@@ -26,7 +27,7 @@ git diff --check origin/main...HEAD
 
 ## Security review
 
-Code meets the bounded one-worker, one-Authority-process contract in local tests, with the operational limitations below. Requested release verdict: **BLOCKED**, because the live build identity, selected deployment source, durable directory/rollback proof and CodeQL gate have not been established. PR remains draft. A tested process-recovery contract is not proof of exactly-once execution under power loss.
+Code meets the bounded one-worker, one-Authority-process contract in local tests, with the operational limitations below. Requested release verdict: **BLOCKED**. The Hostinger build UUID and ZIP source label are now known, but deployed source SHA/ZIP checksum, effective data directory, writer count, rollback proof, complete integrated test run and CodeQL analysis are not established. PR remains draft. A tested process-recovery contract is not proof of exactly-once execution under power loss.
 
 | Review 5480903361 item | Engineering disposition | Reproducible evidence |
 | --- | --- | --- |
@@ -73,6 +74,14 @@ Worker headers: `x-persistflow-node-id`, `x-persistflow-node-timestamp` (ISO tim
 Report statuses: COMPLETED requires exitCode=0; FAILED, TIMED_OUT, REJECTED are terminal; RUNNING maps to UNCERTAIN. Operation states also include QUEUED/RUNNING. Terminal result contradictions get 409. Duplicate matching reports are acknowledged without a new checkpoint. A final report for an already claimed old-generation job records that original generation.
 
 HTTP errors: 401 invalid/missing authorization; 400 invalid JSON/request/oversized body; 409 stale generation or operation/node/request conflict; 404 missing run; 503 disabled executor, absent router or no eligible node; 500 scrubbed internal error. Basic body parsing/size validation can precede worker authentication. Normal unsigned `{}` probes of the new routes return 401 regardless of the feature flag. There is no command-cancel endpoint or automatic lease expiry/reassignment.
+
+## Additional read-only Hostinger evidence (2026-10-10)
+
+Authenticated Hostinger Node.js API calls via existing Composio connection resolved build `01a1094e-4561-7179-a9e5-e00378da3390`, completed `2026-10-04T23:44:57Z` with runtime `started_at=2026-10-04T23:44:58Z`. Runtime settings specify Node 24 and `src/hostinger-entry.js`, while the latest build source is ZIP `persistflow-rfc9207-20260929.zip` (restored previous deployment source), **not a Git commit**. Its SHA-256 or retrievable previous artifact remains unverified.
+
+The Hostinger setting for Git auto-deploy points to `menezesx2k26/persistflow-gabriel-mcp-hostinger` `main`, NOT this repository; this target returned 404 through currently linked GitHub credentials, so its current source cannot be assumed accessible or safe to trigger. The runtime environment API confirms the key `PERSISTFLOW_DATA_DIR` but masks its value. Hostinger file listing is public-root-scoped and cannot establish private data persistence or the single-writer condition. There is no verified immutable rollback ZIP. See [read-only Hostinger observations](https://github.com/menezes-platform/ops-codex-os/pull/33#issuecomment-6103503321) and [follow-up audit](https://github.com/menezes-platform/ops-codex-os/pull/33#issuecomment-6103528920).
+
+The following historical diagnosis remains as a dated snapshot; the provider build UUID and source label are now known, but exact deployed bytes, deploy wiring, 404 root cause, durable path and rollback are unresolved.
 
 ## Live Hostinger evidence and 404 diagnosis
 
