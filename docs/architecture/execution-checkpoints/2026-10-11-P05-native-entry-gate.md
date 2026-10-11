@@ -12,3 +12,14 @@
 - Blockers: existing phase P03/P04 unmet; no verified live runtime and rollback; no authorized paid infrastructure; no hosted CI verification for this exact branch.
 - Next safe action: obtain verified worktree or preexisting approved test runner (without additional paid resources); run complete `npm test`, `npm run validate:spec-kit` and `git diff --check` on exact branch; then continue Task 2 with TDD on resident-node. Do not merge this branch merely on local 4/4.
 - Safety: no production deployment, merges, secrets, Drive writes, corpus ingestion, or paid AI/infrastructure initiated.
+
+## Independent Agent Platform retrieval-client hardening — same Native execution
+
+- **Ruling:** The approved plan Task 8 proposed a new `modules/context-gateway/src/execution-plane-client.js`, but P02 already contains `clients/execution-plane/v1/client.js` with `retrieve()` and `indexProject()`. Reuse and validate that existing client; do not introduce a duplicate transport facade. Cost if wrong: future P04 transport and retrieval response shapes may need a versioned producer/client adaptation.
+- Added `tests/p05-execution-plane-client.test.js` with 7 focused cases. First run against existing client: 5 tests, 1 passed and 4 failed for expected absent guards. Added two further tests, observed 5/7 pass (two RED failures), then minimal filtering and foreign Git-ref rejection.
+- Current isolated mirror under Node 22.16.0: **11/11 PASS** (four P05 entry tests + seven scoped client tests). `node --check` passed on the initial implementation; no full repository dependency-integrated suite was run.
+- Exact Git blob comparison of local tested source versus remote readback: `clients/execution-plane/v1/client.js` SHA `6f91223f07e5b4d067f325cb504623d14bff7c2c`; new client test SHA `afceefe352df5697afdf8e3595bf3e7c85853357`, matching the locally tested bytes.
+- The existing client now checks project-scoped input, disallows unrecognized query-filter keys, validates evidence envelope/source/ref/revision, discards unrecognized provider properties, rejects declared foreign scope/foreign `owner/repo@ref` Git provenance, and validates indexing receipts against the requested project/revision. **These checks are not proof of backend project isolation** when the service omits source provenance, and do not certify P05 runtime or retrieval gate AG-009.
+- This work is **independent, preparatory portion of Task 8 only**; no connected Rust retrieval endpoint, authenticated live host or production cutover is claimed.
+- New remote commits include `40cb3533` test RED; `bfd0972b` implementation; `fa5d92cc` adversarial tests; `29d3365d` filter protection; `fcd16098` Git source provenance protection. The original Task 1 remains incomplete pending whole-repository test and phase evidence.
+- GitHub Actions run/status lookup for the previous PR head reported empty arrays (no hosted CI success); repeat against exact final commit before merging.
