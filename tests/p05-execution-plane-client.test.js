@@ -50,3 +50,18 @@ test('index receipt must match requested scope and revision', async () => {
   await assert.rejects(clientFor({ ...validReceipt, scope: 'project/other/repo' }).indexProject(input), /EXECUTION_PLANE_RECEIPT_INVALID/);
   await assert.rejects(clientFor({ ...validReceipt, status: 'approved' }).indexProject(input), /EXECUTION_PLANE_RECEIPT_INVALID/);
 });
+
+test('foreign Git source ref cannot masquerade as current project when scope metadata is absent', async () => {
+  await assert.rejects(clientFor({ evidence: [{ ...evidence, source_ref: 'other/repo@abc123' }] })
+    .retrieve({ scope, query: 'docs', filters: {} }), /EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('unknown retrieval filter fields cannot widen scope', async () => {
+  let requested = false;
+  const client = createExecutionPlaneClient({
+    baseUrl: 'https://execution-plane.internal',
+    fetchImpl: async () => { requested = true; return { ok: true, status: 200, json: async () => ({ evidence: [] }) }; },
+  });
+  await assert.rejects(client.retrieve({ scope, query: 'docs', filters: { project: 'project/other/repo' } }), /FILTERS_INVALID/);
+  assert.equal(requested, false);
+});
