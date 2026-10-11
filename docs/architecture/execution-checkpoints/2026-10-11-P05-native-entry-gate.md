@@ -1,0 +1,14 @@
+# P05 Native execution checkpoint — 2026-10-11
+
+- Phase: `P05` (source preparation only).
+- Source branch: `execution/p05-native-entry-gate-20261011`, based on `consolidation/p05-generation-contract-20261005` (Agent Platform draft PR #32).
+- Spec Kit: unchanged; P03/P04 phase exit: **not proven**; P05 formal entry/exit: **NOT PASSED**.
+- Task 1 progress: standalone source-only guard `scripts/validate-p05-entry.js` plus four deterministic Node tests `tests/p05-entry-gate.test.js`. The helper **never grants P05 release**, merely distinguishes blocked prerequisites from claims requiring independent live verification.
+- TDD evidence: RED `node --test /mnt/data/p05-native-check/tests/p05-entry-gate.test.js` failed with `MODULE_NOT_FOUND` for the absent implementation. GREEN rerun after implementation reported 4/4 pass, 0 fail on Node v22.16.0. This verification was in an isolated local mirror of these two files, **not** the complete repository worktree; exact remote readback is required before claiming branch equivalence.
+- Existing dependency reuse: P03 `modules/context-gateway/src/index.js`; P05 PR #32 `modules/context-store/src/corpus-manifest.js` and `generation-policy.js`; resident-node P04 draft PR #1 `src/indexing_runtime.rs`, `src/chunking.rs`, `src/bm25.rs`.
+- **Ruling:** the approved writing plan places the P05 entry test in `tests/platform-contracts.test.js`. This environment lacks the full Git worktree, its `ajv` dependencies, and network clone/DNS, so the source-only test is in a dedicated dependency-free `tests/p05-entry-gate.test.js`; this keeps the new safety behavior verifiable without altering existing contract fixtures. Cost if wrong: independent packaging/whole-repo CI may reveal integration defects.
+- **Ruling:** A declarative evidence object may report `PASSED` but is not authenticated by this pure function. Even with both phases declared passed, the helper returns `REQUIRES_RUNTIME_VERIFICATION`, `p05_release_allowed: false`. Cost if wrong: this guard cannot substitute for the authoritative runtime acceptance gate.
+- Unverified: full Agent Platform `npm test`/Spec Kit validator on this branch (missing full checkout/dependencies); native Rust Cargo suite (Cargo not installed here); actual Drive corpus/FAISS/embedding; production runtime, rollback, deployment, and all P05 acceptance gates.
+- Blockers: existing phase P03/P04 unmet; no verified live runtime and rollback; no authorized paid infrastructure; no hosted CI verification for this exact branch.
+- Next safe action: obtain verified worktree or preexisting approved test runner (without additional paid resources); run complete `npm test`, `npm run validate:spec-kit` and `git diff --check` on exact branch; then continue Task 2 with TDD on resident-node. Do not merge this branch merely on local 4/4.
+- Safety: no production deployment, merges, secrets, Drive writes, corpus ingestion, or paid AI/infrastructure initiated.
