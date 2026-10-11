@@ -182,6 +182,12 @@ async function runAgent({ env = process.env, intervalMs = 30_000, signal,
   try { remoteExecutor = await startExecutor({ env }); }
   catch (error) { logError(executorStartupCode(error)); }
   if (remoteExecutor) void runExecutorLoop(remoteExecutor).catch(() => logError('EXECUTOR_LOOP_FAILED'));
+  // Optional semantic observations share this agent; startup failure cannot stop heartbeat.
+  try {
+    const {configuredObservation,runObservationLoop}=require('./observation-client');
+    const observation=configuredObservation({env});
+    if(observation)void runObservationLoop(observation,{signal,log:logError}).catch(()=>logError('OBSERVATION_LOOP_FAILED'));
+  } catch { logError('OBSERVATION_START_FAILED'); }
   while (!signal?.aborted) {
     try {
       const heartbeat = await collect(remoteExecutor ? { activeJobs: () => remoteExecutor.executor.activeJobs } : {});

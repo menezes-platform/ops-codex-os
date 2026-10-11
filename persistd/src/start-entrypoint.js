@@ -31,6 +31,20 @@ function productionFleetExecutorEnabled(env = process.env) {
   return env.PERSISTFLOW_FLEET_EXECUTOR_ENABLED === '1';
 }
 
+function productionDesktopObservationConfiguration(env = process.env) {
+  const disabled={enabled:false,nodes:{}};
+  if(env.PERSISTFLOW_DESKTOP_OBSERVATION_ENABLED!=='1') return disabled;
+  try {
+    const nodes=JSON.parse(env.PERSISTFLOW_DESKTOP_OBSERVATION_NODES_JSON||'{}');
+    const {OPERATIONS}=require('./fleet/observation');
+    if(!nodes || Array.isArray(nodes) || typeof nodes!=='object' || Object.keys(nodes).some(id=>id!=='desktop-primary')) return disabled;
+    const node=nodes['desktop-primary'];
+    if(!node || node.hostname!=='DESKTOP-L6CITUI' || !Array.isArray(node.operations) || !node.operations.length
+      || node.operations.some(op=>!Object.hasOwn(OPERATIONS,op))) return disabled;
+    return {enabled:true,nodes};
+  } catch { return disabled; }
+}
+
 function startWeb() {
   const {
     createServer,
@@ -51,8 +65,11 @@ function startWeb() {
     && String(process.env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') === '1';
   const ephemeralProvider = createProductionRailwayProvider({ env: process.env });
   const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore, railwayProvider: ephemeralProvider });
+  const observation=productionDesktopObservationConfiguration();
   const server = createServer({
     store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetRouter, fleetExecutorEnabled,
+    desktopObservationEnabled:observation.enabled,
+    desktopObservationNodes:observation.nodes,
     ephemeralProvider, ephemeralEnabled,
   });
   server.listen(port, '0.0.0.0', () => {
@@ -70,4 +87,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { chooseStartMode, createProductionRailwayProvider, createProductionFleetRouter, productionFleetExecutorEnabled, startWeb, start };
+module.exports = { chooseStartMode, createProductionRailwayProvider, createProductionFleetRouter, productionFleetExecutorEnabled, productionDesktopObservationConfiguration, startWeb, start };

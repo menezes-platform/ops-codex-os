@@ -16,13 +16,32 @@ function sameToken(actual, expected) {
   return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
 }
 
-function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl, validateBearer, resourceMetadataUrl } = {}) {
+function createPersistFlowMcpNodeHandler({ service, observationQueue, token, tokenDigest, iconUrl, validateBearer, resourceMetadataUrl } = {}) {
   if (!service) throw new Error('PERSISTFLOW_SERVICE_REQUIRED');
   const handler = createMcpHandler((ctx) => {
     const resolvedIconUrl = iconUrl || (ctx.requestInfo ? new URL('/persistflow.svg', ctx.requestInfo.url).href : '');
     const info = { name: 'PersistFlow', version: '0.2.0' };
     if (resolvedIconUrl) info.icons = [{ src: resolvedIconUrl }];
     const server = new McpServer(info);
+    const observationArguments={
+      'desktop.status':z.object({}).strict(), 'desktop.windows.list':z.object({}).strict(),
+      'desktop.screenshot':z.object({kind:z.enum(['virtual_desktop','monitor','window']).optional(),ref:z.string().min(1).max(255).optional()}).strict(),
+      'desktop.window.inspect':z.object({ref:z.string().min(1).max(255)}).strict(),
+      'desktop.ui.inspect':z.object({window_ref:z.string().min(1).max(255),max_depth:z.number().int().min(0).max(5).optional(),max_nodes:z.number().int().min(1).max(100).optional()}).strict(),
+      'desktop.files.list':z.object({offset:z.number().int().min(0).max(1000).optional(),limit:z.number().int().min(1).max(100).optional()}).strict(),
+      'desktop.files.stat':z.object({name:z.string().min(1).max(255)}).strict(),
+      'desktop.files.preview':z.object({name:z.string().min(1).max(255)}).strict(),
+    };
+    for (const [operation,argsSchema] of Object.entries(observationArguments)) {
+      server.registerTool(operation,{
+        title:operation,description:'Owner-authorized read-only Windows observation on an explicitly enabled node. Fresh actual session required; no arbitrary paths, shell, input, clipboard or credentials. Screenshot returns an MCP image block; observations expire after 30 seconds. Reuse operationId only to reconcile, use a new ID for a fresh observation.',
+        inputSchema:z.object({runId:z.string().min(1).max(128),generation:z.number().int().positive(),operationId:z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/),nodeId:z.literal('desktop-primary'),arguments:argsSchema.default({})}).strict(),
+        annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
+      },async args=>{
+        if(!observationQueue) throw Error('OBSERVATION_DISABLED');
+        return observationQueue.observe({...args,operation});
+      });
+    }
 
     server.registerTool('persist_run_start', {
       title: 'Start PersistFlow run',
