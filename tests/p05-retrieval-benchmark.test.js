@@ -165,3 +165,26 @@ test('malformed parent path or conflicting citation scope is rejected', () => {
   t.cases[0].hits[0].source_ref='demo/beta@rev-b';
   assert.throws(()=>evaluateReplay(fixture,t),/RETRIEVAL_TRACE_INVALID/);
 });
+
+test('stale revision with relevant evidence ID must not inflate recall or MRR', () => {
+  const t=copy(trace);
+  t.cases[0].hits[0].revision='rev-a';
+  t.cases[0].hits[0].source_ref='demo/alpha@rev-a';
+  const result=evaluateReplay(fixture,t);
+  assert.equal(result.metrics.recall_at_5,0.5);
+  assert.equal(result.metrics.mrr,0.5);
+  assert.equal(result.metrics.temporal_accuracy,0);
+});
+
+test('source_ref revision contradicting hit revision is invalid provenance', () => {
+  const t=copy(trace);
+  t.cases[0].hits[0].source_ref='demo/alpha@rev-a';
+  assert.throws(()=>evaluateReplay(fixture,t),/RETRIEVAL_TRACE_INVALID/);
+});
+
+test('synthetic and observed traces cannot be compared as same quality lane', () => {
+  const t=copy(trace);
+  t.lane='offline_observed';t.algorithm='real-bm25';
+  for(const c of t.cases)c.latency_ms=5;
+  assert.throws(()=>compareReplayReports(evaluateReplay(fixture,trace),evaluateReplay(fixture,t)),/BENCHMARK_COMPARISON_INVALID/);
+});
