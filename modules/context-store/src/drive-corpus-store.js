@@ -1,5 +1,6 @@
 'use strict';
 const { createHash } = require('node:crypto');
+const { TextDecoder } = require('node:util');
 const { createCorpusManifest, assertCorpusManifest } = require('./corpus-manifest');
 
 const SCOPE = /^project\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})$/;
@@ -146,7 +147,10 @@ function createDriveCorpusStore({ transport } = {}) {
         const key = `${root}/corpus/${hexDigest(entry.content_sha256, 'CORPUS_DOCUMENT_DIGEST_INVALID')}`;
         const bytes = await get(key);
         if (digestBytes(bytes) !== entry.content_sha256) throw new Error('CORPUS_OBJECT_DIGEST_MISMATCH');
-        documents.push({ source_ref: entry.source_ref, path: entry.path, content: bytes.toString('utf8') });
+        let content;
+        try { content = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); }
+        catch { throw new Error('CORPUS_OBJECT_INVALID_UTF8'); }
+        documents.push({ source_ref: entry.source_ref, path: entry.path, content });
       }
       return Object.freeze({ manifest, documents: Object.freeze(documents) });
   }
