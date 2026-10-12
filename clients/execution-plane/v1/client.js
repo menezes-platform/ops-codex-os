@@ -62,6 +62,9 @@ function validateRetrievalResult(value, scopes, filters) {
       || typeof item.provenance.revision !== 'string' || !item.provenance.revision.trim()
       || (item.provenance.path !== undefined && !safeProvenancePath(item.provenance.path))
       || (item.scope !== undefined && !scopes.includes(item.scope))
+      || (scopes.length > 1 && item.source !== 'git' && item.scope === undefined)
+      || (item.source === 'git' && item.scope !== undefined
+        && item.source_ref !== item.scope.slice('project/'.length) + '@' + item.provenance.revision)
       || (item.source === 'git' && !scopes.some((scope) => item.source_ref === scope.slice('project/'.length) + '@' + item.provenance.revision))
       || (filters.revision !== undefined && item.provenance.revision !== filters.revision)
       || (filters.source_types !== undefined && !filters.source_types.includes(item.source))) invalid();
