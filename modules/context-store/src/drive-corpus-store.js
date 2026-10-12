@@ -75,7 +75,7 @@ function createDriveCorpusStore({ transport } = {}) {
 
   async function putCorpusProjection({ scope, source_revision, documents, idempotency_key } = {}) {
       const root = scopeRoot(scope);
-      if (typeof idempotency_key !== 'string' || !idempotency_key.trim()
+      if (typeof idempotency_key !== 'string' || !idempotency_key.isWellFormed() || !idempotency_key.trim()
         || idempotency_key !== idempotency_key.trim()
         || Buffer.byteLength(idempotency_key, 'utf8') > 200
         || /[\u0000-\u001F\u007F-\u009F]/u.test(idempotency_key)) {
