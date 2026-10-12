@@ -4,6 +4,7 @@ const { createCorpusManifest, assertCorpusManifest } = require('./corpus-manifes
 
 const SCOPE = /^project\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})$/;
 const DIGEST = /^sha256:([a-f0-9]{64})$/;
+const RECEIPT_FIELDS = ['scope', 'source_revision', 'corpus_manifest_ref', 'idempotency_digest'];
 
 function scopeRoot(scope) {
   const match = typeof scope === 'string' && SCOPE.exec(scope);
@@ -44,6 +45,26 @@ function createDriveCorpusStore({ transport } = {}) {
     if (!persisted.equals(bytes)) throw new Error('CORPUS_OBJECT_DIGEST_MISMATCH');
   }
 
+  async function getOptional(key) {
+    let value;
+    try { value = await transport.getObject({ key }); }
+    catch { throw new Error('CORPUS_OBJECT_UNAVAILABLE'); }
+    return value == null ? null : bytesFromObject(value);
+  }
+
+  function validateReceipt(bytes, scope, idempotencyDigest) {
+    let value;
+    try { value = JSON.parse(bytes.toString('utf8')); }
+    catch { throw new Error('CORPUS_RECEIPT_INVALID'); }
+    if (value === null || typeof value !== 'object' || Array.isArray(value)
+      || Object.keys(value).length !== RECEIPT_FIELDS.length
+      || RECEIPT_FIELDS.some((field) => !Object.hasOwn(value, field))
+      || value.scope !== scope || value.idempotency_digest !== idempotencyDigest
+      || typeof value.source_revision !== 'string'
+      || !DIGEST.test(value.corpus_manifest_ref)) throw new Error('CORPUS_RECEIPT_INVALID');
+    return value;
+  }
+
   async function get(key) {
     let value;
     try { value = await transport.getObject({ key }); }
@@ -51,10 +72,34 @@ function createDriveCorpusStore({ transport } = {}) {
     return bytesFromObject(value);
   }
 
-  return Object.freeze({
-    async putCorpusProjection({ scope, source_revision, documents } = {}) {
+  async function putCorpusProjection({ scope, source_revision, documents, idempotency_key } = {}) {
       const root = scopeRoot(scope);
+      if (typeof idempotency_key !== 'string' || !idempotency_key.trim()
+        || idempotency_key !== idempotency_key.trim()
+        || Buffer.byteLength(idempotency_key, 'utf8') > 200
+        || /[\u0000-\u001F\u007F-\u009F]/u.test(idempotency_key)) {
+        throw new Error('IDEMPOTENCY_KEY_INVALID');
+      }
       const manifest = createCorpusManifest({ scope, source_revision, documents });
+      const idempotencyDigest = digestBytes(Buffer.from(idempotency_key, 'utf8'));
+      const receiptKey = `${root}/receipts/${hexDigest(idempotencyDigest, 'CORPUS_RECEIPT_INVALID')}.json`;
+      const immutableReceipt = {
+        scope, source_revision, corpus_manifest_ref: manifest.corpus_manifest_ref,
+        idempotency_digest: idempotencyDigest,
+      };
+      const manifestKey = `${root}/manifests/${hexDigest(manifest.corpus_manifest_ref, 'CORPUS_MANIFEST_REF_INVALID')}.json`;
+      const prior = await getOptional(receiptKey);
+      if (prior !== null) {
+        const storedReceipt = validateReceipt(prior, scope, idempotencyDigest);
+        if (storedReceipt.corpus_manifest_ref !== manifest.corpus_manifest_ref
+          || storedReceipt.source_revision !== source_revision) throw new Error('CORPUS_IDEMPOTENCY_CONFLICT');
+        // Confirm the original manifest and objects remain readable before replay.
+        await readCorpusProjection({ scope, corpus_manifest_ref: storedReceipt.corpus_manifest_ref });
+        return Object.freeze({
+          scope, source_revision, corpus_manifest_ref: manifest.corpus_manifest_ref,
+          manifest_key: manifestKey, objects_written: 0, status: 'replayed',
+        });
+      }
       const contentByRef = new Map(documents.map((document) => [document.source_ref, document.content]));
       const stored = new Set();
       for (const document of manifest.documents) {
@@ -67,15 +112,25 @@ function createDriveCorpusStore({ transport } = {}) {
         }
       }
       // The manifest is written last; failed object uploads cannot publish it.
-      const manifestKey = `${root}/manifests/${hexDigest(manifest.corpus_manifest_ref, 'CORPUS_MANIFEST_REF_INVALID')}.json`;
       await put(manifestKey, Buffer.from(JSON.stringify(manifest), 'utf8'));
+      // The receipt is an immutable project-local idempotency claim. A racing
+      // writer with the same key but another manifest loses the create-only race.
+      try { await put(receiptKey, Buffer.from(JSON.stringify(immutableReceipt), 'utf8')); }
+      catch (error) {
+        if (error.message !== 'CORPUS_OBJECT_DIGEST_MISMATCH') throw error;
+        const raced = await getOptional(receiptKey);
+        if (raced === null) throw new Error('CORPUS_OBJECT_UNAVAILABLE');
+        const winner = validateReceipt(raced, scope, idempotencyDigest);
+        if (winner.corpus_manifest_ref !== manifest.corpus_manifest_ref
+          || winner.source_revision !== source_revision) throw new Error('CORPUS_IDEMPOTENCY_CONFLICT');
+      }
       return Object.freeze({
         scope, source_revision, corpus_manifest_ref: manifest.corpus_manifest_ref,
         manifest_key: manifestKey, objects_written: stored.size, status: 'stored',
       });
-    },
+  }
 
-    async readCorpusProjection({ scope, corpus_manifest_ref } = {}) {
+  async function readCorpusProjection({ scope, corpus_manifest_ref } = {}) {
       const root = scopeRoot(scope);
       const manifestKey = `${root}/manifests/${hexDigest(corpus_manifest_ref, 'CORPUS_MANIFEST_REF_INVALID')}.json`;
       let manifest;
@@ -94,7 +149,11 @@ function createDriveCorpusStore({ transport } = {}) {
         documents.push({ source_ref: entry.source_ref, path: entry.path, content: bytes.toString('utf8') });
       }
       return Object.freeze({ manifest, documents: Object.freeze(documents) });
-    },
+  }
+
+  return Object.freeze({
+    putCorpusProjection,
+    readCorpusProjection,
   });
 }
 
