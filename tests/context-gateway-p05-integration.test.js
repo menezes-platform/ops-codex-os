@@ -193,3 +193,23 @@ test('single-project memory hit can omit scope when trusted resolver supplies on
   const r=await h.gateway.recall({query:'x'});
   assert.equal(r.evidence[0].content,'note');
 });
+
+test('impossible calendar dates are rejected locally before retrieval transport',async()=>{
+  const h=harness({evidence:[]});
+  for(const impossible of ['2026-02-30T12:00:00Z','2026-04-31T12:00:00Z','2025-02-29T00:00:00Z','2026-13-01T00:00:00Z']){
+    await assert.rejects(h.gateway.recall({query:'x',filters:{after:impossible}}),/FILTERS_INVALID/,impossible);
+  }
+  assert.equal(h.calls.length,0);
+});
+
+test('inverted retrieval time range must fail before transport',async()=>{
+  const h=harness({evidence:[]});
+  await assert.rejects(h.gateway.recall({query:'x',filters:{after:'2026-10-13T00:00:00Z',before:'2026-10-12T00:00:00Z'}}),/FILTERS_INVALID/);
+  assert.equal(h.calls.length,0);
+});
+
+test('leap day with matching offset remains valid',async()=>{
+  const h=harness({evidence:[]});
+  assert.deepEqual(await h.gateway.recall({query:'x',filters:{after:'2024-02-29T10:00:00+03:00',before:'2024-02-29T12:00:00+03:00'}}),{evidence:[]});
+  assert.equal(h.calls.length,1);
+});
