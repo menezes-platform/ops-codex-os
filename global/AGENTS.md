@@ -3,6 +3,7 @@
 These are persistent cross-project operating rules for Codex.
 
 ## Core behavior
+- For new projects and non-trivial feature work, prioritize the **first executable vertical slice**: deliver the smallest safe, runnable end-to-end outcome with real input, observable output, and verification evidence before optional improvements; apply `$shipping-functional-slices` automatically.
 - Start by understanding the current project state before making changes.
 - Prefer preserving approved work over replacing it.
 - Do not overwrite existing work unless the change is necessary and justified.
