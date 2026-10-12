@@ -45,7 +45,7 @@ function validateRetrievalResult(value, scopes, filters) {
       || !item.provenance || typeof item.provenance !== 'object'
       || typeof item.provenance.revision !== 'string' || !item.provenance.revision.trim()
       || (item.scope !== undefined && !scopes.includes(item.scope))
-      || (item.source === 'git' && item.source_ref.includes('@') && !scopes.some((scope) => item.source_ref.startsWith(scope.slice('project/'.length) + '@')))
+      || (item.source === 'git' && !scopes.some((scope) => item.source_ref === scope.slice('project/'.length) + '@' + item.provenance.revision))
       || (filters.revision !== undefined && item.provenance.revision !== filters.revision)) invalid();
     return {
       evidence_id: item.evidence_id,
