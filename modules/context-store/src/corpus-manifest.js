@@ -24,7 +24,7 @@ function assertOnlyFields(value, allowed, code) {
 }
 
 function assertText(value, code) {
-  if (typeof value !== 'string' || !value.trim() || value !== value.trim()
+  if (typeof value !== 'string' || !value.isWellFormed() || !value.trim() || value !== value.trim()
     || Buffer.byteLength(value, 'utf8') > 2048 || /[\u0000-\u001F\u007F-\u009F]/u.test(value)) fail(code);
 }
 
@@ -97,7 +97,7 @@ function createCorpusManifest({ scope, source_revision, documents } = {}) {
     assertOnlyFields(document, INPUT_DOCUMENT_FIELDS, 'CORPUS_DOCUMENT_INVALID');
     assertText(document.source_ref, 'SOURCE_REF_REQUIRED');
     assertDocumentPath(document.path, 'CORPUS_DOCUMENT_INVALID');
-    if (typeof document.content !== 'string') fail('DOCUMENT_CONTENT_REQUIRED');
+    if (typeof document.content !== 'string' || !document.content.isWellFormed()) fail('DOCUMENT_CONTENT_REQUIRED');
     return {
       source_ref: document.source_ref,
       path: document.path,
