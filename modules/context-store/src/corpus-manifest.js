@@ -24,7 +24,13 @@ function assertOnlyFields(value, allowed, code) {
 }
 
 function assertText(value, code) {
-  if (typeof value !== 'string' || !value.trim() || value !== value.trim()) fail(code);
+  if (typeof value !== 'string' || !value.trim() || value !== value.trim()
+    || Buffer.byteLength(value, 'utf8') > 2048 || /[\u0000-\u001F\u007F-\u009F]/u.test(value)) fail(code);
+}
+
+function assertRevision(value, code) {
+  assertText(value, code);
+  if (Buffer.byteLength(value, 'utf8') > 500) fail(code);
 }
 
 function assertDocumentPath(value, code) {
@@ -84,7 +90,7 @@ function assertUniqueDocuments(documents) {
 
 function createCorpusManifest({ scope, source_revision, documents } = {}) {
   assertScope(scope);
-  assertText(source_revision, 'SOURCE_REVISION_REQUIRED');
+  assertRevision(source_revision, 'SOURCE_REVISION_REQUIRED');
   if (!Array.isArray(documents) || documents.length === 0) fail('CORPUS_DOCUMENTS_REQUIRED');
 
   const normalized = documents.map((document) => {
@@ -106,7 +112,7 @@ function assertCorpusManifest(value) {
   assertOnlyFields(value, MANIFEST_FIELDS, 'CORPUS_MANIFEST_INVALID');
   if (value.schema_version !== 1) fail('CORPUS_MANIFEST_INVALID');
   assertScope(value.scope);
-  assertText(value.source_revision, 'CORPUS_MANIFEST_INVALID');
+  assertRevision(value.source_revision, 'CORPUS_MANIFEST_INVALID');
   if (!Array.isArray(value.documents) || value.documents.length === 0) fail('CORPUS_MANIFEST_INVALID');
 
   const documents = value.documents.map((document) => {
