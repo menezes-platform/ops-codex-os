@@ -66,3 +66,26 @@ test('malformed or replaced blob cannot be promoted to indexing input',async()=>
  const files=await fs.readdir(corpusDir);await fs.writeFile(path.join(corpusDir,files[0]),'forged');
  await assert.rejects(materializeIndexingSnapshot({corpusStore:store,scope:base.scope,revision:'rev-a',corpus_manifest_ref:receipt.corpus_manifest_ref}),/CORPUS_OBJECT_DIGEST_MISMATCH/);
 }));
+
+test('materialization independently rejects a forged manifest returned by an injected store',async()=>{
+ const manifest={scope:'project/demo/alpha',source_revision:'rev-a',corpus_manifest_ref:'sha256:'+'a'.repeat(64),documents:[]};
+ const corpusStore={readCorpusProjection:async()=>({manifest,documents:[{source_ref:'git:alpha:x',path:'x',content:'danger'}]})};
+ await assert.rejects(materializeIndexingSnapshot({corpusStore,scope:manifest.scope,revision:'rev-a',corpus_manifest_ref:manifest.corpus_manifest_ref}),/CORPUS_SNAPSHOT_INTEGRITY_INVALID/);
+});
+
+test('materialization independently rejects a tampered document when a driver bypasses SHA checking',async()=>{
+ const {createCorpusManifest}=require('../modules/context-store/src/corpus-manifest');
+ const manifest=createCorpusManifest({scope:base.scope,source_revision:'rev-a',documents:base.documents});
+ const documents=base.documents.map(x=>({...x,content:'tampered'}));
+ const corpusStore={readCorpusProjection:async()=>({manifest,documents})};
+ await assert.rejects(materializeIndexingSnapshot({corpusStore,scope:base.scope,revision:'rev-a',corpus_manifest_ref:manifest.corpus_manifest_ref}),/CORPUS_SNAPSHOT_INTEGRITY_INVALID/);
+});
+
+test('materialization independently rejects an omitted or extra document',async()=>{
+ const {createCorpusManifest}=require('../modules/context-store/src/corpus-manifest');
+ const manifest=createCorpusManifest({scope:base.scope,source_revision:'rev-a',documents:base.documents});
+ for(const documents of [base.documents.slice(0,1),base.documents.concat({source_ref:'git:alpha:extra',path:'extra',content:'extra'})]){
+  const corpusStore={readCorpusProjection:async()=>({manifest,documents})};
+  await assert.rejects(materializeIndexingSnapshot({corpusStore,scope:base.scope,revision:'rev-a',corpus_manifest_ref:manifest.corpus_manifest_ref}),/CORPUS_SNAPSHOT_INTEGRITY_INVALID/);
+ }
+});
