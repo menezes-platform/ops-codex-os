@@ -79,7 +79,7 @@ test('observed bounded latency records p50/p95 independently of evaluation runti
   t.lane='offline_observed';
   t.algorithm='bm25-v1';
   t.cases.forEach((c,i)=>{c.latency_ms=[2,4,6,8][i];});
-  const result=evaluateReplay(fixture,t);
+  const result=evaluateReplay({...copy(fixture),source_commit:'a'.repeat(40)},t);
   assert.equal(result.metrics.latency_p50_ms,5);
   assert.equal(result.metrics.latency_p95_ms,7.7);
   assert.equal(result.p05_runtime_qualified,false);
@@ -186,5 +186,20 @@ test('synthetic and observed traces cannot be compared as same quality lane', ()
   const t=copy(trace);
   t.lane='offline_observed';t.algorithm='real-bm25';
   for(const c of t.cases)c.latency_ms=5;
-  assert.throws(()=>compareReplayReports(evaluateReplay(fixture,trace),evaluateReplay(fixture,t)),/BENCHMARK_COMPARISON_INVALID/);
+  const pinned={...copy(fixture),source_commit:'a'.repeat(40)};
+  assert.throws(()=>compareReplayReports(evaluateReplay(pinned,trace),evaluateReplay(pinned,t)),/BENCHMARK_COMPARISON_INVALID/);
+});
+
+test('an observed quality trace must name a pinned forty-hex source commit', () => {
+  const t=copy(trace);t.lane='offline_observed';t.algorithm='bm25-v1';
+  for(const c of t.cases)c.latency_ms=1;
+  assert.throws(()=>evaluateReplay(fixture,t),/RETRIEVAL_SOURCE_COMMIT_UNPINNED/);
+  const pinned={...copy(fixture),source_commit:'a'.repeat(40)};
+  assert.equal(evaluateReplay(pinned,t).source_commit,'a'.repeat(40));
+});
+
+test('quality comparison rejects a different declared corpus count', () => {
+  const a=evaluateReplay(fixture,trace);
+  const b=evaluateReplay({...copy(fixture),corpus_count:fixture.corpus_count+1},trace);
+  assert.throws(()=>compareReplayReports(a,b),/BENCHMARK_COMPARISON_INVALID/);
 });
