@@ -74,6 +74,11 @@ function validateRetrievalResult(value, scopes, filters) {
       || !item.provenance || typeof item.provenance !== 'object'
       || typeof item.provenance.revision !== 'string' || !item.provenance.revision.trim()
       || (item.provenance.path !== undefined && !safeProvenancePath(item.provenance.path))
+      || (item.provenance.observed_at !== undefined && !validDateTime(item.provenance.observed_at))
+      || (filters.after !== undefined && (item.provenance.observed_at === undefined
+        || Date.parse(item.provenance.observed_at) < Date.parse(filters.after)))
+      || (filters.before !== undefined && (item.provenance.observed_at === undefined
+        || Date.parse(item.provenance.observed_at) > Date.parse(filters.before)))
       || (item.scope !== undefined && !scopes.includes(item.scope))
       || (scopes.length > 1 && item.source !== 'git' && item.scope === undefined)
       || (item.source === 'git' && item.scope !== undefined
