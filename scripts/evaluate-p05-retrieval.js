@@ -78,6 +78,9 @@ function percentile(values, probability) {
 function evaluateReplay(fixture, trace) {
   validateFixture(fixture);
   validateTrace(fixture, trace);
+  if (trace.lane === 'offline_observed' && !/^[a-f0-9]{40}$/.test(fixture.source_commit)) {
+    throw new Error('RETRIEVAL_SOURCE_COMMIT_UNPINNED');
+  }
   const observed = new Map(trace.cases.map((c) => [c.question_id, c]));
   let matchingQueries = 0;
   let precisionTotal = 0;
@@ -157,6 +160,7 @@ function compareReplayReports(baseline, candidate) {
   if (!isRecord(baseline) || !isRecord(candidate)
     || baseline.fixture_id !== candidate.fixture_id
     || baseline.source_commit !== candidate.source_commit
+    || baseline.corpus_count !== candidate.corpus_count
     || baseline.query_count !== candidate.query_count
     || baseline.lane !== candidate.lane
     || JSON.stringify(baseline.profiles) !== JSON.stringify(candidate.profiles)
