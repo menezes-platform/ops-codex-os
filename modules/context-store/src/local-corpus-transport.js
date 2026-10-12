@@ -5,7 +5,7 @@ const { constants } = require('node:fs');
 const { randomBytes } = require('node:crypto');
 
 // Offline test adapter only. Durable production corpus authority remains Drive.
-const KEY = /^projects\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/(?:corpus\/[a-f0-9]{64}|manifests\/[a-f0-9]{64}\.json)$/;
+const KEY = /^projects\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/(?:corpus\/[a-f0-9]{64}|manifests\/[a-f0-9]{64}\.json|receipts\/[a-f0-9]{64}\.json)$/;
 function components(key) {
   if (typeof key !== 'string' || !KEY.test(key)) throw new Error('CORPUS_OBJECT_KEY_INVALID');
   return key.split('/');
