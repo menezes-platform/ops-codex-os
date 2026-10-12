@@ -1,0 +1,37 @@
+{
+  "manifest": {
+    "schema_version": 1,
+    "scope": "project/demo/alpha",
+    "source_revision": "public-pilot-v1",
+    "documents": [
+      {
+        "source_ref": "git:alpha:README.md",
+        "path": "README.md",
+        "content_sha256": "sha256:a8f9fc8e2dce08daa7c52fe61ef85e8a8ebd8993bed879cf994232aca4aed498"
+      },
+      {
+        "source_ref": "git:alpha:docs/recovery.md",
+        "path": "docs/recovery.md",
+        "content_sha256": "sha256:8bf1a206d736078644822d6396572c7bac713f8a2e4f7b1a6785fa63ac96800c"
+      }
+    ],
+    "corpus_manifest_ref": "sha256:ad11dde95b3beb2a6b62a30c284f1ed12a64a656f99f48822083e55fdb1312ac"
+  },
+  "snapshot": {
+    "scope": "project/demo/alpha",
+    "revision": "public-pilot-v1",
+    "manifest_ref": "sha256:ad11dde95b3beb2a6b62a30c284f1ed12a64a656f99f48822083e55fdb1312ac",
+    "documents": [
+      {
+        "source_ref": "git:alpha:README.md",
+        "path": "README.md",
+        "content": "# Project alpha public documentation\nA reproducible index source."
+      },
+      {
+        "source_ref": "git:alpha:docs/recovery.md",
+        "path": "docs/recovery.md",
+        "content": "# Recovery\nCurrent and previous generations must be verifiable."
+      }
+    ]
+  }
+}
