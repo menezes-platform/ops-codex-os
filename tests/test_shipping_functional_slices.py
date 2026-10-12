@@ -27,6 +27,13 @@ class FunctionalSliceSkillContractTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, skill)
 
+    def test_first_slice_is_a_top_level_core_rule(self):
+        agents = (ROOT / "global" / "AGENTS.md").read_text(encoding="utf-8")
+        core = agents.split("## Core behavior\n", 1)[1].split("\n## ", 1)[0]
+        first_rule = next(line for line in core.splitlines() if line.startswith("- "))
+        self.assertIn("first executable vertical slice", first_rule.lower())
+        self.assertIn("$shipping-functional-slices", first_rule)
+
     def test_global_route_and_human_discovery(self):
         agents = (ROOT / "global" / "AGENTS.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
