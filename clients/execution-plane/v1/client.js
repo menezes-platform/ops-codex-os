@@ -26,7 +26,15 @@ function assertRetrievalRequest(input) {
   const scopes = assertProjectScopes(input);
   if (typeof input.query !== 'string' || !input.query.trim()) throw new Error('QUERY_REQUIRED');
   if (!input.filters || typeof input.filters !== 'object' || Array.isArray(input.filters)
-    || Object.keys(input.filters).some((key) => !['source_types', 'revision', 'after', 'before'].includes(key))) {
+    || Object.keys(input.filters).some((key) => !['source_types', 'revision', 'after', 'before'].includes(key))
+    || (input.filters.source_types !== undefined && (!Array.isArray(input.filters.source_types)
+      || input.filters.source_types.some((source) => typeof source !== 'string' || !source.trim())
+      || new Set(input.filters.source_types).size !== input.filters.source_types.length))
+    || (input.filters.revision !== undefined && (typeof input.filters.revision !== 'string' || !input.filters.revision.trim()))
+    || ['after','before'].some((field) => input.filters[field] !== undefined
+      && (typeof input.filters[field] !== 'string'
+        || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(input.filters[field])
+        || !Number.isFinite(Date.parse(input.filters[field]))))) {
     throw new Error('FILTERS_INVALID');
   }
   return scopes;
@@ -46,7 +54,8 @@ function validateRetrievalResult(value, scopes, filters) {
       || typeof item.provenance.revision !== 'string' || !item.provenance.revision.trim()
       || (item.scope !== undefined && !scopes.includes(item.scope))
       || (item.source === 'git' && !scopes.some((scope) => item.source_ref === scope.slice('project/'.length) + '@' + item.provenance.revision))
-      || (filters.revision !== undefined && item.provenance.revision !== filters.revision)) invalid();
+      || (filters.revision !== undefined && item.provenance.revision !== filters.revision)
+      || (filters.source_types !== undefined && !filters.source_types.includes(item.source))) invalid();
     return {
       evidence_id: item.evidence_id,
       source: item.source,
@@ -79,7 +88,8 @@ function validateIndexReceipt(value, scope, revision) {
   };
 }
 
-function createExecutionPlaneClient({ baseUrl, fetchImpl = globalThis.fetch, capabilityProvider = null } = {}) {
+function createExecutionPlaneClient({ baseUrl, fetchImpl = globalThis.fetch, capabilityProvider = null, timeoutMs = 5000 } = {}) {
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30000) throw new Error('EXECUTION_PLANE_TIMEOUT_INVALID');
   const base = normalizeBaseUrl(baseUrl);
   if (typeof fetchImpl !== 'function') throw new Error('EXECUTION_PLANE_FETCH_REQUIRED');
 
@@ -93,6 +103,7 @@ function createExecutionPlaneClient({ baseUrl, fetchImpl = globalThis.fetch, cap
     const response = await fetchImpl(`${base}${path}`, {
       method,
       headers,
+      signal: AbortSignal.timeout(timeoutMs),
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     if (!response.ok) throw new Error(`EXECUTION_PLANE_HTTP_${response.status}`);
