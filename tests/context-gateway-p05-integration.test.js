@@ -98,3 +98,42 @@ test('invalid project resolver does not trigger transport',async()=>{
   await assert.rejects(h.gateway.recall({query:'x'}),/INVALID_PROJECT_SCOPE/);
   assert.equal(h.calls.length,0);
 });
+
+test('requested source type is enforced after transport returns extra evidence', async()=>{
+  const unwanted = {...validEvidence(), source:'memory', source_ref:'memo-1'};
+  const h=harness({evidence:[unwanted]});
+  await assert.rejects(h.gateway.recall({query:'x',filters:{source_types:['git']}}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('direct client rejects malformed filters before making any external request',async()=>{
+  let count=0;
+  const client=createExecutionPlaneClient({baseUrl:'https://execution.internal',fetchImpl:async()=>{count++;throw new Error('FETCH_SHOULD_NOT_RUN');}});
+  for(const filters of [{source_types:'git'},{source_types:['git','git']},{revision:''},{after:'not-a-date'},{before:'2026-10-12'}]) {
+    await assert.rejects(client.retrieve({scope:alpha,query:'x',filters}),/FILTERS_INVALID/);
+  }
+  assert.equal(count,0);
+});
+
+test('bounded transport sends an AbortSignal and aborts a stalled retrieval',async()=>{
+  let signal;
+  const client=createExecutionPlaneClient({baseUrl:'https://execution.internal',timeoutMs:12,fetchImpl:async(_url,options)=>{
+    signal=options.signal;
+    return new Promise((_resolve,reject)=>{
+      if(signal.aborted) return reject(signal.reason);
+      signal.addEventListener('abort',()=>reject(signal.reason),{once:true});
+    });
+  }});
+  // AbortSignal.timeout() deliberately uses an unref timer; a synthetic fetch
+  // needs an active event-loop handle that a real socket would supply.
+  const keepAlive=setTimeout(()=>{},100);
+  try {
+    await assert.rejects(client.retrieve({scope:alpha,query:'x',filters:{}}),/timeout|aborted|Abort/i);
+    assert.equal(signal.aborted,true);
+  } finally { clearTimeout(keepAlive); }
+});
+
+test('timeout configuration fails closed on invalid values',()=>{
+  for(const timeoutMs of [0,-1,30001,'five seconds',Number.NaN]) {
+    assert.throws(()=>createExecutionPlaneClient({baseUrl:'https://execution.internal',timeoutMs,fetchImpl:async()=>{}}),/EXECUTION_PLANE_TIMEOUT_INVALID/);
+  }
+});
