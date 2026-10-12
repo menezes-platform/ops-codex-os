@@ -1,5 +1,8 @@
 'use strict';
 
+const { createHash } = require('node:crypto');
+const { assertCorpusManifest } = require('./corpus-manifest');
+
 const SCOPE = /^project\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const DIGEST = /^sha256:[a-f0-9]{64}$/;
 /**
@@ -22,13 +25,26 @@ async function materializeIndexingSnapshot({ corpusStore, scope, revision, corpu
   if (projection.manifest.scope !== scope || projection.manifest.source_revision !== revision) {
     throw new Error('CORPUS_SNAPSHOT_REVISION_MISMATCH');
   }
-  const documents = projection.documents.map(({ source_ref, path, content }) => {
+  let manifest;
+  try { manifest = assertCorpusManifest(projection.manifest); }
+  catch { throw new Error('CORPUS_SNAPSHOT_INTEGRITY_INVALID'); }
+  if (manifest.scope !== scope || manifest.corpus_manifest_ref !== corpus_manifest_ref
+    || !Array.isArray(projection.documents) || projection.documents.length !== manifest.documents.length) {
+    throw new Error('CORPUS_SNAPSHOT_INTEGRITY_INVALID');
+  }
+  const received = new Map(projection.documents.map((document) => [document.source_ref, document]));
+  if (received.size !== manifest.documents.length) throw new Error('CORPUS_SNAPSHOT_INTEGRITY_INVALID');
+  const documents = manifest.documents.map((entry) => {
+    const document = received.get(entry.source_ref);
+    if (!document || document.path !== entry.path) throw new Error('CORPUS_SNAPSHOT_INTEGRITY_INVALID');
+    const { source_ref, path, content } = document;
     if (typeof content !== 'string' || !content.trim() || !content.isWellFormed()) {
       throw new Error('CORPUS_SNAPSHOT_DOCUMENT_INVALID');
     }
+    const digest = 'sha256:' + createHash('sha256').update(content, 'utf8').digest('hex');
+    if (digest !== entry.content_sha256) throw new Error('CORPUS_SNAPSHOT_INTEGRITY_INVALID');
     return Object.freeze({ source_ref, path, content });
   });
-  if (documents.length === 0) throw new Error('CORPUS_SNAPSHOT_DOCUMENT_INVALID');
   return Object.freeze({
     scope, revision,
     manifest_ref: corpus_manifest_ref,
