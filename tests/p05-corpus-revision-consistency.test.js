@@ -34,3 +34,19 @@ test('same revision permits incremental edits and metadata noop remains availabl
   assert.equal(plan(old,edited).operation,'incremental');
   assert.equal(plan(old,old).operation,'noop');
 });
+
+test('manifest creation rejects control characters and overlong UTF-8 source metadata before digesting',()=>{
+  for(const bad of ['git:ops-codex-os:README.md\nsecret','git:ops-codex-os:\0README.md','x'.repeat(2049)]){
+    assert.throws(()=>corpus('aaa',[{...document,source_ref:bad}]),/SOURCE_REF_REQUIRED/);
+  }
+  for(const bad of ['aaa\nspoof','a'.repeat(501),'é'.repeat(260)]){
+    assert.throws(()=>corpus(bad),/SOURCE_REVISION_REQUIRED/);
+  }
+});
+
+test('parsed manifests fail closed on mutated source metadata before digest verification',()=>{
+  const valid=corpus('aaa');
+  const bad={...valid,documents:[{...valid.documents[0],source_ref:'safe\0malicious'},...valid.documents.slice(1)]};
+  const {assertCorpusManifest}=require('../modules/context-store/src/corpus-manifest');
+  assert.throws(()=>assertCorpusManifest(bad),/CORPUS_DOCUMENT_INVALID/);
+});
