@@ -137,3 +137,32 @@ test('timeout configuration fails closed on invalid values',()=>{
     assert.throws(()=>createExecutionPlaneClient({baseUrl:'https://execution.internal',timeoutMs,fetchImpl:async()=>{}}),/EXECUTION_PLANE_TIMEOUT_INVALID/);
   }
 });
+
+test('retrieval rejects unsafe source paths without forwarding citations',async()=>{
+  for(const path of ['../private/key.txt','/etc/passwd','docs//private','docs/../../secrets','docs\\secret.md']) {
+    const h=harness({evidence:[{...validEvidence(),provenance:{path,revision:'r2'}}]});
+    await assert.rejects(h.gateway.recall({query:'x'}),/EXECUTION_PLANE_RETRIEVAL_INVALID/,path);
+  }
+});
+
+test('retrieval rejects more than 100 hits before building unbounded context',async()=>{
+  const many=Array.from({length:101},(_,i)=>({...validEvidence(),evidence_id:'e'+i}));
+  const h=harness({evidence:many});
+  await assert.rejects(h.gateway.recall({query:'x'}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('oversized evidence text is not returned to the gateway',async()=>{
+  const h=harness({evidence:[{...validEvidence(),content:'x'.repeat(131073)}]});
+  await assert.rejects(h.gateway.recall({query:'x'}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('duplicate evidence identity is rejected before it can bias recall',async()=>{
+  const h=harness({evidence:[validEvidence(),validEvidence()]});
+  await assert.rejects(h.gateway.recall({query:'x'}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('oversized query fails locally and never reaches transport',async()=>{
+  const h=harness({evidence:[]});
+  await assert.rejects(h.gateway.recall({query:'x'.repeat(16385)}),/QUERY_INVALID/);
+  assert.equal(h.calls.length,0);
+});
