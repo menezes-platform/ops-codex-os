@@ -166,3 +166,30 @@ test('oversized query fails locally and never reaches transport',async()=>{
   await assert.rejects(h.gateway.recall({query:'x'.repeat(16385)}),/QUERY_INVALID/);
   assert.equal(h.calls.length,0);
 });
+
+test('multi-project non-Git hits without a project identity must fail closed',async()=>{
+  const memory={evidence_id:'mem-1',source:'memory',source_ref:'memory:record-1',content:'private note',provenance:{revision:'rev1'}};
+  const h=harness({evidence:[memory]});
+  await assert.rejects(h.gateway.recallAcrossProjects({query:'x',allowlisted_scopes:[alpha,beta]}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('multi-project memory hits with explicit allowed project identity are sanitized',async()=>{
+  const memory={evidence_id:'mem-1',scope:beta,source:'memory',source_ref:'memory:record-1',content:'note',provenance:{revision:'rev1'}};
+  const h=harness({evidence:[memory]});
+  const r=await h.gateway.recallAcrossProjects({query:'x',allowlisted_scopes:[alpha,beta]});
+  assert.equal(r.evidence[0].content,'note');
+  assert.equal(Object.hasOwn(r.evidence[0],'scope'),false);
+});
+
+test('multi-project Git hit cannot claim a different allowed project in scope metadata',async()=>{
+  const forged={...validEvidence(alpha),scope:beta};
+  const h=harness({evidence:[forged]});
+  await assert.rejects(h.gateway.recallAcrossProjects({query:'x',allowlisted_scopes:[alpha,beta]}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('single-project memory hit can omit scope when trusted resolver supplies one',async()=>{
+  const memory={evidence_id:'mem-1',source:'memory',source_ref:'memory:record-1',content:'note',provenance:{revision:'rev1'}};
+  const h=harness({evidence:[memory]});
+  const r=await h.gateway.recall({query:'x'});
+  assert.equal(r.evidence[0].content,'note');
+});
