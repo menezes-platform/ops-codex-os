@@ -22,6 +22,19 @@ function assertProjectScopes(input) {
   return single ? [input.scope] : input.allowlisted_scopes;
 }
 
+function validDateTime(value) {
+  if (typeof value !== 'string') return false;
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
+  if (!match) return false;
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText] = match;
+  const year = Number(yearText), month = Number(monthText), day = Number(dayText);
+  const hour = Number(hourText), minute = Number(minuteText), second = Number(secondText);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const monthDays = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return year > 0 && month >= 1 && month <= 12 && day >= 1 && day <= monthDays[month - 1]
+    && hour < 24 && minute < 60 && second < 60 && Number.isFinite(Date.parse(value));
+}
+
 function assertRetrievalRequest(input) {
   const scopes = assertProjectScopes(input);
   if (typeof input.query !== 'string' || !input.query.trim()) throw new Error('QUERY_REQUIRED');
@@ -33,9 +46,9 @@ function assertRetrievalRequest(input) {
       || new Set(input.filters.source_types).size !== input.filters.source_types.length))
     || (input.filters.revision !== undefined && (typeof input.filters.revision !== 'string' || !input.filters.revision.trim()))
     || ['after','before'].some((field) => input.filters[field] !== undefined
-      && (typeof input.filters[field] !== 'string'
-        || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(input.filters[field])
-        || !Number.isFinite(Date.parse(input.filters[field]))))) {
+      && !validDateTime(input.filters[field]))
+    || (input.filters.after !== undefined && input.filters.before !== undefined
+      && Date.parse(input.filters.after) > Date.parse(input.filters.before))) {
     throw new Error('FILTERS_INVALID');
   }
   return scopes;
