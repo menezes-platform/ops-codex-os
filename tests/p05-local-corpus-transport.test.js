@@ -7,7 +7,7 @@ const path=require('node:path');
 const {createLocalCorpusObjectTransport}=require('../modules/context-store/src/local-corpus-transport');
 const {createDriveCorpusStore}=require('../modules/context-store/src/drive-corpus-store');
 async function tempRoot(fn){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'p05-corpus-'));try{return await fn(dir);}finally{await fs.rm(dir,{recursive:true,force:true});}}
-const query={scope:'project/demo/alpha',source_revision:'a1',documents:[{source_ref:'git:alpha:README.md',path:'README.md',content:'durable data'}]};
+const query={scope:'project/demo/alpha',source_revision:'a1',idempotency_key:'local-001',documents:[{source_ref:'git:alpha:README.md',path:'README.md',content:'durable data'}]};
 test('an offline corpus is durable across adapter restart using real file bytes',async()=>tempRoot(async(root)=>{
  const a=createDriveCorpusStore({transport:await createLocalCorpusObjectTransport({root})});
  const receipt=await a.putCorpusProjection(query);
