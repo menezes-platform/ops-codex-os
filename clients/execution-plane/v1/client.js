@@ -25,6 +25,7 @@ function assertProjectScopes(input) {
 function assertRetrievalRequest(input) {
   const scopes = assertProjectScopes(input);
   if (typeof input.query !== 'string' || !input.query.trim()) throw new Error('QUERY_REQUIRED');
+  if (input.query.length > 16384) throw new Error('QUERY_INVALID');
   if (!input.filters || typeof input.filters !== 'object' || Array.isArray(input.filters)
     || Object.keys(input.filters).some((key) => !['source_types', 'revision', 'after', 'before'].includes(key))
     || (input.filters.source_types !== undefined && (!Array.isArray(input.filters.source_types)
@@ -40,22 +41,36 @@ function assertRetrievalRequest(input) {
   return scopes;
 }
 
+function safeProvenancePath(path) {
+  return typeof path === 'string' && path.length > 0 && !path.startsWith('/')
+    && !path.includes('\\') && !/^[A-Za-z]:/.test(path)
+    && path.split('/').every((part) => part.length > 0 && part !== '.' && part !== '..');
+}
+
 function validateRetrievalResult(value, scopes, filters) {
   const invalid = () => { throw new Error('EXECUTION_PLANE_RETRIEVAL_INVALID'); };
-  if (!value || typeof value !== 'object' || !Array.isArray(value.evidence)) invalid();
+  if (!value || typeof value !== 'object' || !Array.isArray(value.evidence) || value.evidence.length > 100) invalid();
   if (value.scope !== undefined && !scopes.includes(value.scope)) invalid();
+  const evidenceIds = new Set();
   const evidence = value.evidence.map((item) => {
     if (!item || typeof item !== 'object' || Array.isArray(item)
       || typeof item.evidence_id !== 'string' || !item.evidence_id.trim()
       || !['git', 'memory', 'engram'].includes(item.source)
       || typeof item.source_ref !== 'string' || !item.source_ref.trim()
-      || typeof item.content !== 'string'
+      || typeof item.content !== 'string' || item.content.length > 131072
       || !item.provenance || typeof item.provenance !== 'object'
       || typeof item.provenance.revision !== 'string' || !item.provenance.revision.trim()
+      || (item.provenance.path !== undefined && !safeProvenancePath(item.provenance.path))
       || (item.scope !== undefined && !scopes.includes(item.scope))
       || (item.source === 'git' && !scopes.some((scope) => item.source_ref === scope.slice('project/'.length) + '@' + item.provenance.revision))
       || (filters.revision !== undefined && item.provenance.revision !== filters.revision)
       || (filters.source_types !== undefined && !filters.source_types.includes(item.source))) invalid();
+    const identityScope = item.source === 'git'
+      ? item.source_ref.slice(0, item.source_ref.lastIndexOf('@'))
+      : (item.scope || scopes[0]);
+    const scopedEvidenceId = identityScope + ':' + item.evidence_id;
+    if (evidenceIds.has(scopedEvidenceId)) invalid();
+    evidenceIds.add(scopedEvidenceId);
     return {
       evidence_id: item.evidence_id,
       source: item.source,
