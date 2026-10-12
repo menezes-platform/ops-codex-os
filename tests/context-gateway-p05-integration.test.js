@@ -213,3 +213,27 @@ test('leap day with matching offset remains valid',async()=>{
   assert.deepEqual(await h.gateway.recall({query:'x',filters:{after:'2024-02-29T10:00:00+03:00',before:'2024-02-29T12:00:00+03:00'}}),{evidence:[]});
   assert.equal(h.calls.length,1);
 });
+
+test('temporal retrieval rejects evidence older than requested after timestamp',async()=>{
+  const old={...validEvidence(),provenance:{revision:'r2',path:'docs/readme.md',observed_at:'2025-12-31T23:59:59Z'}};
+  const h=harness({evidence:[old]});
+  await assert.rejects(h.gateway.recall({query:'x',filters:{after:'2026-01-01T00:00:00Z'}}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('temporal retrieval refuses evidence with no observed_at when date filter requested',async()=>{
+  const h=harness({evidence:[validEvidence()]});
+  await assert.rejects(h.gateway.recall({query:'x',filters:{before:'2026-10-12T00:00:00Z'}}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
+
+test('temporal retrieval accepts observed evidence within window and preserves exact timestamp',async()=>{
+  const item={...validEvidence(),provenance:{revision:'r2',path:'docs/readme.md',observed_at:'2026-10-12T01:30:00+01:00'}};
+  const h=harness({evidence:[item]});
+  const r=await h.gateway.recall({query:'x',filters:{after:'2026-10-12T00:29:00Z',before:'2026-10-12T00:31:00Z'}});
+  assert.equal(r.evidence[0].provenance.observed_at,'2026-10-12T01:30:00+01:00');
+});
+
+test('malformed evidence observed_at cannot satisfy date-time schema even without time filters',async()=>{
+  const item={...validEvidence(),provenance:{revision:'r2',path:'docs/readme.md',observed_at:'2026-02-30T00:00:00Z'}};
+  const h=harness({evidence:[item]});
+  await assert.rejects(h.gateway.recall({query:'x'}),/EXECUTION_PLANE_RETRIEVAL_INVALID/);
+});
