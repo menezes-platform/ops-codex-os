@@ -176,12 +176,14 @@ function planCorpusUpdate({ previous_manifest = null, candidate_manifest, previo
   } else if (!sameProfiles(oldProfiles, nextProfiles)) {
     operation = 'rebuild';
     reason = 'profile_changed';
+  } else if (previous.source_revision !== candidate.source_revision) {
+    // The Rust structural chunk ID includes source revision. A metadata-only
+    // update would leave the index with IDs and citations from the old commit.
+    operation = 'rebuild';
+    reason = 'source_revision_changed';
   } else if (added.length || changed.length || removed.length) {
     operation = 'incremental';
     reason = 'document_delta';
-  } else if (previous.source_revision !== candidate.source_revision) {
-    operation = 'metadata_only';
-    reason = 'source_revision_changed';
   } else {
     operation = 'noop';
     reason = 'unchanged';
