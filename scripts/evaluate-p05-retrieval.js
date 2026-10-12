@@ -61,7 +61,7 @@ function validateTrace(fixture, trace) {
         || !PROJECT_SCOPE.test(hit.scope) || !nonempty(hit.revision)
         || !nonempty(hit.source_ref) || !safeDocumentPath(hit.path)
         || typeof hit.content !== 'string'
-        || !hit.source_ref.startsWith(hit.scope.slice('project/'.length) + '@')) invalidTrace();
+        || hit.source_ref !== hit.scope.slice('project/'.length) + '@' + hit.revision) invalidTrace();
     }
   }
 }
@@ -100,20 +100,21 @@ function evaluateReplay(fixture, trace) {
       }
     }
     const relevant = new Set(question.relevant_ids);
+    const isCurrentRelevant = (hit) => relevant.has(hit.evidence_id) && hit.revision === question.revision;
     const topFive = validHits.slice(0, 5);
-    const matches = topFive.filter((hit) => relevant.has(hit.evidence_id));
+    const matches = topFive.filter(isCurrentRelevant);
     if (matches.length > 0) matchingQueries++;
     precisionTotal += matches.length / 5;
     // Zero-gold questions count as 0 recall, never perfect recall.
     recallTotal += relevant.size ? matches.length / relevant.size : 0;
-    const first = validHits.findIndex((hit) => relevant.has(hit.evidence_id));
+    const first = validHits.findIndex(isCurrentRelevant);
     if (first >= 0) reciprocalTotal += 1 / (first + 1);
 
     if (question.stale_ids.length) {
       temporalCases++;
       const stale = new Set(question.stale_ids);
-      const firstCurrent = validHits.findIndex((hit) => relevant.has(hit.evidence_id) && hit.revision === question.revision);
-      const firstStale = validHits.findIndex((hit) => stale.has(hit.evidence_id));
+      const firstCurrent = validHits.findIndex(isCurrentRelevant);
+      const firstStale = validHits.findIndex((hit) => stale.has(hit.evidence_id) || (relevant.has(hit.evidence_id) && hit.revision !== question.revision));
       if (firstCurrent >= 0 && (firstStale < 0 || firstCurrent < firstStale)) temporalCorrect++;
     }
   }
@@ -157,6 +158,7 @@ function compareReplayReports(baseline, candidate) {
     || baseline.fixture_id !== candidate.fixture_id
     || baseline.source_commit !== candidate.source_commit
     || baseline.query_count !== candidate.query_count
+    || baseline.lane !== candidate.lane
     || JSON.stringify(baseline.profiles) !== JSON.stringify(candidate.profiles)
     || !isRecord(baseline.metrics) || !isRecord(candidate.metrics)
     || !Number.isFinite(baseline.metrics.recall_at_5)
