@@ -110,7 +110,9 @@ Default roots:
 - Windows: `%LOCALAPPDATA%\Gabriel\object-cache`
 - Linux: `~/.cache/gabriel/object-cache`
 
-Eviction begins when projected free space falls below `max(50 GiB, 10%)` or cache bytes exceed `GABRIEL_CACHE_MAX_BYTES`. It stops only after projected free space reaches `max(80 GiB, 15%)` and cache is below its configured limit.
+Eviction begins when projected free space falls below `max(30 GiB, 10%)` or cache bytes exceed `GABRIEL_CACHE_MAX_BYTES`. It stops only after projected free space reaches `max(80 GiB, 15%)` and cache is below its configured limit.
+
+The same `max(30 GiB, 10%)` **start reserve** gates FleetRouter node eligibility and the opt-in FleetExecutor; task scratch estimates are subtracted before checking headroom. The separate `max(80 GiB, 15%)` **recovery target** is unchanged when cache eviction actually starts. For a ~223 GiB disk, 49 GiB free is eligible for a zero-scratch task, while a task requiring 20 GiB of scratch is rejected. This policy change is source-only until deployed to the Authority and installed node agent; never bypass either check.
 
 Pinned/in-use objects are never evicted. If eviction cannot create sufficient headroom, local execution fails with `INSUFFICIENT_LOCAL_CAPACITY` so routing can choose another node.
 

@@ -7,7 +7,7 @@ const GiB = 1024 ** 3;
 
 function evictionReserves(totalBytes) {
   return {
-    startReserve: Math.max(50 * GiB, Math.floor(Number(totalBytes) * 0.10)),
+    startReserve: Math.max(30 * GiB, Math.floor(Number(totalBytes) * 0.10)),
     targetReserve: Math.max(80 * GiB, Math.floor(Number(totalBytes) * 0.15)),
   };
 }
