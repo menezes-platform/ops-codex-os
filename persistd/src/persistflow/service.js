@@ -68,6 +68,7 @@ class PersistFlowService {
     fleetStore = null,
     fleetConfig = { nodes: [] },
     fleetRouter = null,
+    fleetExecutorEnabled = false,
     ephemeralProvider = null,
     ephemeralEnabled = false,
     ephemeralLoop = null,
@@ -81,6 +82,8 @@ class PersistFlowService {
     this.fleetStore = fleetStore;
     this.fleetConfig = fleetConfig;
     this.fleetRouter = fleetRouter;
+    this.fleetExecutorEnabled = fleetExecutorEnabled === true;
+    this.activeFleetExecutions = new Map();
     this.ephemeralProvider = ephemeralProvider;
     this.ephemeralEnabled = ephemeralEnabled === true;
     this.ephemeralLoop = ephemeralLoop;
@@ -188,6 +191,99 @@ class PersistFlowService {
       };
     });
     return { decision, run };
+  }
+
+  async executeFleetTask(runId, input = {}) {
+    if (!this.fleetExecutorEnabled) throw new Error('FLEET_EXECUTION_DISABLED');
+    const { executionRequest } = require('../fleet/executor');
+    const { normalizeRouteIntent } = require('../fleet/contracts');
+    if (Object.keys(input).some(key => !['generation', 'operationId', 'commandId', 'intent'].includes(key))) throw new Error('INVALID_EXECUTION_REQUEST');
+    executionRequest({ requestId: input.operationId, commandId: input.commandId });
+    const state = this.assertRunGeneration(runId, input.generation);
+    const intent = normalizeRouteIntent(input.intent || {});
+    const fingerprint = crypto.createHash('sha256').update(JSON.stringify({ generation: Number(input.generation), commandId: input.commandId, intent })).digest('hex');
+    const key = JSON.stringify([runId, input.operationId]);
+    const existing = Object.hasOwn(state.fleetExecutions || {}, input.operationId) ? state.fleetExecutions[input.operationId] : null;
+    if (existing && existing.fingerprint !== fingerprint) throw new Error('EXECUTION_ID_CONFLICT');
+    const active = this.activeFleetExecutions.get(key);
+    if (active && active !== fingerprint) throw new Error('EXECUTION_ID_CONFLICT');
+    if (active || existing) return { operation: existing || { operationId: input.operationId, status: 'ROUTING' }, replayed: true };
+    this.activeFleetExecutions.set(key, fingerprint);
+    try {
+      if (!this.fleetRouter) throw new Error('FLEET_ROUTER_NOT_CONFIGURED');
+      const decision = await this.fleetRouter.route({ ...intent,
+        requiredCapabilities: [...new Set([...intent.requiredCapabilities, 'fleet-executor', 'command:' + input.commandId])],
+      });
+      const requestId = crypto.createHash('sha256').update(JSON.stringify([runId, Number(input.generation), input.operationId])).digest('hex');
+      const operation = { operationId: input.operationId, commandId: input.commandId, requestId, fingerprint,
+        generation: Number(input.generation), nodeId: decision.nodeId, status: 'QUEUED', submittedAt: this.nowIso() };
+      this.store.update(runId, current => {
+        assertMutableGeneration(current, input.generation);
+        const checkpoint = { at: this.nowIso(), generation: Number(input.generation), evidence: {
+          type: 'fleet.execution.queued', operationId: input.operationId, nodeId: decision.nodeId, requestId,
+        } };
+        return { ...current, latestRoute: decision, fleetExecutions: { ...(current.fleetExecutions || {}), [input.operationId]: operation },
+          checkpoints: [...(current.checkpoints || []), checkpoint], latestCheckpoint: checkpoint, updatedAt: checkpoint.at };
+      });
+      return { operation, replayed: false };
+    } finally { this.activeFleetExecutions.delete(key); }
+  }
+
+  pollFleetExecution(nodeId) {
+    if (!this.fleetExecutorEnabled) throw new Error('FLEET_EXECUTION_DISABLED');
+    const { eligibleNodes } = require('../fleet/eligibility');
+    const pending = this.store.list().flatMap(run => Object.values(run.fleetExecutions || {}).map(operation => ({ run, operation })))
+      .filter(({ operation }) => operation.nodeId === nodeId && ['QUEUED', 'RUNNING', 'UNCERTAIN'].includes(operation.status))
+      .sort((a, b) => (a.operation.status === 'QUEUED') - (b.operation.status === 'QUEUED') || a.operation.submittedAt.localeCompare(b.operation.submittedAt));
+    for (const { run, operation } of pending) {
+      if (operation.status === 'QUEUED') {
+        if (run.generation !== operation.generation) continue;
+        const eligible = eligibleNodes({ config: this.fleetConfig, snapshot: this.fleetStatus(), intent: {
+          pinnedNodeId: nodeId, requiredCapabilities: ['fleet-executor', 'command:' + operation.commandId], estimatedScratchBytes: 0,
+        } });
+        if (!eligible.some(node => node.id === nodeId)) continue;
+        this.store.update(run.runId, current => {
+          assertMutableGeneration(current, operation.generation);
+          return { ...current, fleetExecutions: { ...current.fleetExecutions, [operation.operationId]: {
+            ...operation, status: 'RUNNING', claimedAt: this.nowIso(),
+          } } };
+        });
+      }
+      // Re-delivery always uses this same ID. The worker's durable receipt prevents duplicate launch.
+      return { job: { runId: run.runId, operationId: operation.operationId, generation: operation.generation,
+        requestId: operation.requestId, commandId: operation.commandId } };
+    }
+    return { job: null };
+  }
+
+  reportFleetExecution(nodeId, input) {
+    if (!this.fleetExecutorEnabled) throw new Error('FLEET_EXECUTION_DISABLED');
+    if (!input || typeof input !== 'object' || Object.keys(input).some(key => !['runId', 'operationId', 'generation', 'requestId', 'commandId', 'status', 'exitCode', 'outputTruncated'].includes(key))
+      || !['COMPLETED', 'FAILED', 'TIMED_OUT', 'RUNNING', 'REJECTED'].includes(input.status)
+      || input.status === 'COMPLETED' && input.exitCode !== 0
+      || input.exitCode !== null && !Number.isInteger(input.exitCode)) throw new Error('INVALID_EXECUTION_REQUEST');
+    let replayed = false;
+    this.store.update(input.runId, current => {
+      const operation = Object.hasOwn(current.fleetExecutions || {}, input.operationId) ? current.fleetExecutions[input.operationId] : null;
+      if (!operation || operation.nodeId !== nodeId || operation.requestId !== input.requestId
+        || operation.commandId !== input.commandId || operation.generation !== input.generation) throw new Error('EXECUTION_ID_CONFLICT');
+      const status = input.status === 'RUNNING' ? 'UNCERTAIN' : input.status;
+      if (operation.status === status && operation.exitCode === input.exitCode
+        && operation.outputTruncated === (input.outputTruncated === true)) {
+        replayed = true; return current;
+      }
+      if (!['RUNNING', 'UNCERTAIN'].includes(operation.status)) {
+        if (operation.status !== status || operation.exitCode !== input.exitCode) throw new Error('EXECUTION_ID_CONFLICT');
+        replayed = true; return current;
+      }
+      const completed = { ...operation, status, exitCode: input.exitCode, outputTruncated: input.outputTruncated === true, updatedAt: this.nowIso() };
+      const checkpoint = { at: completed.updatedAt, generation: operation.generation, evidence: {
+        type: 'fleet.execution.receipt', operationId: input.operationId, nodeId, requestId: operation.requestId, status, exitCode: completed.exitCode,
+      } };
+      return { ...current, fleetExecutions: { ...current.fleetExecutions, [input.operationId]: completed },
+        checkpoints: [...(current.checkpoints || []), checkpoint], latestCheckpoint: checkpoint, updatedAt: checkpoint.at };
+    });
+    return { acknowledged: true, requestId: input.requestId, replayed };
   }
 
   async executeEphemeralTask(runId, input = {}) {

@@ -129,18 +129,67 @@ async function postHeartbeat({
   }
 }
 
-async function runAgent({ env = process.env, intervalMs = 30_000 } = {}) {
+async function startConfiguredExecutor({ env = process.env, readFile = fs.readFileSync } = {}) {
+  if (env.PERSISTFLOW_FLEET_EXECUTOR_ENABLED !== '1') return null;
+  if (!env.PERSISTFLOW_FLEET_EXECUTOR_CONFIG) throw new Error('EXECUTOR_CONFIG_REQUIRED');
+  const { FleetExecutor } = require('./executor');
+  const { FleetAuthorityClient } = require('./executor-client');
+  const config = JSON.parse(readFile(env.PERSISTFLOW_FLEET_EXECUTOR_CONFIG, 'utf8'));
+  const executor = new FleetExecutor({ nodeId: env.PERSISTFLOW_FLEET_NODE_ID, secret: env.PERSISTFLOW_FLEET_NODE_SECRET,
+    receiptDir: config.receiptDir, commands: config.commands });
+  const client = new FleetAuthorityClient({ baseUrl: env.PERSISTFLOW_BASE_URL, nodeId: executor.nodeId, secret: executor.secret });
+  return { executor, client };
+}
+
+async function runExecutorLoop(remoteExecutor) {
+  const { pollAndExecute } = require('./executor-client');
+  let lastError = null;
+  let lastReceipt = null;
+  for (;;) {
+    try {
+      const receipt = await pollAndExecute(remoteExecutor);
+      const event = receipt && JSON.stringify(receipt);
+      if (event && event !== lastReceipt) process.stdout.write('[fleet-executor] ' + event + '\n');
+      if (event) lastReceipt = event;
+      lastError = null;
+    } catch (error) {
+      const code = /^[A-Z_0-9]+$/.test(error.message || '') ? error.message : 'EXECUTOR_TRANSPORT_ERROR';
+      if (code !== lastError) process.stderr.write('[fleet-executor] ' + code + '\n');
+      lastError = code;
+    }
+    await sleep(5000);
+  }
+}
+
+function executorStartupCode(error) {
+  if (error instanceof SyntaxError) return 'EXECUTOR_CONFIG_INVALID';
+  if (['EACCES', 'EPERM'].includes(error?.code)) return 'EXECUTOR_CONFIG_ACCESS_DENIED';
+  if (error?.code === 'ENOENT') return 'EXECUTOR_CONFIG_NOT_FOUND';
+  if (['EXECUTOR_CONFIG_REQUIRED', 'EXECUTOR_COMMANDS_REQUIRED', 'INVALID_EXECUTOR_COMMAND'].includes(error?.message)) return 'EXECUTOR_CONFIG_INVALID';
+  return 'EXECUTOR_START_FAILED';
+}
+
+async function runAgent({ env = process.env, intervalMs = 30_000, signal,
+  startExecutor = startConfiguredExecutor, collect = collectHeartbeat, post = postHeartbeat,
+  logError = code => process.stderr.write('[fleet-agent] ' + code + '\n'),
+} = {}) {
   const baseUrl = env.PERSISTFLOW_BASE_URL;
   const nodeId = env.PERSISTFLOW_FLEET_NODE_ID;
   const secret = env.PERSISTFLOW_FLEET_NODE_SECRET;
-  for (;;) {
+  let remoteExecutor = null;
+  // Only a completely constructed executor is allowed to poll. Initialization is
+  // attempted once; repairing private configuration requires a controlled restart.
+  try { remoteExecutor = await startExecutor({ env }); }
+  catch (error) { logError(executorStartupCode(error)); }
+  if (remoteExecutor) void runExecutorLoop(remoteExecutor).catch(() => logError('EXECUTOR_LOOP_FAILED'));
+  while (!signal?.aborted) {
     try {
-      const heartbeat = await collectHeartbeat();
-      await postHeartbeat({ baseUrl, nodeId, secret, heartbeat });
+      const heartbeat = await collect(remoteExecutor ? { activeJobs: () => remoteExecutor.executor.activeJobs } : {});
+      await post({ baseUrl, nodeId, secret, heartbeat });
     } catch (error) {
-      process.stderr.write('[fleet-agent] ' + String(error?.message || error) + '\n');
+      logError(/^FLEET_HEARTBEAT_HTTP_\d{3}$/.test(error?.message || '') ? error.message : 'FLEET_HEARTBEAT_FAILED');
     }
-    await sleep(intervalMs);
+    if (!signal?.aborted) await sleep(intervalMs);
   }
 }
 
@@ -158,4 +207,5 @@ module.exports = {
   sampleCpuPercent,
   readCacheInventory,
   defaultCacheRoot,
+  startConfiguredExecutor,
 };

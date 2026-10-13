@@ -27,6 +27,10 @@ function createProductionFleetRouter({ env = process.env, fleetConfig, fleetStor
   });
 }
 
+function productionFleetExecutorEnabled(env = process.env) {
+  return env.PERSISTFLOW_FLEET_EXECUTOR_ENABLED === '1';
+}
+
 function startWeb() {
   const {
     createServer,
@@ -42,12 +46,13 @@ function startWeb() {
   const fleetStore = createProductionFleetStore();
   const fleetConfig = loadProductionFleetConfig();
   const fleetNodeSecrets = productionFleetNodeSecrets();
+  const fleetExecutorEnabled = productionFleetExecutorEnabled();
   const ephemeralEnabled = String(process.env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') === '1'
     && String(process.env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') === '1';
   const ephemeralProvider = createProductionRailwayProvider({ env: process.env });
   const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore, railwayProvider: ephemeralProvider });
   const server = createServer({
-    store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetRouter,
+    store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetRouter, fleetExecutorEnabled,
     ephemeralProvider, ephemeralEnabled,
   });
   server.listen(port, '0.0.0.0', () => {
@@ -65,4 +70,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { chooseStartMode, createProductionRailwayProvider, createProductionFleetRouter, startWeb, start };
+module.exports = { chooseStartMode, createProductionRailwayProvider, createProductionFleetRouter, productionFleetExecutorEnabled, startWeb, start };

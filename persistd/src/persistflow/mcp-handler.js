@@ -120,6 +120,23 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
       }),
     }, async ({ runId, ...input }) => jsonResult(await service.routeTask(runId, input)));
 
+    server.registerTool('persist_fleet_execute', {
+      title: 'Execute an allowlisted command on an authenticated Fleet worker',
+      description: 'Queue a locally allowlisted commandId for an eligible registered worker. Workers poll and report through signed outbound HTTPS; no inbound worker port is required. PersistFlow records the operation before delivery. Reuse operationId to inspect without duplicate execution. No arbitrary commands, arguments, environment or paths.',
+      inputSchema: z.object({
+        runId: z.string().min(1),
+        generation: z.number().int().positive(),
+        operationId: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/),
+        commandId: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/),
+        intent: z.object({
+          taskId: z.string().min(1), summary: z.string().min(1).max(2000),
+          requiredCapabilities: z.array(z.string()).default([]),
+          estimatedScratchBytes: z.number().int().nonnegative().default(0),
+          pinnedNodeId: z.string().optional(),
+        }).strict(),
+      }).strict(),
+    }, async ({ runId, ...input }) => jsonResult(await service.executeFleetTask(runId, input)));
+
     server.registerTool('persist_fleet_execute_ephemeral', {
       title: 'Execute one durable PersistFlow operation on eligible ephemeral capacity',
       description: 'Route a bounded CLI operation through FleetRouter and, only when selected and eligible, execute it on a Railway anonymous worker. PersistFlow records the operation before remote acquisition; retry the same operationId to inspect/reconcile without duplicate execution.',

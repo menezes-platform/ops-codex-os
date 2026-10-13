@@ -1,0 +1,44 @@
+name: Fleet Executor Release Gate
+
+on:
+  pull_request:
+    paths:
+      - "persistd/**"
+      - "scripts/verify-fleet-executor-security.cjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/fleet-executor-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-tests:
+    name: node-24-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install from lockfile
+        run: npm ci --ignore-scripts
+      - name: Root unit tests
+        run: npm test
+      - name: Full PersistFlow tests
+        run: npm --prefix persistd test
+      - name: Deterministic executor security tests
+        run: node scripts/verify-fleet-executor-security.cjs
+      - name: Validate Spec Kit
+        run: npm run validate:spec-kit
