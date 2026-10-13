@@ -1,0 +1,11 @@
+{
+  "fixture_id":"p05-offline-adversarial-v1",
+  "lane":"synthetic_fixture",
+  "algorithm":"handcrafted-ranking-not-a-retriever",
+  "cases":[
+    {"question_id":"current-gate","latency_ms":null,"hits":[{"evidence_id":"alpha/gate/current","scope":"project/demo/alpha","revision":"rev-b","source_ref":"demo/alpha@rev-b","path":"docs/gate.md","content":"Current gate requires P04."}]},
+    {"question_id":"rollback","latency_ms":null,"hits":[{"evidence_id":"alpha/rollback/current","scope":"project/demo/alpha","revision":"rev-b","source_ref":"demo/alpha@rev-b","path":"docs/rollback.md","content":"Current and previous pointer transaction."}]},
+    {"question_id":"separate-project","latency_ms":null,"hits":[{"evidence_id":"beta/notes/current","scope":"project/demo/beta","revision":"rev-z","source_ref":"demo/beta@rev-z","path":"docs/beta.md","content":"Separate index by project."}]},
+    {"question_id":"unanswerable","latency_ms":null,"hits":[]}
+  ]
+}

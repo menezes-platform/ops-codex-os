@@ -24,7 +24,13 @@ function assertOnlyFields(value, allowed, code) {
 }
 
 function assertText(value, code) {
-  if (typeof value !== 'string' || !value.trim() || value !== value.trim()) fail(code);
+  if (typeof value !== 'string' || !value.isWellFormed() || !value.trim() || value !== value.trim()
+    || Buffer.byteLength(value, 'utf8') > 2048 || /[\u0000-\u001F\u007F-\u009F]/u.test(value)) fail(code);
+}
+
+function assertRevision(value, code) {
+  assertText(value, code);
+  if (Buffer.byteLength(value, 'utf8') > 500) fail(code);
 }
 
 function assertDocumentPath(value, code) {
@@ -84,14 +90,14 @@ function assertUniqueDocuments(documents) {
 
 function createCorpusManifest({ scope, source_revision, documents } = {}) {
   assertScope(scope);
-  assertText(source_revision, 'SOURCE_REVISION_REQUIRED');
+  assertRevision(source_revision, 'SOURCE_REVISION_REQUIRED');
   if (!Array.isArray(documents) || documents.length === 0) fail('CORPUS_DOCUMENTS_REQUIRED');
 
   const normalized = documents.map((document) => {
     assertOnlyFields(document, INPUT_DOCUMENT_FIELDS, 'CORPUS_DOCUMENT_INVALID');
     assertText(document.source_ref, 'SOURCE_REF_REQUIRED');
     assertDocumentPath(document.path, 'CORPUS_DOCUMENT_INVALID');
-    if (typeof document.content !== 'string') fail('DOCUMENT_CONTENT_REQUIRED');
+    if (typeof document.content !== 'string' || !document.content.isWellFormed()) fail('DOCUMENT_CONTENT_REQUIRED');
     return {
       source_ref: document.source_ref,
       path: document.path,
@@ -106,7 +112,7 @@ function assertCorpusManifest(value) {
   assertOnlyFields(value, MANIFEST_FIELDS, 'CORPUS_MANIFEST_INVALID');
   if (value.schema_version !== 1) fail('CORPUS_MANIFEST_INVALID');
   assertScope(value.scope);
-  assertText(value.source_revision, 'CORPUS_MANIFEST_INVALID');
+  assertRevision(value.source_revision, 'CORPUS_MANIFEST_INVALID');
   if (!Array.isArray(value.documents) || value.documents.length === 0) fail('CORPUS_MANIFEST_INVALID');
 
   const documents = value.documents.map((document) => {
@@ -176,12 +182,14 @@ function planCorpusUpdate({ previous_manifest = null, candidate_manifest, previo
   } else if (!sameProfiles(oldProfiles, nextProfiles)) {
     operation = 'rebuild';
     reason = 'profile_changed';
+  } else if (previous.source_revision !== candidate.source_revision) {
+    // The Rust structural chunk ID includes source revision. A metadata-only
+    // update would leave the index with IDs and citations from the old commit.
+    operation = 'rebuild';
+    reason = 'source_revision_changed';
   } else if (added.length || changed.length || removed.length) {
     operation = 'incremental';
     reason = 'document_delta';
-  } else if (previous.source_revision !== candidate.source_revision) {
-    operation = 'metadata_only';
-    reason = 'source_revision_changed';
   } else {
     operation = 'noop';
     reason = 'unchanged';

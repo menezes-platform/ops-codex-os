@@ -70,7 +70,7 @@ test('first corpus publication requests a rebuild', () => {
 
 test('document additions, edits and removals produce a scoped incremental plan', () => {
   const previous = manifest();
-  const candidate = manifest('def', [
+  const candidate = manifest('abc', [
     { ...documents[0], content: '# Updated project\n' },
     { source_ref: 'git:ops-codex-os:docs/operations.md', path: 'docs/operations.md', content: 'Operations\n' },
   ]);
@@ -105,7 +105,7 @@ test('profile change requests a rebuild even when corpus content is unchanged', 
   assert.equal(plan.unchanged_document_count, 2);
 });
 
-test('source revision-only change updates metadata without re-embedding documents', () => {
+test('source revision-only change rebuilds revision-bound chunk identities', () => {
   const previous = manifest('abc');
   const candidate = manifest('def');
   const plan = planCorpusUpdate({
@@ -115,7 +115,7 @@ test('source revision-only change updates metadata without re-embedding document
     candidate_profiles: profiles,
   });
 
-  assert.equal(plan.operation, 'metadata_only');
+  assert.equal(plan.operation, 'rebuild');
   assert.equal(plan.reason, 'source_revision_changed');
   assert.equal(plan.unchanged_document_count, 2);
   assert.notEqual(plan.corpus_manifest_ref, previous.corpus_manifest_ref);
