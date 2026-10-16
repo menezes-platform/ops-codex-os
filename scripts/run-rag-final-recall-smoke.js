@@ -38,9 +38,9 @@ async function runControlledRecallSmoke({driveFixture,indexFixture}={}){
     if(scope!=='personal/current')throw new Error('SCOPE_DENIED');
     let events=await driveFixture.listEvents();
     if(!Array.isArray(events)||events.length>1000)throw new Error('CORPUS_INVALID');
-    events=events.map(normalizeMemoryEvent).filter(e=>e.scope==='personal/current'&&e.kind!=='tombstone');
-    const tombstones=new Set((await driveFixture.listEvents()).filter(e=>e.kind==='tombstone').map(e=>e.content));
-    events=events.filter(e=>!tombstones.has(e.event_id));
+    const snapshot=events.map(normalizeMemoryEvent);
+    const tombstones=new Set(snapshot.filter(e=>e.kind==='tombstone').map(e=>e.content));
+    events=snapshot.filter(e=>e.kind!=='tombstone'&&!tombstones.has(e.event_id));
     const ranked=localBM25(events,query);
     const selected=ranked.slice(0,1).map(x=>({
      evidence_id:x.event.event_id,scope:'personal/current',owner_principal_id:owner.principal_id,

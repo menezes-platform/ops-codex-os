@@ -19,3 +19,11 @@ test('task_34_contract refuses cross-scope evidence and degrades on missing arch
  const result=await runControlledRecallSmoke({driveFixture:{async listEvents(){throw Error('Drive offline')}},indexFixture:{query:'what did we decide',allowedScope:'personal/current'}});
  assert.equal(result.status,'unavailable');assert.equal(result.evidence_count,0);
 });
+test('one immutable snapshot backs BM25 ranking and tombstone filtering without a second Drive read',async()=>{
+ let reads=0;
+ const first=[event('old','The memory authority is Google Drive')];
+ const outcome=await runControlledRecallSmoke({
+  driveFixture:{async listEvents(){reads++;if(reads>1)throw new Error('snapshot changed');return first;}},
+  indexFixture:{query:'memory authority',allowedScope:'personal/current'}});
+ assert.equal(outcome.status,'ok');assert.equal(reads,1);
+});
