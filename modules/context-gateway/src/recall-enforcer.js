@@ -1,6 +1,7 @@
 'use strict';
 const {decideRecall}=require('./recall-trigger-policy');
 const {normalizeRecallStatus}=require('./recall-status');
+const {sanitizeEvidenceForModel}=require('./evidence-sanitizer');
 // Only controlled hosts can enforce this policy. Consumer ChatGPT cannot be forced to invoke Drive.
 async function enforceRecall({intent,gateway,answerProducer}={}) {
  if (typeof answerProducer!=='function') throw new Error('ANSWER_PRODUCER_REQUIRED');
@@ -26,7 +27,10 @@ async function enforceRecall({intent,gateway,answerProducer}={}) {
  const normalized=normalizeRecallStatus({primary,policy:{allowEngram:false}});
  if (normalized.status!=='ok')
   return {answer:null,receipt:Object.freeze({required:true,status:normalized.status,reason_code:normalized.reason_code})};
- const answer=await answerProducer({evidence:normalized.evidence,memoryStatus:'ok'});
+ const safe=sanitizeEvidenceForModel(normalized.evidence);
+ if (safe.evidence.every(item=>item.suspicious))
+  return {answer:null,receipt:Object.freeze({required:true,status:'denied',reason_code:'EVIDENCE_UNTRUSTED'})};
+ const answer=await answerProducer({evidence:safe.evidence,promptBoundary:safe.promptBoundary,memoryStatus:'ok'});
  return {answer,receipt:Object.freeze({required:true,status:'ok',reason_code:'EVIDENCE_VERIFIED',
   generation_id:normalized.generation_id,evidence_count:normalized.evidence.length})};
 }
