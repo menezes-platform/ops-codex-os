@@ -37,6 +37,6 @@ function createPersonalEventLedger({store}={}) {
   }
   throw new Error('PERSONAL_COMMAND_INVALID');
  }
- return Object.freeze({appendOrTombstone,listActive});
+ return Object.freeze({appendOrTombstone,listActive,listAll:()=>store.listEvents()});
 }
 module.exports={createPersonalEventLedger};
