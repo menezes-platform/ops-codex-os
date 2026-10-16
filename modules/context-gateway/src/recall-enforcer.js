@@ -9,10 +9,19 @@ async function enforceRecall({intent,gateway,answerProducer}={}) {
   const answer=await answerProducer({evidence:[],memoryStatus:'not_required'});
   return {answer,receipt:Object.freeze({required:false,status:'not_required',reason_code:'NOT_RELEVANT'})};
  }
- if (decision.lanes.length!==1 || !gateway || typeof gateway.recall!=='function')
+ if (decision.lanes.length!==1 || !gateway)
   return {answer:null,receipt:Object.freeze({required:true,status:'unavailable',reason_code:'SCOPE_OR_GATEWAY_UNAVAILABLE'})};
  let primary;
- try {primary=await gateway.recall({scope:decision.lanes[0],query:intent.userIntent.text});}
+ try {
+  const scope=decision.lanes[0];
+  if (scope==='personal/current') {
+   if (typeof gateway.recallPersonal!=='function') throw new Error('PERSONAL_RECALL_NOT_AVAILABLE');
+   primary=await gateway.recallPersonal({query:intent.userIntent.text});
+  }
+  else if (typeof gateway.recall==='function')
+   primary=await gateway.recall({query:intent.userIntent.text});
+  else throw new Error('RECALL_NOT_AVAILABLE');
+ }
  catch {primary={status:'unavailable'};}
  const normalized=normalizeRecallStatus({primary,policy:{allowEngram:false}});
  if (normalized.status!=='ok')
