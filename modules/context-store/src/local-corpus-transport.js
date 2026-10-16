@@ -5,7 +5,7 @@ const { constants } = require('node:fs');
 const { randomBytes } = require('node:crypto');
 
 // Offline test adapter only. Durable production corpus authority remains Drive.
-const KEY = /^projects\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/(?:corpus\/[a-f0-9]{64}|manifests\/[a-f0-9]{64}\.json|receipts\/[a-f0-9]{64}\.json)$/;
+const KEY = /^(?:projects\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/(?:corpus\/[a-f0-9]{64}|manifests\/[a-f0-9]{64}\.json|receipts\/[a-f0-9]{64}\.json)|personal\/current\/(?:events|receipts)\/[a-f0-9]{64}\.json)$/;
 function components(key) {
   if (typeof key !== 'string' || !KEY.test(key)) throw new Error('CORPUS_OBJECT_KEY_INVALID');
   return key.split('/');
@@ -42,6 +42,23 @@ async function createLocalCorpusObjectTransport({ root } = {}) {
   }
 
   return Object.freeze({
+    async listObjectKeys({ prefix } = {}) {
+      if (!['personal/current/events/', 'personal/current/receipts/'].includes(prefix))
+        throw new Error('CORPUS_LIST_PREFIX_INVALID');
+      const parentInfo = await parentFor(prefix + '0'.repeat(64) + '.json', false);
+      if (!parentInfo) return [];
+      const entries = await fs.readdir(parentInfo.parent, { withFileTypes: true });
+      const keys = [];
+      for (const entry of entries) {
+        if (entry.name.startsWith('.staging-')) continue;
+        const key = prefix + entry.name;
+        if (!KEY.test(key) || !entry.isFile() || entry.isSymbolicLink())
+          throw new Error('CORPUS_OBJECT_PATH_UNSAFE');
+        await assertNotSymlink(path.join(parentInfo.parent, entry.name));
+        keys.push(key);
+      }
+      return keys.sort();
+    },
     async putObjectIfAbsent({ key, content } = {}) {
       const paths = await parentFor(key, true);
       if (!Buffer.isBuffer(content) && !(content instanceof Uint8Array)) throw new Error('CORPUS_OBJECT_BYTES_INVALID');

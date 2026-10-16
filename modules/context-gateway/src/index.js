@@ -1,3 +1,5 @@
+const { createPersonalRecall } = require('./personal-recall');
+const { enforceRecall } = require('./recall-enforcer');
 const PROJECT_SCOPE = /^project\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const FILTER_FIELDS = new Set(['source_types', 'revision', 'after', 'before']);
 
@@ -35,7 +37,7 @@ function assertIdempotencyKey(value) {
   if (typeof value !== 'string' || !value.trim()) throw new Error('IDEMPOTENCY_KEY_REQUIRED');
 }
 
-function createContextGateway({ executionPlaneClient, resolveProjectScope, allowlistedMultiProjectScopes = [] } = {}) {
+function createContextGateway({ executionPlaneClient, resolveProjectScope, allowlistedMultiProjectScopes = [], resolvePersonalOwner = null } = {}) {
   if (!executionPlaneClient || typeof executionPlaneClient.retrieve !== 'function' || typeof executionPlaneClient.indexProject !== 'function') {
     throw new Error('EXECUTION_PLANE_CLIENT_REQUIRED');
   }
@@ -49,7 +51,26 @@ function createContextGateway({ executionPlaneClient, resolveProjectScope, allow
     return assertProjectScope(await resolveProjectScope());
   }
 
+  const personalRecall = typeof resolvePersonalOwner === 'function'
+    ? createPersonalRecall({ executionPlaneClient, ownerResolver: resolvePersonalOwner }) : null;
   return Object.freeze({
+    async answerWithContext({ userIntent, historyReferences = false, answerProducer } = {}) {
+      const scope = await currentScope();
+      const availableScopes = [scope];
+      if (personalRecall) availableScopes.push('personal/current');
+      return enforceRecall({
+        intent: { userIntent, historyReferences, availableScopes },
+        gateway: {
+          recall: ({ query }) => executionPlaneClient.retrieve({ scope, query, filters: {} }),
+          recallPersonal: personalRecall ? ({ query }) => personalRecall.recall({ query }) : null,
+        },
+        answerProducer,
+      });
+    },
+    async recallPersonal(request) {
+      if (!personalRecall) throw new Error('PERSONAL_RECALL_DISABLED');
+      return personalRecall.recall(request);
+    },
     async recall(request) {
       assertOnlyFields(request, new Set(['query', 'filters']));
       const query = normalizeQuery(request.query);
