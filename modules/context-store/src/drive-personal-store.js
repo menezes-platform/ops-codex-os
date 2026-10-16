@@ -64,6 +64,27 @@ function createDrivePersonalStore({transport}={}) {
   await putVerified(receiptKey,Buffer.from(JSON.stringify(receiptFields),'utf8'));
   return Object.freeze({...receiptFields,status:'stored'});
  }
- return Object.freeze({putEvent,readEvent});
+ async function listEvents() {
+  if (typeof transport.listObjectKeys !== 'function') throw new Error('PERSONAL_LIST_UNAVAILABLE');
+  let listed;
+  try {listed=await transport.listObjectKeys({prefix:'personal/current/events/'});}
+  catch {throw new Error('PERSONAL_LIST_UNAVAILABLE');}
+  if (!Array.isArray(listed) || listed.length>10000 ||
+      listed.some(key => typeof key!=='string' || !/^personal\/current\/events\/[a-f0-9]{64}\.json$/.test(key)) ||
+      new Set(listed).size !== listed.length) throw new Error('PERSONAL_LIST_INVALID');
+  const result=[];
+  for (const key of listed.sort()) {
+   const bytes=await read(key);
+   if (!bytes) throw new Error('PERSONAL_OBJECT_UNAVAILABLE');
+   let parsed;
+   try {parsed=normalizeMemoryEvent(JSON.parse(bytes.toString('utf8')));}
+   catch {throw new Error('PERSONAL_OBJECT_INVALID');}
+   if (keys.event(parsed.event_id)!==key) throw new Error('PERSONAL_OBJECT_INVALID');
+   const canonical=Buffer.from(JSON.stringify(Object.fromEntries(ORDER.map(field=>[field,parsed[field]]))),'utf8');
+   if (!canonical.equals(bytes)) throw new Error('PERSONAL_OBJECT_DIGEST_MISMATCH');
+   result.push(parsed);
+  }
+  return result.sort((a,b)=>a.observed_at.localeCompare(b.observed_at)||a.event_id.localeCompare(b.event_id));
+ } return Object.freeze({putEvent,readEvent,listEvents});
 }
 module.exports={createDrivePersonalStore};
