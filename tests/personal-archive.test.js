@@ -43,4 +43,15 @@ test('task_18_contract tampered archive aborts before any writes',async()=>{
  const target=newLedger();
  await assert.rejects(importPersonalArchive({stream:Readable.from([bad]),ledger:target,dryRun:false,ownerApproved:true}),/ARCHIVE_/);
  assert.equal((await target.listAll()).length,0);
+});test('portable archive accepts UTF-8 characters split across stream chunks',async()=>{
+ const source=newLedger();
+ await source.appendOrTombstone({op:'append',event:evt('accent','Memória sintética de teste'),idempotency_key:'accent-id'});
+ const exported=await bytes(await exportPersonalArchive({ledger:source}));
+ const buf=Buffer.from(exported,'utf8');
+ const accent=buf.indexOf(Buffer.from('ó','utf8'));
+ assert(accent>0);
+ const target=newLedger();
+ const result=await importPersonalArchive({stream:Readable.from([buf.subarray(0,accent+1),buf.subarray(accent+1)]),ledger:target,dryRun:false,ownerApproved:true});
+ assert.equal(result.imported,1);
+ assert.equal((await target.listActive())[0].content,'Memória sintética de teste');
 });

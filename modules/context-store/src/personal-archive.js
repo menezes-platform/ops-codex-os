@@ -1,5 +1,6 @@
 'use strict';
 const {Readable}=require('node:stream');
+const {TextDecoder}=require('node:util');
 const {createHash}=require('node:crypto');
 const {normalizeMemoryEvent}=require('./personal-event-schema');
 const sha=bytes=>'sha256:'+createHash('sha256').update(bytes).digest('hex');
@@ -24,11 +25,13 @@ async function exportPersonalArchive({ledger}={}) {
 async function readArchive(stream) {
  if (!stream || typeof stream[Symbol.asyncIterator]!=='function') throw new Error('ARCHIVE_STREAM_REQUIRED');
  let data='',size=0;
+ const decoder=new TextDecoder('utf-8',{fatal:true});
  for await (const part of stream) {
   const bytes=Buffer.isBuffer(part)?part:Buffer.from(part);
   size+=bytes.length;
   if (size>MAX_BYTES) throw new Error('ARCHIVE_TOO_LARGE');
-  data+=bytes.toString('utf8');
+  try {data+=decoder.decode(bytes,{stream:true});}
+  catch {throw new Error('ARCHIVE_UTF8_INVALID');}
  }
  if (!data.endsWith('\n')) throw new Error('ARCHIVE_TRUNCATED');
  const lines=data.trimEnd().split('\n');
