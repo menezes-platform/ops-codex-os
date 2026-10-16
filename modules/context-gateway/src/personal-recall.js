@@ -1,6 +1,7 @@
 'use strict';
 const {resolvePersonalScope}=require('../../context-store/src/personal-scope');
 const {normalizeRecallStatus}=require('./recall-status');
+const {validateRecallEvidence}=require('./recall-evidence');
 function createPersonalRecall({executionPlaneClient,ownerResolver}={}) {
  if (!executionPlaneClient || typeof executionPlaneClient.retrieve!=='function' ||
      typeof ownerResolver!=='function') throw new Error('PERSONAL_RECALL_ADAPTERS_REQUIRED');
@@ -24,7 +25,11 @@ function createPersonalRecall({executionPlaneClient,ownerResolver}={}) {
        throw new Error('FOREIGN_OWNER_EVIDENCE');
     }
    }
-   return normalizeRecallStatus({primary:raw,policy:{allowEngram:false}});
+   const verified = raw && raw.status==='ok' && Array.isArray(raw.evidence) && raw.evidence.length
+     ? {...raw,evidence:validateRecallEvidence({hits:raw.evidence,
+        manifest:{scope,revision:raw.revision,generation_id:raw.generation_id},
+        sourceAuthority:'drive-episodic'})} : raw;
+   return normalizeRecallStatus({primary:verified,policy:{allowEngram:false}});
   }
  });
 }
