@@ -54,3 +54,16 @@
 - 2026-10-15 source verification: `node --test --test-concurrency=2` on 47 test files (excluding only the Windows symlink-fixture file) yielded **211 PASS, 0 FAIL** before the UTF-8 regression test was added. The complete-suite Windows EPERM issue is still unresolved.
 - Production cutover and actual final DoD **remain BLOCKED**; tests and an untrusted evidence manifest cannot self-certify deployment.
 - `docs/architecture/adr/0012-drive-first-episodic-staged.md` describes the explicit migration gate and preserves Engram authority until independently verified cutover.
+## Verified continuation after interruption (2026-10-15, Sao Paulo local)
+- Remote branch verified at 22e8768 before resumed commits; draft PR #41 created against execution/p05-native-entry-gate-20261011. No merge.
+- Task C34: added an actual local BM25-only offline retrieval smoke over injected fixture events; it is NOT the native Rust+FAISS index or authenticated Drive transport.
+- C34 regression: a second read of the fixture could mix generations (RED), replaced with one validated immutable snapshot (GREEN, 3/3 focused tests).
+- Task D41: restored a fresh local storage fixture from JSONL and checked event IDs, tombstone state, archive hash, and exact export roundtrip; rejects modified archive before writing (2/2 tests).
+- Final targeted suite: 217/217 passed in 49 test files, with concurrency=2. Log: .superpowers/sdd/rag-final/final-20261015-after-resume.log (local, gitignored).
+- Remaining four non-symlink tests in P05 transport file: 4/4 PASS separately. Two symlink fixture cases are NOT RUNNABLE on this Windows host (EPERM during symlink creation); full npm test remains NOT GREEN here.
+- Latest npm run validate:spec-kit: PASS. No build script exists in package.json; production native Rust/Android builds unverified.
+- Structural verification: verifyRagFinalDoD({}) reported BLOCKED with 21 missing real acceptance receipts; the receipt gate is structural and not a trusted attestation service.
+- Source-level slices represented: A11-18 (8), B19-22 (4), C27-34 (8), D40-42 (3) = 23 of 32 newly scoped tasks. None of this promotes live DoD; P05 predecessor and 9 remaining new native/Android tasks require separate completion evidence.
+- Existing Engram runtime authority remains unchanged; no real user data moved into new Drive-first storage; no production access, deploy, costly services, or permissions used.
+- Review: local author self-review plus focused regression, not independent reviewer or CI acceptance.
+- Next blocking actions: authenticated Google Drive transport proof, Rust/FAISS index and P03/P04/P05 gate evidence, Android SDK/device smoke, security and full CI review, restore/rollback receipts, final owner-approved cutover.
