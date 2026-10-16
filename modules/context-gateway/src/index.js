@@ -1,3 +1,4 @@
+const { createPersonalRecall } = require('./personal-recall');
 const PROJECT_SCOPE = /^project\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const FILTER_FIELDS = new Set(['source_types', 'revision', 'after', 'before']);
 
@@ -35,7 +36,7 @@ function assertIdempotencyKey(value) {
   if (typeof value !== 'string' || !value.trim()) throw new Error('IDEMPOTENCY_KEY_REQUIRED');
 }
 
-function createContextGateway({ executionPlaneClient, resolveProjectScope, allowlistedMultiProjectScopes = [] } = {}) {
+function createContextGateway({ executionPlaneClient, resolveProjectScope, allowlistedMultiProjectScopes = [], resolvePersonalOwner = null } = {}) {
   if (!executionPlaneClient || typeof executionPlaneClient.retrieve !== 'function' || typeof executionPlaneClient.indexProject !== 'function') {
     throw new Error('EXECUTION_PLANE_CLIENT_REQUIRED');
   }
@@ -49,7 +50,13 @@ function createContextGateway({ executionPlaneClient, resolveProjectScope, allow
     return assertProjectScope(await resolveProjectScope());
   }
 
+  const personalRecall = typeof resolvePersonalOwner === 'function'
+    ? createPersonalRecall({ executionPlaneClient, ownerResolver: resolvePersonalOwner }) : null;
   return Object.freeze({
+    async recallPersonal(request) {
+      if (!personalRecall) throw new Error('PERSONAL_RECALL_DISABLED');
+      return personalRecall.recall(request);
+    },
     async recall(request) {
       assertOnlyFields(request, new Set(['query', 'filters']));
       const query = normalizeQuery(request.query);
