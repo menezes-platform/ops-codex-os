@@ -1,0 +1,13 @@
+{
+  "schema_version":1,
+  "fixture_id":"p05-offline-adversarial-v1",
+  "source_commit":"synthetic-fixture-not-a-commit",
+  "corpus_count":8,
+  "profiles":{"lexical_profile":"bm25-v1","vector_profile":"faiss-flat-v1","embedding_profile":"local-minilm-l6-v2@v1"},
+  "questions":[
+    {"question_id":"current-gate","scope":"project/demo/alpha","revision":"rev-b","relevant_ids":["alpha/gate/current"],"stale_ids":["alpha/gate/old"]},
+    {"question_id":"rollback","scope":"project/demo/alpha","revision":"rev-b","relevant_ids":["alpha/rollback/current"],"stale_ids":[]},
+    {"question_id":"separate-project","scope":"project/demo/beta","revision":"rev-z","relevant_ids":["beta/notes/current"],"stale_ids":[]},
+    {"question_id":"unanswerable","scope":"project/demo/alpha","revision":"rev-b","relevant_ids":[],"stale_ids":[]}
+  ]
+}

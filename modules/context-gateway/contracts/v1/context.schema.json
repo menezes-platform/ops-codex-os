@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://platform.menezes.dev/contracts/context-gateway/v1/context.schema.json",
+  "title": "Context Gateway v1",
+  "type": "object",
+  "$defs": {
+    "projectScope": {
+      "type": "string",
+      "pattern": "^project/[A-Za-z0-9][A-Za-z0-9._-]{0,99}/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$"
+    },
+    "filters": {
+      "type": "object",
+      "properties": {
+        "source_types": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "revision": { "type": "string", "minLength": 1 },
+        "after": { "type": "string", "format": "date-time" },
+        "before": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["git", "memory", "engram"] },
+        "ref": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      },
+      "required": ["kind", "ref", "path"],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "observed_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["revision"],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "evidence_id": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "enum": ["git", "memory", "engram"] },
+        "source_ref": { "type": "string", "minLength": 1 },
+        "content": { "type": "string" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      },
+      "required": ["evidence_id", "source", "source_ref", "content", "provenance"],
+      "additionalProperties": false
+    },
+    "recallRequest": {
+      "type": "object",
+      "properties": {
+        "scope": { "$ref": "#/$defs/projectScope" },
+        "query": { "type": "string", "minLength": 1 },
+        "filters": { "$ref": "#/$defs/filters" }
+      },
+      "required": ["scope", "query", "filters"],
+      "additionalProperties": false
+    },
+    "recallResult": {
+      "type": "object",
+      "properties": { "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } } },
+      "required": ["evidence"],
+      "additionalProperties": false
+    },
+    "multiProjectRecallRequest": {
+      "type": "object",
+      "properties": {
+        "allowlisted_scopes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/projectScope" }
+        },
+        "query": { "type": "string", "minLength": 1 },
+        "filters": { "$ref": "#/$defs/filters" }
+      },
+      "required": ["allowlisted_scopes", "query", "filters"],
+      "additionalProperties": false
+    },
+    "ingestRequest": {
+      "type": "object",
+      "properties": {
+        "scope": { "$ref": "#/$defs/projectScope" },
+        "idempotency_key": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "source": { "$ref": "#/$defs/source" },
+        "classification": { "type": "string", "enum": ["project-source", "project-docs", "personal-context", "episodic-conversation"] },
+        "content": { "type": "string", "minLength": 1 }
+      },
+      "required": ["scope", "idempotency_key", "source", "classification", "content"],
+      "additionalProperties": false
+    },
+    "ingestReceipt": {
+      "type": "object",
+      "properties": {
+        "receipt_id": { "type": "string", "minLength": 1 },
+        "scope": { "$ref": "#/$defs/projectScope" },
+        "revision": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["accepted", "duplicate", "rejected"] }
+      },
+      "required": ["receipt_id", "scope", "revision", "status"],
+      "additionalProperties": false
+    },
+    "explainRequest": {
+      "type": "object",
+      "properties": { "scope": { "$ref": "#/$defs/projectScope" }, "evidence_id": { "type": "string", "minLength": 1 } },
+      "required": ["scope", "evidence_id"],
+      "additionalProperties": false
+    },
+    "explainResult": { "$ref": "#/$defs/evidence" },
+    "requestReindexRequest": {
+      "type": "object",
+      "properties": {
+        "scope": { "$ref": "#/$defs/projectScope" },
+        "revision": { "type": "string", "minLength": 1 },
+        "idempotency_key": { "type": "string", "minLength": 1, "maxLength": 200 }
+      },
+      "required": ["scope", "revision", "idempotency_key"],
+      "additionalProperties": false
+    },
+    "indexingReceipt": {
+      "type": "object",
+      "properties": {
+        "receipt_id": { "type": "string", "minLength": 1 },
+        "scope": { "$ref": "#/$defs/projectScope" },
+        "revision": { "type": "string", "minLength": 1 },
+        "generation": { "type": "integer", "minimum": 1 },
+        "status": { "type": "string", "enum": ["queued", "completed", "failed"] }
+      },
+      "required": ["receipt_id", "scope", "revision", "generation", "status"],
+      "additionalProperties": false
+    }
+  }
+}

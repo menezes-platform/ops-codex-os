@@ -1,0 +1,9 @@
+{
+  "scope": "project/demo/alpha",
+  "source_revision": "public-pilot-v1",
+  "idempotency_key": "public-pilot-001",
+  "documents": [
+    { "source_ref": "git:alpha:README.md", "path": "README.md", "content": "# Project alpha public documentation\nA reproducible index source." },
+    { "source_ref": "git:alpha:docs/recovery.md", "path": "docs/recovery.md", "content": "# Recovery\nCurrent and previous generations must be verifiable." }
+  ]
+}

@@ -34,7 +34,6 @@ A continuidade segue o princípio de que **contexto do modelo não é histórico
 - `frontend-director`: owner automático e obrigatório de frontend não trivial; diagnostica, escolhe especialistas on-demand, pode refatorar/reconstruir a camada frontend e coordena implementação + QA até `APPROVED` ou um bloqueio real fora do escopo.
 - `visual-quality-director`: direção, revisão e aprovação de assets visuais.
 - `durable-execution-memory`: continuidade entre sessões, recuperação após interrupções e persistência de fatos operacionais sem depender do histórico do chat.
-- `shipping-functional-slices`: transforma ideias, funcionalidades e roadmaps em uma primeira entrega de ponta a ponta executável e verificável, seguida de melhorias opcionais; não confunde infraestrutura ou mocks com produto funcionando.
 - `persistent-conversation-controller`: mantém workflows supervisionados vivos através de limites de conversas no navegador, com rollover preventivo e takeover verificado.
 - `llm-app-pattern-library`: consulta seletiva a padrões e exemplos de agentes, RAG, multimodal, voice, generative UI, always-on e multi-agent antes de introduzir arquitetura ou dependências novas.
 - `context-budget-manager`: controla o working set de contexto, usa carregamento progressivo e evita leituras, referências e reexploração desnecessárias sem sacrificar validação.
@@ -153,7 +152,6 @@ NovoProjeto/
 ## Recomendação prática
 
 - mantenha o `global/AGENTS.md` curto
-- ao iniciar novos projetos ou grandes funcionalidades, use `shipping-functional-slices`: primeira entrega deve funcionar de ponta a ponta, com evidência real; tarefas seguintes aprimoram sem bloquear o valor inicial
 - coloque detalhes processuais nas skills
 - use `docs/context/` para estado persistente
 - trate Git/repositório como evidência autoritativa de execução

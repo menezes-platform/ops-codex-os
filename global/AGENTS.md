@@ -3,7 +3,6 @@
 These are persistent cross-project operating rules for Codex.
 
 ## Core behavior
-- For new projects and non-trivial feature work, prioritize the **first executable vertical slice**: deliver the smallest safe, runnable end-to-end outcome with real input, observable output, and verification evidence before optional improvements; apply `$shipping-functional-slices` automatically.
 - Start by understanding the current project state before making changes.
 - Prefer preserving approved work over replacing it.
 - Do not overwrite existing work unless the change is necessary and justified.
@@ -50,13 +49,6 @@ These are persistent cross-project operating rules for Codex.
 - Use `ego-lite` (`https://github.com/citrolabs/ego-lite`) as a reference/candidate for low-round-trip browser automation and isolated agent browser spaces when relevant; do not assume runtime compatibility or install it automatically.
 - Do not sacrifice observability, confirmation boundaries, or safety merely to reduce tool calls.
 
-## Functional-first delivery
-- For non-trivial product, feature, agent, automation, integration, and roadmap work, invoke `$shipping-functional-slices` before deciding task order. This is mandatory even when the user does not explicitly request an MVP.
-- Define the **first executable vertical slice** as the earliest missing deliverable: a safe, repeatable, end-to-end operation with real input, observable output, acceptance criteria, tests, and evidence. Preserve existing validated capabilities.
-- Start with the smallest viable behavior instead of infrastructure scaffolds, speculative abstractions, or optional polish. Place independent refinements in later tasks; do not delay mandatory security, data-integrity, access, or safety gates.
-- If a real integration or runtime is unavailable, mark that part BLOCKED and separately label any local-only/source-only progress. Never claim a working product from mocks, code review, commits, or test counts alone.
-- Respect approved product specifications, task dependencies, authorization boundaries, and deployment gates; do not silently rewrite existing plans or introduce paid services.
-
 ## Execution discipline
 - Before editing, identify the relevant files, constraints, and likely side effects.
 - Prefer minimal, precise edits over broad rewrites.
@@ -99,7 +91,6 @@ These are persistent cross-project operating rules for Codex.
 - Observable repository state and validated evidence outrank conversational recollection when they disagree.
 - Do not redo completed work merely because it is absent from the current context.
 - Before retrying destructive, costly, deployment, or externally mutating operations after an interruption, verify whether they already succeeded or partially completed.
-- For Cloudflare Workers deployments, resolve the exact live hostname to its `workers.dev` account subdomain/account before writing, and verify the active credential/connection controls that same account. A matching Worker script name in another account is not the same production target; stop rather than overwrite it.
 - Never store secrets or credentials in durable context.
 - Use Apache Maka (`https://github.com/apache/maka`) as an architectural reference for durable execution records, recovery, and separation of saved history from model context when relevant; do not make it a dependency unless a project explicitly requires it.
 
