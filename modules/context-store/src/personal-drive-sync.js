@@ -6,7 +6,7 @@ function canonicalize(val) {
  if (val === null || typeof val !== 'object') return val;
  if (Array.isArray(val)) return val.map(canonicalize);
  const keys = Object.keys(val).sort();
- const res = {};
+ const res = Object.create(null);
  for (const k of keys) {
   res[k] = canonicalize(val[k]);
  }

@@ -3,6 +3,18 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const {syncPersonalChanges}=require('../modules/context-store/src/personal-drive-sync');
 
+test('JSON prototype-named keys participate in idempotency fingerprints', async () => {
+ let cursor='c0';
+ const changes=['first','changed'].map(value=>JSON.parse(
+  '{"op":"append","idempotency_key":"proto-key","event":{"scope":"personal/current","__proto__":{"value":"'+value+'"}}}'));
+ await assert.rejects(syncPersonalChanges({
+  cursorStore:{async get(){return cursor},async set(value){cursor=value}},
+  drive:{async listChanges(){return {changes,next_cursor:'c1'}}},
+  ledger:{async appendOrTombstone(){return {status:'stored',manifest_ref:'sha256:'+'a'.repeat(64)}}}
+ }),/SYNC_IDEMPOTENCY_CONFLICT/);
+ assert.equal(cursor,'c0');
+});
+
 test('task_17_contract advances cursor only after verified writes and handles duplicates',async()=>{
  let cursor='c0';const applied=[];
  const cursorStore={async get(){return cursor},async set(value){cursor=value}};
