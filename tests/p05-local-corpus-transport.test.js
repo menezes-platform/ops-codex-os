@@ -40,7 +40,7 @@ test('rejects symlink-backed project root instead of reading foreign filesystem'
  const foreign=await fs.mkdtemp(path.join(os.tmpdir(),'p05-foreign-'));
  try{
   await fs.mkdir(path.join(root,'projects','demo'),{recursive:true});
-  await fs.symlink(foreign,path.join(root,'projects','demo','alpha'));
+  await fs.symlink(foreign,path.join(root,'projects','demo','alpha'),process.platform==='win32'?'junction':'dir');
   const t=await createLocalCorpusObjectTransport({root});
   const key='projects/demo/alpha/corpus/'+'a'.repeat(64);
   await assert.rejects(t.putObjectIfAbsent({key,content:Buffer.from('secret')}),/CORPUS_OBJECT_PATH_UNSAFE/);

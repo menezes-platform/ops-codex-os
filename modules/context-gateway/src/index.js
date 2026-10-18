@@ -1,5 +1,6 @@
 const { createPersonalRecall } = require('./personal-recall');
 const { enforceRecall } = require('./recall-enforcer');
+const { validateRecallEvidence } = require('./recall-evidence');
 const PROJECT_SCOPE = /^project\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const FILTER_FIELDS = new Set(['source_types', 'revision', 'after', 'before']);
 
@@ -61,7 +62,19 @@ function createContextGateway({ executionPlaneClient, resolveProjectScope, allow
       return enforceRecall({
         intent: { userIntent, historyReferences, availableScopes },
         gateway: {
-          recall: ({ query }) => executionPlaneClient.retrieve({ scope, query, filters: {} }),
+          recall: async ({ query }) => {
+            const raw = await executionPlaneClient.retrieve({ scope, query, filters: { source_types: ['git'] } });
+            if (!raw || raw.status !== 'ok') return raw;
+            if (!Array.isArray(raw.evidence) || raw.evidence.some(hit =>
+              !hit || hit.source !== 'git' || (hit.authority !== undefined && hit.authority !== 'git'))) {
+              throw new Error('PROJECT_SOURCE_AUTHORITY_DENIED');
+            }
+            return { ...raw, evidence: validateRecallEvidence({
+              hits: raw.evidence,
+              manifest: { scope, revision: raw.revision, generation_id: raw.generation_id },
+              sourceAuthority: 'git',
+            }) };
+          },
           recallPersonal: personalRecall ? ({ query }) => personalRecall.recall({ query }) : null,
         },
         answerProducer,

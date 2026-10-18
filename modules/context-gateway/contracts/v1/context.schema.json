@@ -45,6 +45,12 @@
         "source": { "type": "string", "enum": ["git", "memory", "engram"] },
         "source_ref": { "type": "string", "minLength": 1 },
         "content": { "type": "string" },
+        "scope": { "$ref": "#/$defs/projectScope" },
+        "source_revision": { "type": "string", "minLength": 1 },
+        "generation_id": { "type": "string", "minLength": 1 },
+        "observed_at": { "type": "string", "format": "date-time" },
+        "content_sha256": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "retrieval_method": { "enum": ["bm25", "vector", "hybrid", "manual"] },
         "provenance": { "$ref": "#/$defs/provenance" }
       },
       "required": ["evidence_id", "source", "source_ref", "content", "provenance"],
@@ -62,8 +68,21 @@
     },
     "recallResult": {
       "type": "object",
-      "properties": { "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } } },
+      "properties": {
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "status": { "enum": ["ok", "miss", "unavailable", "denied", "stale"] },
+        "scope": { "$ref": "#/$defs/projectScope" },
+        "revision": { "type": "string", "minLength": 1 },
+        "generation_id": { "type": "string", "minLength": 1 }
+      },
       "required": ["evidence"],
+      "allOf": [{
+        "if": {"required":["status"],"properties":{"status":{"const":"ok"}}},
+        "then": {"required":["scope","revision","generation_id"],"properties":{"evidence":{"items":{"required":["content_sha256","retrieval_method"],"properties":{"provenance":{"required":["observed_at"]}}}}}}
+      }, {
+        "if": {"required":["status"],"properties":{"status":{"enum":["miss","unavailable","denied","stale"]}}},
+        "then": {"properties":{"evidence":{"maxItems":0}}}
+      }],
       "additionalProperties": false
     },
     "multiProjectRecallRequest": {

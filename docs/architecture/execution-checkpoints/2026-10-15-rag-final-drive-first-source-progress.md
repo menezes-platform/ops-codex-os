@@ -67,3 +67,14 @@
 - Existing Engram runtime authority remains unchanged; no real user data moved into new Drive-first storage; no production access, deploy, costly services, or permissions used.
 - Review: local author self-review plus focused regression, not independent reviewer or CI acceptance.
 - Next blocking actions: authenticated Google Drive transport proof, Rust/FAISS index and P03/P04/P05 gate evidence, Android SDK/device smoke, security and full CI review, restore/rollback receipts, final owner-approved cutover.
+
+## Continued Drive REST adapter source (2026-10-15)
+- Commit 69a6c03 adds google-drive-object-transport.js, fake-HTTP tests, and docs/architecture/drive-first-rest-transport.md.
+- Real Google Drive v3 REST protocol used by source (files.list, multipart create, alt=media get); trusted runtime-provided OAuth token required. No actual authenticated owner Drive call was made.
+- Isolated personal scope, hashed blob filenames, strict metadata checks, readback and bounded download; duplicate Drive names fail closed, but the provider does not offer atomic filename CAS.
+- Tests: 5/5 new adapter tests, 222/222 selected suite tests in 50 files, 4/4 P05 non-symlink tests, Spec Kit PASS, module syntax PASS. Two Windows EPERM symlink fixtures remain unqualified.
+- Log: .superpowers/sdd/rag-final/full-selected-after-drive-rest.log (local and ignored).
+- Rust B23-B26: native resident-node repo verified, but no Windows cargo/rustc/rustfmt, no WSL cargo, and existing native P05 PR #2 CI Rust format failed with tests skipped. Formal predecessor gates remain blocked.
+- Pocket Android repo verified: menezesx2k26-byte/pocket-agent-android, main 75a2079 has README only; a clean isolated clone exists, but no Android SDK/device, D35-D39 remains unimplemented.
+- Missing authorization/bootstrap for Node Drive OAuth, Google Drive permissions, encrypted backups, change cursor, real multiwriter handling, live recall, Engram-off acceptance, native index and Moto G75 smoke.
+- DoD stays BLOCKED. No live Drive records written, merge, production authority cutover, Android permission changes, or paid services.
