@@ -63,8 +63,12 @@ function createContextGateway({ executionPlaneClient, resolveProjectScope, allow
         intent: { userIntent, historyReferences, availableScopes },
         gateway: {
           recall: async ({ query }) => {
-            const raw = await executionPlaneClient.retrieve({ scope, query, filters: {} });
+            const raw = await executionPlaneClient.retrieve({ scope, query, filters: { source_types: ['git'] } });
             if (!raw || raw.status !== 'ok') return raw;
+            if (!Array.isArray(raw.evidence) || raw.evidence.some(hit =>
+              !hit || hit.source !== 'git' || (hit.authority !== undefined && hit.authority !== 'git'))) {
+              throw new Error('PROJECT_SOURCE_AUTHORITY_DENIED');
+            }
             return { ...raw, evidence: validateRecallEvidence({
               hits: raw.evidence,
               manifest: { scope, revision: raw.revision, generation_id: raw.generation_id },
