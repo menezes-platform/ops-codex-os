@@ -18,6 +18,12 @@ test('repeatable native slice uses persisted state across separate Node processe
   const answer=invoke('--root',root,'--query','Qual checksum deve ser conferido após uma interrupção?');
   assert.equal(answer.status,'ok');assert.match(answer.answer,/SHA-256/);assert.match(answer.answer,/git:test:aurora/);
   assert.ok(answer.evidence.every(hit=>hit.source_revision==='aurora-v1'));
+  await fs.writeFile(prepared.receipt.artifact,'damaged derived index');
+  assert.throws(()=>invoke('--root',root,'--query','checksum'),/Command failed/);
+  const repaired=invoke('--rebuild','--root',root);
+  if(hybrid)assert.equal(repaired.receipt.generation,2);
+  const afterRepair=invoke('--root',root,'--query','Qual checksum deve ser conferido após uma interrupção?');
+  assert.equal(afterRepair.status,'ok');assert.deepEqual(afterRepair.evidence.map(hit=>hit.evidence_id),answer.evidence.map(hit=>hit.evidence_id));
   await fs.rename(path.join(root,'corpus'),path.join(root,'unavailable-corpus'));
   assert.throws(()=>invoke('--root',root,'--query','checksum'),/Command failed/);
  }finally{await fs.rm(root,{recursive:true,force:true})}

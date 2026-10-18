@@ -3,7 +3,7 @@
 const fs=require('node:fs/promises');
 const path=require('node:path');
 const {parseArgs}=require('node:util');
-const {createHash}=require('node:crypto');
+const {createHash,randomUUID}=require('node:crypto');
 const {performance}=require('node:perf_hooks');
 const {createDriveCorpusStore}=require('../modules/context-store/src/drive-corpus-store');
 const {createLocalCorpusObjectTransport}=require('../modules/context-store/src/local-corpus-transport');
@@ -13,7 +13,7 @@ const SCOPE='project/rag-validation/aurora';
 const hash=bytes=>'sha256:'+createHash('sha256').update(bytes).digest('hex');
 
 async function main(){
- const {values}=parseArgs({options:{prepare:{type:'boolean'},hybrid:{type:'boolean'},root:{type:'string'},source:{type:'string'},
+ const {values}=parseArgs({options:{prepare:{type:'boolean'},rebuild:{type:'boolean'},hybrid:{type:'boolean'},root:{type:'string'},source:{type:'string'},
   'source-ref':{type:'string'},revision:{type:'string'},query:{type:'string'}}});
  if(!values.root||!path.isAbsolute(values.root))throw new Error('ABSOLUTE_ROOT_REQUIRED');
  const executable=process.env.RAG_NATIVE_BIN;
@@ -40,12 +40,23 @@ async function main(){
   await fs.writeFile(stateFile,JSON.stringify(state,null,2)+'\n',{flag:'wx',mode:0o600});
   return {...state,elapsed_ms:performance.now()-started};
  }
- if(typeof values.query!=='string'||!values.query.trim())throw new Error('QUERY_REQUIRED');
+ if(!values.rebuild&&(typeof values.query!=='string'||!values.query.trim()))throw new Error('QUERY_REQUIRED');
  const state=JSON.parse(await fs.readFile(stateFile,'utf8'));
  if(state.scope!==SCOPE||!['local-native-lexical','local-native-hybrid'].includes(state.mode))throw new Error('QUALIFICATION_STATE_INVALID');
  const corpus=await store.readCorpusProjection({scope:SCOPE,corpus_manifest_ref:state.corpus_manifest_ref});
  if(corpus.manifest.source_revision!==state.revision||corpus.documents.length!==1||
     hash(Buffer.from(corpus.documents[0].content))!==state.source_sha256)throw new Error('SOURCE_INTEGRITY_FAILED');
+ if(values.rebuild){
+  const receipt=await runNativeLexical({executable,request:{action:'build',scope:SCOPE,revision:state.revision,
+   corpus_root:corpusRoot,index_root:indexRoot,manifest_ref:state.corpus_manifest_ref,
+   idempotency_key:'rebuild:'+randomUUID(),...(state.mode==='local-native-hybrid'?{hybrid:true}:{})}});
+  const updated={...state,receipt};
+  const temporary=stateFile+'.'+randomUUID()+'.tmp';
+  const handle=await fs.open(temporary,'wx',0o600);
+  try{await handle.writeFile(JSON.stringify(updated,null,2)+'\n');await handle.sync()}finally{await handle.close()}
+  await fs.rename(temporary,stateFile);
+  return {...updated,elapsed_ms:performance.now()-started};
+ }
  const client=createLocalLexicalClient({executable,indexRoot,receipt:state.receipt});
  const gateway=createContextGateway({executionPlaneClient:client,resolveProjectScope:async()=>SCOPE});
  let evidence=[];

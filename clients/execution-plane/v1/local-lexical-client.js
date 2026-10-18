@@ -31,13 +31,14 @@ function createLocalLexicalClient({executable,indexRoot,receipt}={}){
  const hybrid=receipt?.backend==='rust-sqlite-fts5-faiss-hybrid';
  if(typeof indexRoot!=='string'||!path.isAbsolute(indexRoot)||!receipt||
     (!hybrid&&receipt.backend!=='rust-sqlite-fts5-bm25')||!DIGEST.test(receipt.artifact_sha256)||
-    (hybrid&&(!DIGEST.test(receipt.vector_sha256)||!path.isAbsolute(receipt.vector_artifact||'')))||
+    (hybrid&&(!DIGEST.test(receipt.vector_sha256)||!DIGEST.test(receipt.vector_metadata_sha256)||!path.isAbsolute(receipt.vector_artifact||'')))||
     typeof receipt.revision!=='string'||!receipt.revision.trim()||!path.isAbsolute(receipt.artifact||''))
   throw new Error('NATIVE_RECEIPT_INVALID');
  const scope=assertProjectScope(receipt.scope);
  // Copy host-owned configuration; later mutation cannot switch project/artifact.
  const revision=receipt.revision,artifact=receipt.artifact,artifactDigest=receipt.artifact_sha256;
  const vectorArtifact=receipt.vector_artifact,vectorDigest=receipt.vector_sha256,backend=receipt.backend;
+ const vectorMetadataDigest=receipt.vector_metadata_sha256;
  const generation=hybrid?'hybrid:'+createHash('sha256').update(artifactDigest+vectorDigest).digest('hex'):'lexical:'+artifactDigest.slice(7);
  return Object.freeze({
   async indexProject(){throw new Error('LEXICAL_QUALIFICATION_READ_ONLY')},
@@ -46,11 +47,12 @@ function createLocalLexicalClient({executable,indexRoot,receipt}={}){
    if(typeof request.query!=='string'||!request.query.trim()||Buffer.byteLength(request.query)>4096)throw new Error('QUERY_INVALID');
    const filters=request.filters??{};
    if(!filters||typeof filters!=='object'||Array.isArray(filters)||
-      Object.keys(filters).some(key=>key!=='revision'))throw new Error('FILTERS_UNSUPPORTED');
+      Object.keys(filters).some(key=>!['revision','source_types'].includes(key))||
+      (filters.source_types!==undefined&&(!Array.isArray(filters.source_types)||filters.source_types.length!==1||filters.source_types[0]!=='git')))throw new Error('FILTERS_UNSUPPORTED');
    if(filters.revision!==undefined&&filters.revision!==revision)throw new Error('SOURCE_STALE');
    const result=await runNativeLexical({executable,request:{action:'search',scope,revision,index_root:indexRoot,
     artifact,artifact_sha256:artifactDigest,query:request.query,
-    ...(hybrid?{vector_artifact:vectorArtifact,vector_sha256:vectorDigest}:{})}});
+    ...(hybrid?{vector_artifact:vectorArtifact,vector_sha256:vectorDigest,vector_metadata_sha256:vectorMetadataDigest}:{})}});
    if(!result||!['ok','miss'].includes(result.status)||result.scope!==scope||result.revision!==revision||
       result.backend!==backend||result.artifact_sha256!==artifactDigest||
       (hybrid&&result.vector_sha256!==vectorDigest)||

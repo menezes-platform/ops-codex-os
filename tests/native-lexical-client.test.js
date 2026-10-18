@@ -21,6 +21,19 @@ test('actual Node corpus and Rust FTS5 return verified contextual answers after 
   }]});
   const receipt=await runNativeLexical({executable:process.env.RAG_NATIVE_BIN,request:{action:'build',scope,revision,...(process.env.RAG_NATIVE_HYBRID==='1'?{hybrid:true}:{}),
    corpus_root:corpusRoot,index_root:indexRoot,manifest_ref:persisted.corpus_manifest_ref}});
+  if(process.env.RAG_NATIVE_HYBRID==='1'){
+   const changed=await store.putCorpusProjection({scope,source_revision:'native-v2',idempotency_key:'native-test-v2',documents:[{
+    source_ref:'git:runbook',path:'runbook.md',content:'# Recovery\nSecond revision: use the reviewed replacement procedure.'
+   }]});
+   await runNativeLexical({executable:process.env.RAG_NATIVE_BIN,request:{action:'build',scope,revision:'native-v2',hybrid:true,
+    corpus_root:corpusRoot,index_root:indexRoot,manifest_ref:changed.corpus_manifest_ref}});
+   const current=await runNativeLexical({executable:process.env.RAG_NATIVE_BIN,request:{action:'current',scope,index_root:indexRoot}});
+   assert.equal(current.revision,'native-v2');
+   await runNativeLexical({executable:process.env.RAG_NATIVE_BIN,request:{action:'rollback',scope,index_root:indexRoot,
+    expected_current:2,expected_previous:1,idempotency_key:'restore-v1'}});
+   const restored=await runNativeLexical({executable:process.env.RAG_NATIVE_BIN,request:{action:'current',scope,index_root:indexRoot}});
+   assert.equal(restored.revision,revision);assert.equal(restored.artifact_sha256,receipt.artifact_sha256);
+  }
   const client=createLocalLexicalClient({executable:process.env.RAG_NATIVE_BIN,indexRoot,receipt});
   const gateway=createContextGateway({executionPlaneClient:client,resolveProjectScope:async()=>scope});
   const result=await gateway.answerWithContext({userIntent:{text:'Which generation should recovery restore?',domain:'project'},historyReferences:true,
