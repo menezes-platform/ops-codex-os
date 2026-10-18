@@ -1,6 +1,12 @@
 function normalizeBaseUrl(value) {
   const text = String(value || '').trim().replace(/\/+$/, '');
-  if (!/^https?:\/\//i.test(text)) throw new Error('EXECUTION_PLANE_BASE_URL_REQUIRED');
+  let parsed;
+  try { parsed = new URL(text); } catch { throw new Error('EXECUTION_PLANE_BASE_URL_REQUIRED'); }
+  if (parsed.username || parsed.password || parsed.search || parsed.hash ||
+      (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' &&
+        ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)))) {
+    throw new Error('EXECUTION_PLANE_BASE_URL_UNSAFE');
+  }
   return text;
 }
 
@@ -140,8 +146,10 @@ function createExecutionPlaneClient({ baseUrl, fetchImpl = globalThis.fetch, cap
       method,
       headers,
       signal: AbortSignal.timeout(timeoutMs),
+      redirect: 'error',
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
+    if (response.redirected) throw new Error('EXECUTION_PLANE_REDIRECT_DENIED');
     if (!response.ok) throw new Error(`EXECUTION_PLANE_HTTP_${response.status}`);
     return response.status === 204 ? null : response.json();
   }
