@@ -1195,6 +1195,21 @@ test('rollover preflight blocks before nonce when browser control is unhealthy',
   assert.equal(final.REMOTE_BROWSER_HEALTH, 'UNHEALTHY');
   assert.equal(final.CLAIM_NONCE, undefined);
 });
+test('rollover preflight surfaces an authentication boundary without remote-control retry', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-health-auth-'));
+  const controlPath = makeRun(root, { RUN_ID: 'health-auth', GENERATION: '2', STATUS: 'ACTIVE', PROJECT_ROOT: 'C:\\repo', STARTED_AT: '2026-09-02T20:00:00Z' });
+  let creates = 0;
+  const result = await orchestrator.tick({ root, browser: { async createSuccessor() { creates++; } }, notifier: {}, rolloverMinutes: 0,
+    remoteHealth: { async preflight() { return { ok: false, browser: 'AUTH_REQUIRED', desktop: 'HEALTHY', repaired: false }; } },
+    clock: () => new Date('2026-09-02T20:30:00Z') });
+  const final = readControl(controlPath);
+  assert.equal(result.action, 'AUTH_REQUIRED');
+  assert.equal(creates, 0);
+  assert.equal(final.STATUS, 'AUTH_REQUIRED');
+  assert.equal(final.BLOCKED_REASON, 'AUTH_REQUIRED');
+  assert.equal(final.REMOTE_BROWSER_HEALTH, 'AUTH_REQUIRED');
+});
+
 test('rollover preflight records successful desktop self-heal and continues', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persistd-health-repair-'));
   const controlPath = makeRun(root, { RUN_ID: 'health-repair', GENERATION: '2', STATUS: 'ACTIVE', PROJECT_ROOT: 'C:\\repo', STARTED_AT: '2026-09-02T20:00:00Z' });
