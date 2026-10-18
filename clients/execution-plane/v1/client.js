@@ -1,3 +1,4 @@
+const {createHash}=require('node:crypto');
 function normalizeBaseUrl(value) {
   const text = String(value || '').trim().replace(/\/+$/, '');
   let parsed;
@@ -110,7 +111,28 @@ function validateRetrievalResult(value, scopes, filters) {
       },
     };
   });
-  return { evidence };
+  if (value.status === undefined) return { evidence };
+  if (!['ok','miss','unavailable','denied','stale'].includes(value.status)) invalid();
+  if (value.status !== 'ok') {
+    if (evidence.length) invalid();
+    return { status: value.status, evidence: [] };
+  }
+  if (scopes.length !== 1 || value.scope !== scopes[0] ||
+      typeof value.revision !== 'string' || !value.revision.trim() ||
+      typeof value.generation_id !== 'string' || !value.generation_id.trim()) invalid();
+  const verified = evidence.map((item,index) => {
+    const raw=value.evidence[index];
+    if ((raw.scope!==undefined && raw.scope!==scopes[0]) ||
+        !validDateTime(item.provenance.observed_at) ||
+        !['bm25','vector','hybrid','manual'].includes(raw.retrieval_method) ||
+        raw.content_sha256!=='sha256:'+createHash('sha256').update(item.content,'utf8').digest('hex') ||
+        (raw.generation_id!==undefined && raw.generation_id!==value.generation_id) ||
+        (raw.source_revision!==undefined && raw.source_revision!==item.provenance.revision)) invalid();
+    return {...item,scope:scopes[0],source_revision:item.provenance.revision,
+      generation_id:value.generation_id,observed_at:item.provenance.observed_at,
+      content_sha256:raw.content_sha256,retrieval_method:raw.retrieval_method};
+  });
+  return {status:value.status,scope:scopes[0],revision:value.revision,generation_id:value.generation_id,evidence:verified};
 }
 
 function validateIndexReceipt(value, scope, revision) {

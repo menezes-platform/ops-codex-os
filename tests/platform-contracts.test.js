@@ -164,6 +164,17 @@ test('Execution Plane client is versioned, uses JSON, and refuses a mutation wit
   assert.throws(() => client.submitTask({ ...request, idempotency_key: '' }), /IDEMPOTENCY_KEY_REQUIRED/);
 });
 
+test('enhanced project retrieval contract requires integrity and snapshot metadata', () => {
+  const response={status:'ok',scope:'project/demo/alpha',revision:'v1',generation_id:'g1',evidence:[{
+    evidence_id:'e1',source:'git',source_ref:'demo/alpha@v1',content:'public test content',
+    content_sha256:'sha256:'+'a'.repeat(64),retrieval_method:'hybrid',
+    provenance:{path:'README.md',revision:'v1',observed_at:'2026-10-17T00:00:00Z'}
+  }]};
+  assert.equal(valid(contextSchema.$id,'recallResult',response),true);
+  delete response.evidence[0].content_sha256;
+  assert.equal(valid(contextSchema.$id,'recallResult',response),false);
+});
+
 test('new Agent Platform contracts contain no vendor/framework-specific public types or legacy storage imports', () => {
   const schemaPaths = [
     'modules/context-gateway/contracts/v1/context.schema.json',

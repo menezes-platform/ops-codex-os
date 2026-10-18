@@ -2,7 +2,7 @@
 const {createHash}=require('node:crypto');
 const UTC=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 const AUTHORITIES=new Set(['git','drive-episodic','memory']);
-const METHODS=new Set(['bm25','faiss','hybrid','manual']);
+const METHODS=new Set(['bm25','faiss','vector','hybrid','manual']);
 function validateRecallEvidence({hits,manifest,sourceAuthority}={}) {
  if (!manifest || typeof manifest.scope!=='string' || !manifest.scope ||
      typeof manifest.revision!=='string' || !manifest.revision ||
