@@ -80,10 +80,55 @@ async function ensureEdgeBrowser(options = {}) {
   throw new Error(`PERSISTD_EDGE_CDP_TIMEOUT:${port}`);
 }
 
+function chatIdFromUrl(url) {
+  const match = /\/c\/([^/?#]+)/.exec(String(url || ''));
+  return match ? match[1] : null;
+}
+
+function isManagedScratchUrl(url) {
+  const value = String(url || '').toLowerCase();
+  return value === '' || value === 'about:blank' || value === 'data:,'
+    || value.startsWith('edge://newtab') || value.startsWith('chrome://newtab');
+}
+
+async function pruneManagedEdgeTargets({ env = process.env, keepChatId = null, staleChatIds = [], fetchFn = fetch } = {}) {
+  const port = Number(env.EGO_HOST_DEBUG_PORT) || DEFAULT_PORT;
+  let response;
+  try { response = await fetchFn(`http://127.0.0.1:${port}/json/list`); }
+  catch (error) { return { ok: false, closed: 0, considered: 0, error: error?.message || String(error) }; }
+  if (!response?.ok) return { ok: false, closed: 0, considered: 0, error: `CDP_LIST_HTTP_${response?.status || 'ERROR'}` };
+  let targets;
+  try { targets = await response.json(); }
+  catch (error) { return { ok: false, closed: 0, considered: 0, error: `CDP_LIST_INVALID:${error?.message || error}` }; }
+  if (!Array.isArray(targets)) return { ok: false, closed: 0, considered: 0, error: 'CDP_LIST_NOT_ARRAY' };
+  const stale = new Set((staleChatIds || []).filter(Boolean).map(String));
+  const candidates = targets.filter((target) => {
+    if (target?.type && target.type !== 'page') return false;
+    const id = target?.id || target?.targetId;
+    if (!id) return false;
+    const chatId = chatIdFromUrl(target?.url);
+    if (chatId && keepChatId && chatId === String(keepChatId)) return false;
+    return isManagedScratchUrl(target?.url) || Boolean(chatId && stale.has(chatId));
+  });
+  let closed = 0;
+  const errors = [];
+  for (const target of candidates) {
+    const id = target.id || target.targetId;
+    try {
+      const close = await fetchFn(`http://127.0.0.1:${port}/json/close/${encodeURIComponent(id)}`);
+      if (close?.ok) closed += 1;
+      else errors.push(`${id}:HTTP_${close?.status || 'ERROR'}`);
+    } catch (error) { errors.push(`${id}:${error?.message || error}`); }
+  }
+  return { ok: errors.length === 0, closed, considered: candidates.length, errors };
+}
 module.exports = {
   DEFAULT_PORT,
   buildEdgeLaunchArgs,
   browserEndpoint,
   resolveStateDir,
   ensureEdgeBrowser,
+  chatIdFromUrl,
+  isManagedScratchUrl,
+  pruneManagedEdgeTargets,
 };
