@@ -13,7 +13,7 @@ const SCOPE='project/rag-validation/aurora';
 const hash=bytes=>'sha256:'+createHash('sha256').update(bytes).digest('hex');
 
 async function main(){
- const {values}=parseArgs({options:{prepare:{type:'boolean'},root:{type:'string'},source:{type:'string'},
+ const {values}=parseArgs({options:{prepare:{type:'boolean'},hybrid:{type:'boolean'},root:{type:'string'},source:{type:'string'},
   'source-ref':{type:'string'},revision:{type:'string'},query:{type:'string'}}});
  if(!values.root||!path.isAbsolute(values.root))throw new Error('ABSOLUTE_ROOT_REQUIRED');
  const executable=process.env.RAG_NATIVE_BIN;
@@ -34,15 +34,15 @@ async function main(){
   const readback=await store.readCorpusProjection({scope:SCOPE,corpus_manifest_ref:persisted.corpus_manifest_ref});
   if(hash(Buffer.from(readback.documents[0].content))!==hash(bytes))throw new Error('SOURCE_INTEGRITY_FAILED');
   const receipt=await runNativeLexical({executable,request:{action:'build',scope:SCOPE,revision,
-   corpus_root:corpusRoot,index_root:indexRoot,manifest_ref:persisted.corpus_manifest_ref}});
-  const state={schema_version:1,mode:'local-native-lexical',scope:SCOPE,revision,source_ref:values['source-ref'],
+   corpus_root:corpusRoot,index_root:indexRoot,manifest_ref:persisted.corpus_manifest_ref,...(values.hybrid?{hybrid:true}:{})}});
+  const state={schema_version:1,mode:values.hybrid?'local-native-hybrid':'local-native-lexical',scope:SCOPE,revision,source_ref:values['source-ref'],
    source_sha256:hash(bytes),corpus_manifest_ref:persisted.corpus_manifest_ref,receipt};
   await fs.writeFile(stateFile,JSON.stringify(state,null,2)+'\n',{flag:'wx',mode:0o600});
   return {...state,elapsed_ms:performance.now()-started};
  }
  if(typeof values.query!=='string'||!values.query.trim())throw new Error('QUERY_REQUIRED');
  const state=JSON.parse(await fs.readFile(stateFile,'utf8'));
- if(state.scope!==SCOPE||state.mode!=='local-native-lexical')throw new Error('QUALIFICATION_STATE_INVALID');
+ if(state.scope!==SCOPE||!['local-native-lexical','local-native-hybrid'].includes(state.mode))throw new Error('QUALIFICATION_STATE_INVALID');
  const corpus=await store.readCorpusProjection({scope:SCOPE,corpus_manifest_ref:state.corpus_manifest_ref});
  if(corpus.manifest.source_revision!==state.revision||corpus.documents.length!==1||
     hash(Buffer.from(corpus.documents[0].content))!==state.source_sha256)throw new Error('SOURCE_INTEGRITY_FAILED');

@@ -12,8 +12,9 @@ test('repeatable native slice uses persisted state across separate Node processe
  const invoke=(...args)=>JSON.parse(execFileSync(process.execPath,[cli,...args],{encoding:'utf8',env:process.env}));
  try{
   const source=path.resolve(__dirname,'fixtures/rag-validation/aurora-runbook-v1.md');
-  const prepared=invoke('--prepare','--root',root,'--source',source,'--source-ref','git:test:aurora','--revision','aurora-v1');
-  assert.equal(prepared.mode,'local-native-lexical');assert.equal(prepared.source_sha256.length,71);
+  const hybrid=process.env.RAG_NATIVE_HYBRID==='1';
+  const prepared=invoke('--prepare',...(hybrid?['--hybrid']:[]),'--root',root,'--source',source,'--source-ref','git:test:aurora','--revision','aurora-v1');
+  assert.equal(prepared.mode,hybrid?'local-native-hybrid':'local-native-lexical');assert.equal(prepared.source_sha256.length,71);
   const answer=invoke('--root',root,'--query','Qual checksum deve ser conferido após uma interrupção?');
   assert.equal(answer.status,'ok');assert.match(answer.answer,/SHA-256/);assert.match(answer.answer,/git:test:aurora/);
   assert.ok(answer.evidence.every(hit=>hit.source_revision==='aurora-v1'));
