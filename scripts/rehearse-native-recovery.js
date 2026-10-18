@@ -36,11 +36,15 @@ async function restoreArchive({bytes,expectedSha256,root}){
  const paths=new Set();let total=0;
  const checked=archive.entries.map(entry=>{
   if(!entry||typeof entry.path!=='string'||path.isAbsolute(entry.path)||entry.path.includes('\\')||
-     entry.path.split('/').some(part=>!part||part==='.'||part==='..'||part.includes(':'))||paths.has(entry.path)||typeof entry.base64!=='string')throw new Error('BACKUP_PATH_UNSAFE');
-  paths.add(entry.path);const data=Buffer.from(entry.base64,'base64');total+=data.length;
+     entry.path.split('/').some(part=>!part||part==='.'||part==='..'||/[<>:"|?*\x00-\x1f]/.test(part)||/[. ]$/.test(part)||/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part))||typeof entry.base64!=='string')throw new Error('BACKUP_PATH_UNSAFE');
+  const portable=entry.path.toLowerCase();
+  if(paths.has(portable))throw new Error('BACKUP_PATH_UNSAFE');
+  paths.add(portable);const data=Buffer.from(entry.base64,'base64');total+=data.length;
   if(total>MAX||data.toString('base64')!==entry.base64||hash(data)!==entry.sha256)throw new Error('BACKUP_ENTRY_DIGEST_MISMATCH');
   return {...entry,data};
  });
+ // Reject file/directory collisions in either input order, on every platform.
+ for(const item of paths){const parts=item.split('/');for(let i=1;i<parts.length;i++)if(paths.has(parts.slice(0,i).join('/')))throw new Error('BACKUP_PATH_UNSAFE')}
  // Validate every checksum/path before the first write to a fresh directory.
  await fs.mkdir(root,{mode:0o700});
  for(const entry of checked){const target=path.join(root,...entry.path.split('/'));await fs.mkdir(path.dirname(target),{recursive:true,mode:0o700});await fs.writeFile(target,entry.data,{flag:'wx',mode:0o600})}

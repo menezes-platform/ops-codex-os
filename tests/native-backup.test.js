@@ -2,6 +2,21 @@
 const test=require('node:test');const assert=require('node:assert/strict');
 const fs=require('node:fs/promises');const path=require('node:path');const os=require('node:os');
 const {createArchive,restoreArchive}=require('../scripts/rehearse-native-recovery');
+const {createHash}=require('node:crypto');
+test('portable restore rejects case and file-directory collisions before creating destination',async()=>{
+ const base=await fs.mkdtemp(path.join(os.tmpdir(),'rag-backup-paths-'));
+ try{
+  for(const paths of [['A.txt','a.txt'],['dir','dir/child.txt'],['dir/child.txt','DIR'],['file.','other']]){
+   const content=Buffer.from('public fixture');
+   const digest=bytes=>'sha256:'+createHash('sha256').update(bytes).digest('hex');
+   const bytes=Buffer.from(JSON.stringify({format:'rag-native-qualification-backup-v1',scope:'project/rag-validation/aurora',
+    entries:paths.map(p=>({path:p,base64:content.toString('base64'),sha256:digest(content)}))}));
+   const root=path.join(base,String(paths[0]).replaceAll('/','_')+paths.length);
+   await assert.rejects(restoreArchive({bytes,expectedSha256:digest(bytes),root}),/BACKUP_PATH_UNSAFE/);
+   await assert.rejects(fs.stat(root),{code:'ENOENT'});
+  }
+ }finally{await fs.rm(base,{recursive:true,force:true})}
+});
 test('complete filesystem archive restores exact bytes and rejects tampering before writes',async()=>{
  const base=await fs.mkdtemp(path.join(os.tmpdir(),'rag-backup-'));
  try{
