@@ -10,7 +10,7 @@ Avoid spending tokens, time, and maintenance effort reinventing solved problems.
 ## Prime directive
 Before custom implementation, perform the cheapest useful search for an existing solution. Reuse or adapt when a mature option satisfies the material requirements with lower total complexity than building from scratch.
 
-Do not browse broadly by default. Search progressively and stop as soon as a clearly adequate candidate is found.
+Do not browse broadly by default. **A local-only or private-only search is never sufficient evidence of no reuse.** For non-trivial new functionality, first inventory accessible repositories across all visibility levels and owners; then inspect only relevant candidates. Stop as soon as a clearly adequate candidate is found.
 
 ## Local vendor cache
 The Gabriel Codex OS installer maintains a shallow local cache under `~/.agents/vendor/` for high-value reuse references. Prefer targeted search there before remote discovery when relevant.
@@ -118,6 +118,14 @@ Check only what is cheap and local:
 
 If an adequate solution exists here, use it and stop.
 
+### Tier 0.5 — Cross-repository inventory (mandatory when local Tier 0 has no adequate solution)
+- Enumerate **all repositories accessible through connected GitHub accounts and organizations**, including **public, private, and internal repositories**. Paginate the inventory instead of trusting one default-size page.
+- Include repositories across owners/organizations, relevant forks and archived repositories; distinguish `not found` from `not accessible` and document any visibility or pagination gap.
+- Search names/descriptions first, then targeted code, docs, project decisions, branches, PRs, and issues for reusable capabilities. Do not limit candidates to names matching the request, or to the default branch if a credible pointer indicates work elsewhere.
+- Favor least-privilege inspection: avoid copying private project data into public reports and avoid dumping entire source trees.
+- If a suitable owned candidate exists, reuse it or record the concrete reason it cannot be reused. If none exists, proceed to public ecosystem discovery.
+- An inventory is metadata discovery, **not** a requirement to read every file in every repository. Report the checked scope when saying that no existing solution was found.
+
 ### Tier 1 — Known toolbox
 Check the smallest relevant known reference, preferably in `~/.agents/vendor/`, not all of them:
 - LLM apps / agents / RAG / multi-agent -> `awesome-llm-apps`
@@ -156,7 +164,7 @@ Prefer candidates with:
 - low integration and operational overhead
 
 ### Tier 3 — Broad discovery
-Use broad GitHub/web discovery only when a meaningful capability gap remains. Search by the capability needed, not vague technology buzzwords.
+Search **external public/open-source GitHub repositories** and the wider web when a meaningful capability gap remains after local, cross-repository, and curated discovery. Search by the capability needed, not vague technology buzzwords. Public upstream projects are not excluded because the connected account does not own them.
 
 Stop after finding a small shortlist of credible candidates. Do not spend tokens exhaustively ranking dozens of near-equivalent tools unless the choice is high-impact.
 
@@ -233,3 +241,5 @@ Before implementing a non-trivial custom subsystem, be able to state one of:
 - `custom_justified`: reusable candidates were checked and failed named material constraints.
 
 Never use `custom_justified` merely because writing code feels faster than looking for an existing solution.
+
+A negative result must state the owned-repository inventory scope (accounts/organizations, visibility, pagination/access limitations) and the external public repository search attempted. Do not claim "no reuse" after checking only private repositories.
