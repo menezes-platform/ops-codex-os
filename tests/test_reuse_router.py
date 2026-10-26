@@ -132,5 +132,14 @@ class ReuseRouterVendorTests(unittest.TestCase):
                 self.assertIn(marker, README)
         self.assertIn("web/reference-only", README)
 
+    def test_router_covers_public_private_and_external_reuse(self):
+        agents = (ROOT / "global" / "AGENTS.md").read_text(encoding="utf-8")
+        for marker in ("public, private, and internal repositories", "Paginate repository metadata", "external public/open-source repositories"):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, agents)
+        for marker in ("Tier 0.5 — Cross-repository inventory", "public, private, and internal repositories", "Paginate the inventory", "external public/open-source GitHub repositories", "not accessible"):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, ROUTER)
+
 if __name__ == "__main__":
     unittest.main()
