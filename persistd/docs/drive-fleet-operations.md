@@ -72,6 +72,9 @@ For each node:
 
 Registered does not mean online. Online does not mean healthy. Healthy does not mean eligible.
 
+## Drive-first job output enforcement on Martha
+
+`persistd/src/fleet/silent-job-cli.js` is the local Drive-only execution entrypoint. It validates the per-job scratch workspace and confirms a short-lived Drive credential from the authenticated PersistFlow `/drive-token` endpoint **before spawning** a child. The child has no HMAC/OAuth credentials, and outputs, logs, receipts and SHA-linked index must be confirmed via `DriveObjectStore.put` before the worker's dedicated job directories can be deleted. A failed Drive token request blocks execution; upload/manifest failure leaves files for retry and is never reported as durable. See `martha-silent-jobs.md` for exact locations, recovery semantics, and prerequisites.
 ## Storage smoke test
 
 Before enabling routing:

@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -80,20 +80,21 @@ test('the command launcher uses WScript hidden mode and no cmd/PowerShell',()=>{
  assert.doesNotMatch(source,/cmd\.exe|powershell\.exe|pwsh\.exe/i);
 });
 
-test('one manifest runs silently with a local trusted CLI and a replay gets rejected', async t=>{
+test('CLI fails closed without Drive authorization before running any job', t=>{
  const root=sandbox(t);
- const manifest=path.join(root,'smoke.json');
- fs.writeFileSync(manifest,JSON.stringify({taskId:'cli-smoke',tool:'node',args:['-e','process.stdout.write("cli-ok")'],cwd:root}));
+ const taskId='cli-smoke';
+ const requestDir=path.join(root,'requests');const jobDir=path.join(root,'workspaces',taskId);
+ fs.mkdirSync(requestDir);fs.mkdirSync(jobDir,{recursive:true});
+ const manifest=path.join(requestDir,taskId+'.json');
+ fs.writeFileSync(manifest,JSON.stringify({taskId,tool:'node',args:['-e','process.stdout.write("local-unsafe")'],cwd:jobDir}));
  const cli=path.join(__dirname,'../persistd/src/fleet/silent-job-cli.js');
  const {spawnSync}=require('node:child_process');
- const first=spawnSync(process.execPath,[cli,manifest],{env:{...process.env,FLEET_SILENT_JOB_ROOT:root},encoding:'utf8',windowsHide:true});
- assert.equal(first.status,0,first.stderr);
- assert.equal(fs.readFileSync(path.join(root,'logs','cli-smoke','stdout.log'),'utf8'),'cli-ok');
- const second=spawnSync(process.execPath,[cli,manifest],{env:{...process.env,FLEET_SILENT_JOB_ROOT:root},encoding:'utf8',windowsHide:true});
- assert.notEqual(second.status,0);
- assert.match(second.stderr,/EEXIST/);
+ const outcome=spawnSync(process.execPath,[cli,manifest],{env:{...process.env,FLEET_SILENT_JOB_ROOT:root},encoding:'utf8',windowsHide:true});
+ assert.equal(outcome.status,1);
+ assert.match(outcome.stderr,/DRIVE_ARCHIVE_NOT_CONFIGURED/);
+ assert.equal(fs.existsSync(path.join(root,'logs',taskId)),false);
+ assert.equal(fs.existsSync(manifest),true);
 });
-
 test('CLI rejects manifests outside trusted workspace',t=>{
  const root=sandbox(t);
  const outside=sandbox(t);
@@ -106,17 +107,13 @@ test('CLI rejects manifests outside trusted workspace',t=>{
  assert.match(result.stderr,/SILENT_JOB_MANIFEST_OUTSIDE_ROOT/);
 });
 
-test('Windows PowerShell UTF-8 BOM manifests are accepted without a visible shell',t=>{
+test('UTF-8 BOM manifest is safely parsed by the worker CLI',t=>{
  const root=sandbox(t);
  const manifest=path.join(root,'bom.json');
- fs.writeFileSync(manifest,'\ufeff'+JSON.stringify({taskId:'bom-smoke',tool:'node',args:['-e','process.stdout.write("BOM_OK")'],cwd:root}));
- const {spawnSync}=require('node:child_process');
- const cli=path.join(__dirname,'../persistd/src/fleet/silent-job-cli.js');
- const result=spawnSync(process.execPath,[cli,manifest],{env:{...process.env,FLEET_SILENT_JOB_ROOT:root},encoding:'utf8',windowsHide:true});
- assert.equal(result.status,0,result.stderr);
- assert.equal(fs.readFileSync(path.join(root,'logs','bom-smoke','stdout.log'),'utf8'),'BOM_OK');
+ fs.writeFileSync(manifest,'\ufeff'+JSON.stringify({taskId:'bom-smoke',tool:'node'}));
+ const {parseManifest}=require('../persistd/src/fleet/silent-job-cli');
+ assert.equal(parseManifest(manifest).taskId,'bom-smoke');
 });
-
 test('Windows Store Python alias is rejected rather than spawning a graphical installer',t=>{
  const root=sandbox(t);
  const {prepareSilentJob}=require('../persistd/src/fleet/silent-job');
