@@ -29,6 +29,17 @@ test('B25 boundary refuses a time range with after later than before', async () 
   }}),/FILTERS_INVALID/);
   assert.equal(requests.length,0);
 });
+test('B25 boundary orders UTC seconds and fractional timestamps chronologically',async()=>{
+  const {recall,requests}=fixture();
+  await recall.recall({query:'history',filters:{
+    after:'2026-10-18T00:00:00Z',before:'2026-10-18T00:00:00.100Z'
+  }});
+  assert.equal(requests.length,1);
+  await assert.rejects(recall.recall({query:'history',filters:{
+    after:'2026-10-18T00:00:00.100Z',before:'2026-10-18T00:00:00Z'
+  }}),/FILTERS_INVALID/);
+  assert.equal(requests.length,1);
+});
 test('B25 boundary denies foreign and nonarray source filters before accessing owner data',async()=>{
   const {recall,requests}=fixture();
   await assert.rejects(recall.recall({query:'history',filters:{source_types:'chat'}}),/FILTERS_INVALID/);
