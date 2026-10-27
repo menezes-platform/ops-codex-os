@@ -28,7 +28,8 @@ function normalizePersonalFilters(raw={}) {
  for (const key of ['after','before']) {
   if (filters[key]!==undefined && !validUtc(filters[key])) throw new Error('FILTERS_INVALID');
  }
- if (filters.after && filters.before && filters.after>filters.before) throw new Error('FILTERS_INVALID');
+ if (filters.after && filters.before &&
+     Date.parse(filters.after)>Date.parse(filters.before)) throw new Error('FILTERS_INVALID');
  return filters;
 }
 function createPersonalRecall({executionPlaneClient,ownerResolver}={}) {
