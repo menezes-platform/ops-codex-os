@@ -10,16 +10,17 @@ Status: SOURCE PATCH + FOCUSED TDD VERIFIED. **DoD BLOCKED; no production promot
   - `tests/personal-recall-filter-validation.test.js`
 - The branch does **not** update main, deploy, grant OAuth, enable capture, migrate Engram, or authorize Android permissions.
 
-## Two observed RED -> GREEN loops (Node v24.19.0)
+## Three observed RED -> GREEN loops (Node v24.19.0)
 1. Added boundary tests for impossible calendar dates, reversed after/before, nonarray/foreign source filters, control chars and wrong filter types. RED: four failing out of five. Implemented `normalizePersonalFilters` with strict RFC3339 UTC timestamps, permitted event sources, bounded revision, and owner-scope-preserving forwarding. GREEN: 8/8 across new and existing personal recall tests.
 2. Added fractional-second ordering case. RED: 1 failure out of 6 new tests because lexical `Z` versus `.` order is not chronological. Changed range check to `Date.parse` numeric comparison. GREEN: **9/9** across the two focused test files, plus successful Node syntax check.
+3. Added two native hybrid query contract tests for UTF-8 byte limit and control characters. RED: 2 failures (old Gateway checked UTF-16 character length only and allowed controls). Implemented a 4096-byte well-formed/control-free query limit aligned with the qualified Rust hybrid adapter. GREEN: **11/11** across the two focused test files; Node syntax check PASS.
 
 Commands in isolated approved scratch `C:\Users\Pichau\rag-node-regression-20261026`:
 ```sh
 node --test tests/personal-recall.test.js tests/personal-recall-filter-validation.test.js
 node --check modules/context-gateway/src/personal-recall.js
 ```
-The four original linked modules were fetched unmodified from GitHub for the focused test harness, then only the modified source/test were committed. GitHub readback verified both commits.
+At final revision: 11 focused Node tests PASS, zero failed. Full Node suite/CI remain unexecuted. The four original linked modules were fetched unmodified from GitHub for the focused test harness, then only the modified source/test were committed. GitHub readback verified both commits.
 
 ## Acceptance boundaries
 This patch hardens the **Node personal Gateway B25 boundary** but does not complete Rust B25, nor B23/B24/B26. It does not prove actual FAISS, Drive OAuth backend, production-scale temporal benchmark, replay resilience, power-loss recovery, full `npm test`/Cargo/Gradle/CI, authenticated owner issuance, isolated device deployment, or P03/P04/P05 exit gates. Never count a passing focused test as production DoD.
