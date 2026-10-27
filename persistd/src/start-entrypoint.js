@@ -41,7 +41,7 @@ function startWeb() {
   const oauthStore = createProductionOAuthStore();
   const fleetStore = createProductionFleetStore();
   const fleetConfig = loadProductionFleetConfig();
-  const fleetNodeSecrets = productionFleetNodeSecrets();
+  const fleetNodeSecrets = productionFleetNodeSecrets({ fleetConfig });
   const ephemeralEnabled = String(process.env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') === '1'
     && String(process.env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') === '1';
   const ephemeralProvider = createProductionRailwayProvider({ env: process.env });

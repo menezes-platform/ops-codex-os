@@ -21,6 +21,16 @@ On the PersistFlow authority host only:
 - `TYPESAFE_API_KEY` when semantic scoring is enabled
 - `PERSISTFLOW_FLEET_NODE_SECRETS_JSON`
 
+When enrolling a new node without replacing existing HMAC credentials, a separate
+environment variable is also supported per registered node:
+`PERSISTFLOW_FLEET_NODE_SECRET_<NODE_ID>`, with non-alphanumeric characters
+in the node ID replaced by `_` and letters uppercased. For `conthabil-martha`,
+use `PERSISTFLOW_FLEET_NODE_SECRET_CONTHABIL_MARTHA`. Set this only in the
+authority host's protected runtime environment. This variable merges with the
+existing JSON map; conflicting or ambiguous mappings fail closed rather than
+replacing another node's secret. Never copy masked secrets from the Hostinger
+API into its full-replacement environment-variable endpoint.
+
 Per worker:
 
 - `PERSISTFLOW_BASE_URL`

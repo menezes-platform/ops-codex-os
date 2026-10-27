@@ -109,6 +109,34 @@ test('production fleet helpers load registry and keep node secrets in env only',
   assert.equal(JSON.stringify(config).includes('secret'), false);
 });
 
+test('production fleet accepts a separate node secret without overwriting other nodes', () => {
+  const { productionFleetNodeSecrets } = require('./src/persistflow/http-server');
+  const fleetConfig = { nodes: [
+    { id: 'desktop-primary' },
+    { id: 'conthabil-martha' },
+  ] };
+  const env = {
+    PERSISTFLOW_FLEET_NODE_SECRETS_JSON: JSON.stringify({ 'desktop-primary': 'existing-secret' }),
+    PERSISTFLOW_FLEET_NODE_SECRET_CONTHABIL_MARTHA: 'martha-secret',
+  };
+  assert.deepEqual(productionFleetNodeSecrets({ env, fleetConfig }), {
+    'desktop-primary': 'existing-secret',
+    'conthabil-martha': 'martha-secret',
+  });
+  assert.throws(() => productionFleetNodeSecrets({
+    env: { ...env, PERSISTFLOW_FLEET_NODE_SECRETS_JSON: JSON.stringify({ 'conthabil-martha': 'other' }) },
+    fleetConfig,
+  }), /FLEET_NODE_SECRET_DUPLICATE/);
+  assert.deepEqual(productionFleetNodeSecrets({
+    env: { PERSISTFLOW_FLEET_NODE_SECRET_CONTHABIL_MARTHA: 'orphaned-secret' },
+    fleetConfig: { nodes: [{ id: 'desktop-primary' }] },
+  }), {}, 'unregistered nodes must not get credentials from the environment');
+  assert.throws(() => productionFleetNodeSecrets({
+    env: { PERSISTFLOW_FLEET_NODE_SECRET_A_B: 'ambiguous-secret' },
+    fleetConfig: { nodes: [{ id: 'a-b' }, { id: 'a_b' }] },
+  }), /FLEET_NODE_SECRET_DUPLICATE/);
+});
+
 test('registered node can obtain short-lived Drive access without refresh credentials', async () => {
   const driveAuth = {
     async getAccess() {

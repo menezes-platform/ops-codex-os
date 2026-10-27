@@ -70,8 +70,21 @@ function loadProductionFleetConfig({ configPath = DEFAULT_FLEET_CONFIG_PATH } = 
   return loadFleetConfig(JSON.parse(fs.readFileSync(configPath, 'utf8')));
 }
 
-function productionFleetNodeSecrets({ env = process.env } = {}) {
-  return parseNodeSecrets(env.PERSISTFLOW_FLEET_NODE_SECRETS_JSON || '');
+function productionFleetNodeSecrets({ env = process.env, fleetConfig = { nodes: [] } } = {}) {
+  const secrets = parseNodeSecrets(env.PERSISTFLOW_FLEET_NODE_SECRETS_JSON || '');
+  const seenEnvironmentNames = new Set();
+  for (const node of fleetConfig.nodes || []) {
+    const suffix = String(node.id || '').replace(/[^a-z0-9]/gi, '_').toUpperCase();
+    const name = 'PERSISTFLOW_FLEET_NODE_SECRET_' + suffix;
+    const secret = env[name];
+    if (!secret) continue;
+    if (seenEnvironmentNames.has(name) || Object.prototype.hasOwnProperty.call(secrets, node.id)) {
+      throw new Error('FLEET_NODE_SECRET_DUPLICATE');
+    }
+    seenEnvironmentNames.add(name);
+    Object.defineProperty(secrets, node.id, { value: String(secret), enumerable: true, writable: true, configurable: true });
+  }
+  return secrets;
 }
 
 const DEFAULT_MCP_DIGEST_PATH = path.join(__dirname, '../../config/mcp-token.sha256');
