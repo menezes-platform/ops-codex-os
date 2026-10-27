@@ -42,6 +42,11 @@ function startWeb() {
   const fleetStore = createProductionFleetStore();
   const fleetConfig = loadProductionFleetConfig();
   const fleetNodeSecrets = productionFleetNodeSecrets({ fleetConfig });
+  const { PairingRegistry } = require('./fleet/pairing-registry');
+  const { productionDataDir } = require('./persistflow/http-server');
+  const path = require('node:path');
+  const pairingRegistry = new PairingRegistry({ directory: path.join(productionDataDir(), 'fleet-enrollment') });
+  pairingRegistry.mergeInto(fleetConfig, fleetNodeSecrets);
   const diagnosticsEnabled = process.env.PERSISTFLOW_FLEET_AUTH_DIAGNOSTICS === '1';
   let lastFleetAuthLogAt = 0;
   const fleetAuthLogger = diagnosticsEnabled ? ({ nodeId, reason }) => {
@@ -57,7 +62,7 @@ function startWeb() {
   const ephemeralProvider = createProductionRailwayProvider({ env: process.env });
   const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore, railwayProvider: ephemeralProvider });
   const server = createServer({
-    store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetAuthLogger, fleetRouter,
+    store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetAuthLogger, fleetRouter, pairingRegistry,
     ephemeralProvider, ephemeralEnabled,
   });
   server.listen(port, '0.0.0.0', () => {

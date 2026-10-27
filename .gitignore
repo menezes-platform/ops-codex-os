@@ -7,3 +7,6 @@ node_modules/
 persistd/.persistflow-data/
 **/google-drive-refresh-token
 **/fleet-agent.env
+
+# Generated Windows installer binaries (publish as GitHub release assets)
+dist/

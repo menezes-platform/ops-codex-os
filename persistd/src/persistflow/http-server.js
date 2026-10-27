@@ -43,6 +43,9 @@ function errorStatus(error) {
   const code = error?.message || 'INTERNAL_ERROR';
   if (code === 'RUN_NOT_FOUND') return 404;
   if (code === 'DRIVE_AUTH_UNAVAILABLE') return 503;
+  if (['PAIRING_CODE_INVALID', 'PAIRING_CODE_EXPIRED'].includes(code)) return 403;
+  if (['PAIRING_NODE_ALREADY_REGISTERED', 'PAIRING_NODE_CONFLICT'].includes(code)) return 409;
+  if (['PAIRING_NODE_ID_INVALID', 'PAIRING_NODE_SECRET_INVALID'].includes(code)) return 400;
   if (['RUN_ALREADY_EXISTS', 'STALE_GENERATION', 'CLAIM_NOT_PENDING', 'CLAIM_TARGET_MISMATCH', 'CLAIM_NONCE_MISMATCH'].includes(code)) return 409;
   if (['RUN_ID_REQUIRED', 'INVALID_GENERATION', 'CLAIM_SECRET_REQUIRED', 'INVALID_JSON', 'BODY_TOO_LARGE', 'INVALID_RUN_UPDATE'].includes(code)) return 400;
   return 500;
@@ -129,6 +132,7 @@ function createServer({
   fleetConfig = { nodes: [] },
   fleetNodeSecrets = {},
   fleetAuthLogger = null,
+  pairingRegistry = null,
   fleetRouter = null,
   ephemeralProvider = null,
   ephemeralEnabled = false,
@@ -176,6 +180,24 @@ function createServer({
       }
       if (req.method === 'GET' && url.pathname === '/healthz') {
         return sendJson(res, 200, { ok: true, service: 'persistflow', authority: store.kind, durable: store.kind !== 'memory' });
+      }
+      if (req.method === 'POST' && url.pathname === '/v1/fleet/pairing-invitations') {
+        if (!ownerBearerAuthorized(req, mcpToken, mcpTokenDigest)) return sendJson(res, 401, { error: 'unauthorized' });
+        if (!pairingRegistry) return sendJson(res, 503, { error: 'pairing_disabled' });
+        await readJson(req);
+        res.setHeader('cache-control', 'no-store');
+        return sendJson(res, 201, pairingRegistry.issue());
+      }
+      if (req.method === 'POST' && url.pathname === '/v1/fleet/enroll') {
+        if (!pairingRegistry) return sendJson(res, 503, { error: 'pairing_disabled' });
+        const input = await readJson(req, 4096);
+        const nodeId = String(input.nodeId || '');
+        if ((fleetConfig.nodes || []).some(node => node.id === nodeId)) return sendJson(res, 409, { error: 'node_already_registered' });
+        const result = pairingRegistry.enroll({ pairingCode: input.pairingCode, nodeId, secret: input.secret });
+        fleetConfig.nodes.push(result.node);
+        fleetNodeSecrets[nodeId] = String(input.secret);
+        res.setHeader('cache-control', 'no-store');
+        return sendJson(res, 201, { nodeId, registered: true, drained: true });
       }
       const fleetHeartbeat = /^\/v1\/fleet\/nodes\/([^/]+)\/heartbeat$/.exec(url.pathname);
       if (req.method === 'POST' && fleetHeartbeat) {
@@ -284,6 +306,7 @@ module.exports = {
   createProductionStore,
   createProductionOAuthStore,
   createProductionFleetStore,
+  productionDataDir,
   loadProductionFleetConfig,
   productionFleetNodeSecrets,
   resolveMcpTokenDigest,
