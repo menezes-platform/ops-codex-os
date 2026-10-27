@@ -19,6 +19,21 @@
       "drained": false
     },
     {
+      "id": "conthabil-martha",
+      "platform": "win32",
+      "arch": "x64",
+      "capabilities": [
+        "git",
+        "node"
+      ],
+      "affinities": [
+        "background",
+        "tests"
+      ],
+      "concurrencyLimit": 1,
+      "drained": true
+    },
+    {
       "id": "ec2-primary",
       "platform": "win32",
       "arch": "x64",
