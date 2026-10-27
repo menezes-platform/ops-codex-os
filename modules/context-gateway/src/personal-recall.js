@@ -2,6 +2,35 @@
 const {resolvePersonalScope}=require('../../context-store/src/personal-scope');
 const {normalizeRecallStatus}=require('./recall-status');
 const {validateRecallEvidence}=require('./recall-evidence');
+const FILTER_KEYS = new Set(['source_types','revision','after','before']);
+const PERSONAL_SOURCE_TYPES = new Set(['manual','git','agent','android','chat']);
+const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+function validUtc(value) {
+ if (typeof value !== 'string' || !ISO_UTC.test(value) || !Number.isFinite(Date.parse(value))) return false;
+ const normalized=new Date(value).toISOString();
+ return normalized.slice(0,19)===value.slice(0,19);
+}
+function normalizePersonalFilters(raw={}) {
+ if (!raw || typeof raw !== 'object' || Array.isArray(raw) ||
+     Object.keys(raw).some(key=>!FILTER_KEYS.has(key))) throw new Error('FILTERS_INVALID');
+ const filters={...raw};
+ if (filters.source_types!==undefined) {
+  if (!Array.isArray(filters.source_types) || filters.source_types.length>PERSONAL_SOURCE_TYPES.size ||
+      filters.source_types.some(s=>typeof s!=='string' || !PERSONAL_SOURCE_TYPES.has(s)) ||
+      new Set(filters.source_types).size!==filters.source_types.length) throw new Error('FILTERS_INVALID');
+  filters.source_types=[...filters.source_types];
+ }
+ if (filters.revision!==undefined && (
+   typeof filters.revision!=='string' || !filters.revision.trim() ||
+   filters.revision!==filters.revision.trim() || !filters.revision.isWellFormed() ||
+   Buffer.byteLength(filters.revision,'utf8')>500 ||
+   /[\u0000-\u001f\u007f-\u009f]/u.test(filters.revision))) throw new Error('FILTERS_INVALID');
+ for (const key of ['after','before']) {
+  if (filters[key]!==undefined && !validUtc(filters[key])) throw new Error('FILTERS_INVALID');
+ }
+ if (filters.after && filters.before && filters.after>filters.before) throw new Error('FILTERS_INVALID');
+ return filters;
+}
 function createPersonalRecall({executionPlaneClient,ownerResolver}={}) {
  if (!executionPlaneClient || typeof executionPlaneClient.retrieve!=='function' ||
      typeof ownerResolver!=='function') throw new Error('PERSONAL_RECALL_ADAPTERS_REQUIRED');
@@ -11,10 +40,7 @@ function createPersonalRecall({executionPlaneClient,ownerResolver}={}) {
        Object.keys(request).some(key=>!['query','filters'].includes(key))) throw new Error('REQUEST_FIELD_INVALID');
    if (typeof request.query!=='string' || !request.query.trim() || request.query.length>16000)
      throw new Error('QUERY_INVALID');
-   const filters=request.filters??{};
-   if (!filters || typeof filters!=='object' || Array.isArray(filters) ||
-       Object.keys(filters).some(key=>!['source_types','revision','after','before'].includes(key)))
-     throw new Error('FILTERS_INVALID');
+   const filters=normalizePersonalFilters(request.filters??{});
    const owner=await ownerResolver();
    const scope=resolvePersonalScope({verifiedOwner:owner,source:'runtime'});
    const raw=await executionPlaneClient.retrieve({scope,query:request.query,filters});
@@ -33,4 +59,5 @@ function createPersonalRecall({executionPlaneClient,ownerResolver}={}) {
   }
  });
 }
-module.exports={createPersonalRecall};
+module.exports={createPersonalRecall,normalizePersonalFilters};
+
