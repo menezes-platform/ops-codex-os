@@ -39,7 +39,9 @@ function createPersonalRecall({executionPlaneClient,ownerResolver}={}) {
   async recall(request) {
    if (!request || typeof request!=='object' || Array.isArray(request) ||
        Object.keys(request).some(key=>!['query','filters'].includes(key))) throw new Error('REQUEST_FIELD_INVALID');
-   if (typeof request.query!=='string' || !request.query.trim() || request.query.length>16000)
+   if (typeof request.query!=='string' || !request.query.trim() ||
+       !request.query.isWellFormed() || Buffer.byteLength(request.query,'utf8')>4096 ||
+       /[\u0000-\u001f\u007f-\u009f]/u.test(request.query))
      throw new Error('QUERY_INVALID');
    const filters=normalizePersonalFilters(request.filters??{});
    const owner=await ownerResolver();
