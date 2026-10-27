@@ -157,3 +157,11 @@ These are persistent cross-project operating rules for Codex.
 - Do not install unnecessary dependencies.
 - Do not expose secrets.
 - Do not silently mutate infrastructure or configuration outside the task scope.
+
+## Multimodel delegation through COS Bridge and Gemini Bridge
+- For substantial tasks with independently executable parts, make an explicit delegation decision before heavy implementation. Use the installed `$cos-bridge` for Chat On Steroids workers and `$gemini-bridge` for authenticated Antigravity/Gemini CLI workers when available. Codex remains the coordinator, integration authority, and final verifier.
+- Do not confine external workers to reviews: deliberately consider assigning scoped implementation, focused tests, discovery, architecture and validation to independent workers. When at least two safe, substantial parallel tracks exist and a bridge passes `health`, dispatch a useful track before doing all work in the parent. Avoid fan-out on trivial or dependent tasks.
+- Start with up to two concurrent workers across both bridges; scale only when worktree isolation, system load, quota and task independence justify it. The GEMINI and COS bridges each accept up to eight workers per delegation request; this is not a guaranteed simultaneous service quota.
+- Read-only Gemini tasks default to plan mode. Mutating Gemini workers require dedicated linked Git worktrees and an `agent/*` branch; mutating CoS workers must also receive isolated worktrees. No two workers may edit the same workspace. Require each worker to return verifiable artifacts and perform local tests before integration.
+- `cos-bridge health` and `node ~/.agents/skills/gemini-bridge/bin/gemini-bridge.mjs health` must pass before dispatch. Provider authentication, permissions and quota are separate. Do not bypass them, pass secrets, use unsafe auto-approval, or treat Google AI Pro as API credits.
+- Record delegated task, worker identity, branch/commit, checks, results and blockers in a compact durable project checkpoint. Never claim an agent ran or finished merely because a prompt was prepared or a spawn was requested.
