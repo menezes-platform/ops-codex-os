@@ -17,10 +17,10 @@ Status: SOURCE PATCH + FOCUSED TDD VERIFIED. **DoD BLOCKED; no production promot
 
 Commands in isolated approved scratch `C:\Users\Pichau\rag-node-regression-20261026`:
 ```sh
-node --test tests/personal-recall.test.js tests/personal-recall-filter-validation.test.js
+node --test tests/personal-recall.test.js tests/personal-recall-filter-validation.test.js tests/context-gateway-personal-integration.test.js
 node --check modules/context-gateway/src/personal-recall.js
 ```
-At final revision: 11 focused Node tests PASS, zero failed. Full Node suite/CI remain unexecuted. The four original linked modules were fetched unmodified from GitHub for the focused test harness, then only the modified source/test were committed. GitHub readback verified both commits.
+Additional existing Context Gateway personal integration test was fetched unchanged and executed in the same isolated dependency mirror. Final focused validation: **12/12 Node tests PASS**, zero failed (personal recall 3, new filters 8, gateway integration 1). The new test suite alone has 8 cases. Full Node suite/CI remain unexecuted. The four original linked modules were fetched unmodified from GitHub for the focused test harness, then only the modified source/test were committed. GitHub readback verified both commits.
 
 ## Acceptance boundaries
 This patch hardens the **Node personal Gateway B25 boundary** but does not complete Rust B25, nor B23/B24/B26. It does not prove actual FAISS, Drive OAuth backend, production-scale temporal benchmark, replay resilience, power-loss recovery, full `npm test`/Cargo/Gradle/CI, authenticated owner issuance, isolated device deployment, or P03/P04/P05 exit gates. Never count a passing focused test as production DoD.
