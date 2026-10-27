@@ -62,4 +62,14 @@ test('B25 boundary forwards only valid bounded trusted filters without letting m
   assert.equal(requests[0].scope,'personal/current');
   assert.deepEqual(requests[0].filters.source_types,['manual','chat']);
 });
+test('B25 hybrid query is bounded by UTF-8 bytes, not UTF-16 characters',async()=>{
+  const {recall,requests}=fixture();
+  await assert.rejects(recall.recall({query:'🎯'.repeat(1200)}),/QUERY_INVALID/);
+  assert.equal(requests.length,0);
+});
+test('B25 hybrid query refuses controls rejected by the native Rust adapter',async()=>{
+  const {recall,requests}=fixture();
+  await assert.rejects(recall.recall({query:'history\nforged'}),/QUERY_INVALID/);
+  assert.equal(requests.length,0);
+});
 
