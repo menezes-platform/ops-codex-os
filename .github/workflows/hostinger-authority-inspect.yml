@@ -1,0 +1,81 @@
+name: Hostinger Authority Inspect
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hostinger-authority-inspect
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+    steps:
+      - name: Inspect only the authorized PersistFlow site (redacted)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, urllib.request, urllib.error, sys
+
+          token = os.environ.get('HOSTINGER_API_TOKEN', '')
+          if not token:
+              raise SystemExit('HOSTINGER_API_TOKEN missing')
+          base = ('https://developers.hostinger.com/api/hosting/v1/'
+                  'accounts/u775492464/websites/'
+                  'darkslategrey-raccoon-448222.hostingersite.com/nodejs')
+          paths = ('/builds/settings', '/builds/settings/env', '/builds?page=1&per_page=5')
+          for suffix in paths:
+              request = urllib.request.Request(
+                  base + suffix,
+                  headers={'Authorization': 'Bearer ' + token,
+                           'Accept': 'application/json'},
+                  method='GET')
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      payload = json.load(response)
+                      code = response.status
+              except urllib.error.HTTPError as error:
+                  code = error.code
+                  payload = {}
+              print('ENDPOINT=' + suffix.split('?')[0] + ' HTTP=' + str(code))
+              if code != 200:
+                  if code in (401,403,404,429):
+                      continue
+                  raise SystemExit('Hostinger introspection request failed')
+              data = payload.get('data', payload) if isinstance(payload, dict) else payload
+              if suffix == '/builds/settings':
+                  if isinstance(data, dict):
+                      print('SETTINGS=' + json.dumps(
+                          {k:data.get(k) for k in ('node_version','app_type',
+                             'root_directory','entry_file','package_manager',
+                             'source_type','build_script')}, sort_keys=True))
+              elif suffix == '/builds/settings/env':
+                  if isinstance(data, dict): data = data.get('data', data)
+                  if isinstance(data, list):
+                      names = sorted(set(
+                          str(x.get('name') or x.get('key')) for x in data
+                          if isinstance(x, dict) and (x.get('name') or x.get('key'))))
+                      print('ENV_NAMES=' + ','.join(names))
+                      print('MARTHA_ENV_PRESENT=' +
+                            str('PERSISTFLOW_FLEET_NODE_SECRET_CONTHABIL_MARTHA' in names))
+                  else:
+                      print('ENV_KEYS_REDACTED=true')
+              else:
+                  items = data if isinstance(data, list) else data.get('data', []) if isinstance(data, dict) else []
+                  for item in items[:5]:
+                      if not isinstance(item, dict): continue
+                      o = item.get('options') or {}
+                      print('BUILD=' + json.dumps({
+                          'uuid': item.get('uuid'), 'state': item.get('state'),
+                          'created_at': item.get('created_at'),
+                          'source_type': o.get('source_type'),
+                          'entry_file': o.get('entry_file'),
+                          'root_directory': o.get('root_directory')}, sort_keys=True))
+          PY
