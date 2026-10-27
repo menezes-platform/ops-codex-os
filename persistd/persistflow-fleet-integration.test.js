@@ -91,6 +91,35 @@ test('fleet heartbeat rejects bad signatures and unknown nodes', async () => {
   });
 });
 
+test('operator-only fleet authorization diagnostics distinguish missing credentials and bad signatures without disclosing secrets', async () => {
+  const scenarios = [
+    { secrets: {}, expected: 'server_secret_missing' },
+    { secrets: { 'ec2-primary': 'fleet-secret' }, expected: 'signature_mismatch' },
+  ];
+  for (const scenario of scenarios) {
+    const events = [];
+    await withFleetServer(async (base) => {
+      const response = await fetch(base + '/v1/fleet/nodes/ec2-primary/heartbeat', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-persistflow-node-id': 'ec2-primary',
+          'x-persistflow-node-timestamp': '2026-09-24T17:00:10.000Z',
+          'x-persistflow-node-signature': 'a'.repeat(64),
+        },
+        body: '{}',
+      });
+      assert.equal(response.status, 401);
+      assert.deepEqual(await response.json(), { error: 'unauthorized' });
+    }, {
+      fleetNodeSecrets: scenario.secrets,
+      fleetAuthLogger: (event) => events.push(event),
+    });
+    assert.deepEqual(events, [{ nodeId: 'ec2-primary', reason: scenario.expected }]);
+    assert.equal(JSON.stringify(events).includes('fleet-secret'), false);
+  }
+});
+
 test('production fleet helpers load registry and keep node secrets in env only', () => {
   const fs = require('node:fs');
   const os = require('node:os');

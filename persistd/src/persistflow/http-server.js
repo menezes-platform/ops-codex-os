@@ -87,6 +87,16 @@ function productionFleetNodeSecrets({ env = process.env, fleetConfig = { nodes: 
   return secrets;
 }
 
+function fleetAuthFailureReason({ registered, nodeId, headerNodeId, timestamp, signature, secret, nowMs }) {
+  if (!registered) return 'node_unregistered';
+  if (headerNodeId !== nodeId) return 'node_header_mismatch';
+  if (!secret) return 'server_secret_missing';
+  const parsed = Date.parse(String(timestamp || ''));
+  if (!Number.isFinite(parsed) || Math.abs(nowMs - parsed) > 5 * 60 * 1000) return 'timestamp_invalid';
+  if (!/^[a-f0-9]{64}$/i.test(String(signature || ''))) return 'signature_format_invalid';
+  return 'signature_mismatch';
+}
+
 const DEFAULT_MCP_DIGEST_PATH = path.join(__dirname, '../../config/mcp-token.sha256');
 
 function resolveMcpTokenDigest({ env = process.env, fallbackPath = DEFAULT_MCP_DIGEST_PATH } = {}) {
@@ -118,6 +128,7 @@ function createServer({
   fleetStore = null,
   fleetConfig = { nodes: [] },
   fleetNodeSecrets = {},
+  fleetAuthLogger = null,
   fleetRouter = null,
   ephemeralProvider = null,
   ephemeralEnabled = false,
@@ -187,7 +198,20 @@ function createServer({
             secrets: fleetNodeSecrets,
             nowMs: () => clock().getTime(),
           });
-        if (!authorized) return sendJson(res, 401, { error: 'unauthorized' });
+        if (!authorized) {
+          if (typeof fleetAuthLogger === 'function') {
+            try {
+              fleetAuthLogger({
+                nodeId: registered ? nodeId : '<unregistered>',
+                reason: fleetAuthFailureReason({
+                  registered, nodeId, headerNodeId, timestamp, signature,
+                  secret: fleetNodeSecrets[nodeId], nowMs: clock().getTime(),
+                }),
+              });
+            } catch {} // Diagnostic logging must never change the auth response.
+          }
+          return sendJson(res, 401, { error: 'unauthorized' });
+        }
         const heartbeat = service.fleetHeartbeat(nodeId, value);
         return sendJson(res, 200, heartbeat);
       }

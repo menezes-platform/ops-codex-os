@@ -42,12 +42,22 @@ function startWeb() {
   const fleetStore = createProductionFleetStore();
   const fleetConfig = loadProductionFleetConfig();
   const fleetNodeSecrets = productionFleetNodeSecrets({ fleetConfig });
+  const diagnosticsEnabled = process.env.PERSISTFLOW_FLEET_AUTH_DIAGNOSTICS === '1';
+  let lastFleetAuthLogAt = 0;
+  const fleetAuthLogger = diagnosticsEnabled ? ({ nodeId, reason }) => {
+    // Only report the known enrollment target; never print the key, signature or body.
+    if (nodeId !== 'conthabil-martha') return;
+    const now = Date.now();
+    if (now - lastFleetAuthLogAt < 15000) return;
+    lastFleetAuthLogAt = now;
+    process.stderr.write('[fleet-auth] node=conthabil-martha reason=' + reason + '\n');
+  } : null;
   const ephemeralEnabled = String(process.env.PERSISTFLOW_FLEET_ROUTER_ENABLED || '') === '1'
     && String(process.env.PERSISTFLOW_RAILWAY_EPHEMERAL_ENABLED || '') === '1';
   const ephemeralProvider = createProductionRailwayProvider({ env: process.env });
   const fleetRouter = createProductionFleetRouter({ fleetConfig, fleetStore, railwayProvider: ephemeralProvider });
   const server = createServer({
-    store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetRouter,
+    store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetAuthLogger, fleetRouter,
     ephemeralProvider, ephemeralEnabled,
   });
   server.listen(port, '0.0.0.0', () => {
