@@ -6,13 +6,37 @@ const { spawn } = require('node:child_process');
 
 const ALLOWED_TOOLS = Object.freeze({node: process.execPath, git: 'git', python: null});
 const ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/;
+const DEFAULT_WORKSPACE_LIMIT=64*1024*1024;
+const MAX_WORKSPACE_LIMIT=128*1024*1024;
+const DEFAULT_DISK_RESERVE=30*1024*1024*1024;
+function freeDiskBytes(directory) {
+  const info=fs.statfsSync(directory);
+  return Number(info.bavail)*Number(info.bsize);
+}
+function workspaceBytes(directory, cap) {
+  let total=0;
+  const stack=[directory];
+  while(stack.length) {
+    const current=stack.pop();
+    for(const entry of fs.readdirSync(current,{withFileTypes:true})) {
+      const file=path.join(current,entry.name);
+      const stat=fs.lstatSync(file);
+      if(stat.isSymbolicLink())throw new Error('SILENT_JOB_WORKSPACE_SYMLINK_FORBIDDEN');
+      if(stat.isDirectory())stack.push(file);
+      else if(stat.isFile())total+=stat.size;
+      else throw new Error('SILENT_JOB_WORKSPACE_NONFILE_FORBIDDEN');
+      if(total>cap)return total;
+    }
+  }
+  return total;
+}
 
 function containedIn(root, target) {
   const relative = path.relative(root, target);
   return relative === '' || (relative !== '..' && !relative.startsWith('..' + path.sep) && !path.isAbsolute(relative));
 }
 
-function prepareSilentJob({taskId, tool, args = [], cwd, allowedRoot, logRoot, shell, requiresInteractiveUi, requiresBrowserSession, requiresGpu, timeoutMs = 60000, maxOutputBytes = 1048576} = {}) {
+function prepareSilentJob({taskId, tool, args = [], cwd, allowedRoot, logRoot, shell, requiresInteractiveUi, requiresBrowserSession, requiresGpu, timeoutMs = 60000, maxOutputBytes = 1048576, maxWorkspaceBytes = DEFAULT_WORKSPACE_LIMIT, minFreeDiskBytes = DEFAULT_DISK_RESERVE, workspaceScanMs = 250} = {}) {
   if (requiresInteractiveUi || requiresBrowserSession || requiresGpu) throw new Error('SILENT_JOB_INTERACTIVE_FORBIDDEN');
   if (shell !== undefined && shell !== false) throw new Error('SILENT_JOB_SHELL_FORBIDDEN');
   if (!Object.hasOwn(ALLOWED_TOOLS, tool)) throw new Error('SILENT_JOB_TOOL_FORBIDDEN');
@@ -34,11 +58,19 @@ function prepareSilentJob({taskId, tool, args = [], cwd, allowedRoot, logRoot, s
   if (!containedIn(root, logs)) throw new Error('SILENT_JOB_LOG_OUTSIDE_ROOT');
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 15 * 60000) throw new Error('SILENT_JOB_TIMEOUT_INVALID');
   if (!Number.isSafeInteger(maxOutputBytes) || maxOutputBytes < 1 || maxOutputBytes > 8 * 1048576) throw new Error('SILENT_JOB_OUTPUT_LIMIT_INVALID');
-  return {taskId, tool, executable, args, cwd: working, root, logs, timeoutMs, maxOutputBytes};
+  if (!Number.isSafeInteger(maxWorkspaceBytes) || maxWorkspaceBytes<1 || maxWorkspaceBytes>MAX_WORKSPACE_LIMIT) throw new Error('SILENT_JOB_WORKSPACE_QUOTA_INVALID');
+  if (!Number.isSafeInteger(minFreeDiskBytes) || minFreeDiskBytes<0) throw new Error('SILENT_JOB_DISK_RESERVE_INVALID');
+  if (!Number.isSafeInteger(workspaceScanMs) || workspaceScanMs<50 || workspaceScanMs>2000) throw new Error('SILENT_JOB_SCAN_INTERVAL_INVALID');
+  return {taskId, tool, executable, args, cwd: working, root, logs, timeoutMs, maxOutputBytes, maxWorkspaceBytes, minFreeDiskBytes, workspaceScanMs};
 }
 
 async function runSilentJob(input = {}) {
   const job = prepareSilentJob(input);
+  if (freeDiskBytes(job.cwd)<job.minFreeDiskBytes) throw new Error('SILENT_JOB_INSUFFICIENT_DISK');
+  if (workspaceBytes(job.cwd,job.maxWorkspaceBytes)>job.maxWorkspaceBytes) throw new Error('SILENT_JOB_WORKSPACE_LIMIT_EXCEEDED');
+  const tmp=path.join(job.cwd,'.tmp');
+  fs.mkdirSync(tmp,{recursive:true});
+  if (!containedIn(job.cwd,fs.realpathSync(tmp))) throw new Error('SILENT_JOB_TEMP_OUTSIDE_WORKSPACE');
   fs.mkdirSync(job.logs, {recursive:true});
   // Resolve symlinks in an existing logs directory before creating files there.
   if (!containedIn(job.root, fs.realpathSync(job.logs))) throw new Error('SILENT_JOB_LOG_OUTSIDE_ROOT');
@@ -52,8 +84,10 @@ async function runSilentJob(input = {}) {
   let written = 0;
   let truncated = false;
   let timedOut = false;
+  let resourceError = null;
   const startedAt = new Date().toISOString();
-  const env = {...process.env, GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never', CI: 'true', TERM: 'dumb', NO_COLOR: '1'};
+  const env = {...process.env, GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never', CI: 'true', TERM: 'dumb', NO_COLOR: '1',
+    TMP:tmp, TEMP:tmp, TMPDIR:tmp, XDG_CACHE_HOME:tmp, NPM_CONFIG_CACHE:path.join(tmp,'npm-cache')};
   // The HMAC authority is for the heartbeat, never for job subprocesses.
   delete env.PERSISTFLOW_FLEET_NODE_SECRET;
   delete env.PERSISTFLOW_FLEET_NODE_SECRETS_JSON;
@@ -81,15 +115,30 @@ async function runSilentJob(input = {}) {
     child.stderr.on('data',sink(stderrFd));
     const timer = setTimeout(()=>{timedOut=true; child.kill();},job.timeoutMs);
     timer.unref();
+    const monitor=setInterval(()=>{
+      if(resourceError)return;
+      try {
+        if(workspaceBytes(job.cwd,job.maxWorkspaceBytes)>job.maxWorkspaceBytes)resourceError='SILENT_JOB_WORKSPACE_LIMIT_EXCEEDED';
+        else if(freeDiskBytes(job.cwd)<job.minFreeDiskBytes)resourceError='SILENT_JOB_INSUFFICIENT_DISK';
+      } catch(error) {resourceError=String(error?.message||'SILENT_JOB_QUOTA_MONITOR_ERROR');}
+      if(resourceError)child.kill();
+    },job.workspaceScanMs);
+    monitor.unref();
     const completion = await new Promise((resolve)=>{
       child.once('error',(error)=>{spawnError=error;});
       child.once('close',(exitCode,signal)=>resolve({exitCode, signal}));
     });
-    const status = timedOut ? 'timeout' : spawnError || completion.exitCode !== 0 ? 'failed' : 'completed';
+    clearTimeout(timer);
+    clearInterval(monitor);
+    try {
+      if(!resourceError && workspaceBytes(job.cwd,job.maxWorkspaceBytes)>job.maxWorkspaceBytes)resourceError='SILENT_JOB_WORKSPACE_LIMIT_EXCEEDED';
+      if(!resourceError && freeDiskBytes(job.cwd)<job.minFreeDiskBytes)resourceError='SILENT_JOB_INSUFFICIENT_DISK';
+    } catch(error) {resourceError=String(error?.message||'SILENT_JOB_QUOTA_MONITOR_ERROR');}
+    const status = timedOut ? 'timeout' : resourceError || spawnError || completion.exitCode !== 0 ? 'failed' : 'completed';
     const receipt = {
       taskId:job.taskId, tool:job.tool, status,
       exitCode:completion.exitCode, signal:completion.signal || null,
-      errorCode:spawnError?.code || null,
+      errorCode:resourceError || spawnError?.code || null,
       startedAt, finishedAt:new Date().toISOString(),
       stdoutPath,stderrPath,receiptPath,
       truncated, windowsHide:true, shell:false,
