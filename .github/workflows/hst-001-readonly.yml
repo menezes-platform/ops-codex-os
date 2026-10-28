@@ -1,0 +1,38 @@
+name: HST-001 Hostinger inventory read only
+on:
+  push:
+    branches: ["agent/hst-001-readonly-20261028"]
+    paths: [".github/workflows/hst-001-readonly.yml"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Inventory without deploy or restart
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          node --input-type=module <<'HST_READONLY'
+          import { writeFileSync } from 'node:fs';
+          const token=process.env.HOSTINGER_API_TOKEN;
+          if(!token){console.log(JSON.stringify({blocked:'HOSTINGER_TOKEN_NOT_BOUND'}));process.exit(1);}
+          const report={observedAt:new Date().toISOString(),writes:0,requests:[],orders:[],websites:[],nodes:[]};
+          async function get(p){try{const r=await fetch('https://developers.hostinger.com'+p,{headers:{Authorization:'Bearer '+token,Accept:'application/json'},signal:AbortSignal.timeout(15000)});report.requests.push({path:p.replace(/accounts\/[^/]+/,'accounts/[redacted]'),status:r.status});if(!r.ok){await r.body?.cancel();return null;}return await r.json();}catch{report.requests.push({path:p.replace(/accounts\/[^/]+/,'accounts/[redacted]'),status:'NETWORK_ERROR'});return null;}}
+          async function list(p){const out=[];for(let page=1;page<=10;page++){const d=await get(p+'?per_page=100&page='+page);if(!d)break;const rows=Array.isArray(d.data)?d.data:Array.isArray(d)?d:[];out.push(...rows);if((d.meta?.last_page??d.last_page??page)<=page)return out;}return out;}
+          const orders=await list('/api/hosting/v1/orders');report.orders=orders.map(o=>({plan:o.plan?.name,status:o.status}));
+          const sites=await list('/api/hosting/v1/websites');report.websites=sites.map(s=>({domain:s.domain,type:s.website_type,enabled:s.is_enabled,parentDomain:s.parent_domain}));
+          for(const s of sites.filter(s=>s.website_type==='nodejs')){const p='/api/hosting/v1/accounts/'+encodeURIComponent(s.username)+'/websites/'+encodeURIComponent(s.domain);const settings=await get(p+'/nodejs/builds/settings');const builds=await get(p+'/nodejs/builds?per_page=5');const ssl=await get(p+'/ssl/status');report.nodes.push({domain:s.domain,settings:settings?{nodeVersion:settings.node_version??settings.data?.node_version,entryFile:settings.entry_file??settings.data?.entry_file,appType:settings.app_type??settings.data?.app_type}:null,builds:(builds?.data??[]).slice(0,5).map(b=>({state:b.state,createdAt:b.created_at,updatedAt:b.updated_at,nodeVersion:b.options?.node_version})),https:ssl?{status:ssl.status??ssl.data?.status,redirect:ssl.is_https_redirect_enabled??ssl.data?.is_https_redirect_enabled}:null});}
+          for(const o of orders){const d=await get('/api/agency-hosting/v1/orders/'+o.id+'/resource-usage-metrics');if(d)report.orders.find(x=>x.plan===o.plan?.name).resourceLimits=d.limits??d.data?.limits??null;const disk=await get('/api/agency-hosting/v1/orders/'+o.id+'/disk-usage-metrics');if(disk)report.orders.find(x=>x.plan===o.plan?.name).diskLimits=disk.limits??disk.data?.limits??null;}
+          const subs=await get('/api/billing/v1/subscriptions');if(subs)report.subscriptions=(Array.isArray(subs)?subs:subs.data??[]).map(s=>({status:s.status,plan:s.plan?.name??s.plan_name,quantity:s.quantity}));
+          writeFileSync('hst-001-hostinger-inventory.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+          HST_READONLY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hst-001-hostinger-readonly
+          path: hst-001-hostinger-inventory.json
+          retention-days: 5
