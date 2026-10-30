@@ -157,3 +157,10 @@ These are persistent cross-project operating rules for Codex.
 - Do not install unnecessary dependencies.
 - Do not expose secrets.
 - Do not silently mutate infrastructure or configuration outside the task scope.
+
+## Verified capability and entitlement utilization
+- When a verified tool, student/educational entitlement, cloud quota, runner, or infrastructure capability is available, check whether it can solve the next approved workload before introducing a new paid provider, dependency, or duplicate service.
+- Keep a dated, source-linked capability ledger owned by the relevant private/project repository: availability, permitted usage (especially educational versus commercial), renewal/expiry, quota, overage policy, activation proof, current runtime readiness, and next safe workload. Treat a signup, a selectable machine size, or an approved application as weaker evidence than an active subscription or executed workload.
+- Route source-of-truth facts to their owning authority (Git for project state, private account Memory for durable preferences, Engram for episode history, PersistFlow for run continuation). Stage approved sources for RAG retrieval only after scope/privacy review. A Git write, Drive copy, memory append, or generated manifest is **not** proof that a production BM25/FAISS/GraphRAG index was rebuilt or queried; require ingestion/index/publication and test receipts.
+- Avoid idle entitlement waste by identifying a smallest useful, repeatable, measurable job for each eligible capability, but NEVER provision billable resources, start promotional trial clocks, bypass cost hard stops, expose secrets, or use noncommercial licenses commercially solely to increase utilization.
+- Store neither payment details nor credentials in capability ledgers, agent memory, Drive staging documents, or public agent-policy repositories.
