@@ -55,6 +55,24 @@ If the repository uses another established convention, preserve it instead of fo
 5. Identify the last verified checkpoint and resume from the next safe step.
 6. Do not redo completed work merely because it is absent from the current model context.
 
+## Multi-source status reconciliation
+
+Trigger this gate whenever the user asks how a project, RAG, migration, agent, integration or DoD stands, especially if multiple sessions/agents were involved. A previous conversation summary, old checkpoint, or default-branch search alone is **not** a current-state inventory.
+
+1. **Build the source map** before answering: identify the exact project/repositories and the relevant workstreams; inspect default and **non-default branches**, open/draft PRs, relevant commit/CI timestamps, scoped worktrees/local agent results if accessible, and latest project handoffs in Drive, PersistFlow and Engram. Use narrowly scoped retrieval; do not ingest unrelated private material.
+2. **Reconcile time**: record the newest relevant evidence for each workstream, not just the newest file overall. Check what happened *after* each checkpoint. A later implementation report can supersede an old "missing code" list, but cannot by itself satisfy missing test, live-runtime, device or DoD gates.
+3. **Classify each claim**:
+   - `OBSERVED_REMOTE`: verified commit/branch/PR/CI or authoritative remote service result with URL/ref and observation date;
+   - `OBSERVED_LOCAL`: directly executed/read local code, build, device/runtime or test result, including exact worktree/commit and command;
+   - `REPORTED_LOCAL`: prior agent/handoff reports of local work without independent current access; retain the claim with attribution, do not promote to verified;
+   - `HISTORICAL`: valid earlier snapshot, superseded only within its scope by newer matching evidence;
+   - `NOT_VERIFIED`: unobserved, missing evidence, inaccessible source, or contradictory state that cannot be resolved. State `source unavailable` when a host, branch, tool or permission prevents current inspection.
+4. **Apply negative-claim coverage**: do not say "not implemented", "still missing", or "nothing changed" unless all relevant newer branches/agents/handoffs were checked; otherwise say which source or capability is unverified. Do not infer implementation from merely seeing a branch name or count.
+5. **Produce a compact status ledger** per workstream: last verified evidence and timestamp/ref, latest reported progress, tests actually run, merge/main status, runtime, CI, deployment and formal DoD gates. Use explicit PASS/BLOCKED/FAIL/UNVERIFIED where supported, never a made-up percent.
+6. **Fail safely**: when a source unavailable prevents reconciling the latest state, give the best supported partial report and identify the uncertainty. Do not merge, activate, migrate, overwrite, trigger billable CI, expose secrets, or repeat expensive validations just to resolve ambiguity.
+
+In a conflict, current observed runtime and current exact-ref Git/CI evidence outrank stale summaries **within the same scope**. A newer local report and an older remote default-branch state may both be true; retain both until independently reconciled. Engram is episodic unless authority cutover is separately verified. The newest relevant evidence is not necessarily the latest authoritative acceptance.
+
 ## During execution
 - After a meaningful checkpoint, update durable state if losing the checkpoint would cause expensive reconstruction.
 - Keep updates concise and factual.
