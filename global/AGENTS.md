@@ -105,6 +105,12 @@ These are persistent cross-project operating rules for Codex.
 - Never store secrets or credentials in durable context.
 - Use Apache Maka (`https://github.com/apache/maka`) as an architectural reference for durable execution records, recovery, and separation of saved history from model context when relevant; do not make it a dependency unless a project explicitly requires it.
 
+## Cross-source status reconciliation
+- For status, progress, continuation or DoD questions about work spanning agents/sessions, apply `$durable-execution-memory` **before** declaring completed/missing work. Inspect the newest relevant evidence, including current Git/main, non-default branches, PRs and CI, available worktrees/local agent results, scoped Drive handoffs, PersistFlow and Engram, as authorized and relevant. Do not rely on one old checkpoint or search only main.
+- Compare source timestamps and precise revisions, then label evidence as `OBSERVED_REMOTE`, `OBSERVED_LOCAL`, `REPORTED_LOCAL`, `HISTORICAL` or `NOT_VERIFIED`. Separate implementation, tests, physical/runtime acceptance, deployment and formal DoD. An agent's report is not the same as independently rerunning its checks.
+- Before asserting something is *not implemented* or *not done*, satisfy negative-claim coverage: check relevant newer branches, worktrees and handoffs, or explicitly say the newer source is unavailable. If any source is unavailable, state the gap and do not silently downgrade more recent reported progress.
+- Never confuse retrieval/index availability with active tool invocation, production promotion, automatic cross-session memory, or an authority cutover. Preserve project scopes, privacy and existing cost gates.
+
 ## Mandatory account-memory ingestion
 - Before finalizing every substantive chat or task, decide whether the interaction produced stable cross-project user context that should survive the conversation.
 - If it produced a durable user fact, preference, constraint, correction, cross-project context item, or recurring lesson, update the smallest relevant file in `menezesx2k26-byte/Memory` without waiting for the user to ask again.
