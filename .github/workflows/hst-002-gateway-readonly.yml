@@ -1,0 +1,23 @@
+name: HST-002 gateway deployment capability read only
+on:
+  push:
+    branches: ["agent/hst-002-gateway-readonly-20261102"]
+    paths:
+      - ".github/workflows/hst-002-gateway-readonly.yml"
+      - "tools/hostinger/gateway_readonly.py"
+      - "tools/hostinger/test_gateway_readonly.py"
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify sanitized probe
+        run: python3 -m unittest discover -s tools/hostinger -v
+      - name: Read existing production capability without deploy or restart
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: python3 tools/hostinger/gateway_readonly.py
+# Intentionally no artifacts, caches, deployments, package installs, or paid runners.
