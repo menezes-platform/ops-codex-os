@@ -5,6 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { MemoryAuthorityStore, FileAuthorityStore } = require('./authority-store');
 const { FileOAuthStore } = require('./oauth-store');
+const { loadOwnerTokenDigest } = require('./owner-token-digest');
 const { PersistFlowService } = require('./service');
 const { createSandboxProviderFromEnv } = require('./sandbox-provider');
 const { createPersistFlowMcpNodeHandler, sameToken } = require('./mcp-handler');
@@ -123,7 +124,7 @@ function createServer({
   mcpTokenDigest = resolveMcpTokenDigest(),
   iconUrl = process.env.PERSISTFLOW_ICON_URL || '',
   oauthStore = null,
-  ownerTokenDigest = '',
+  ownerTokenDigest = loadOwnerTokenDigest({ dataDirectory: productionDataDir() }),
   sandboxProvider = createSandboxProviderFromEnv(),
   fleetStore = null,
   fleetConfig = { nodes: [] },
