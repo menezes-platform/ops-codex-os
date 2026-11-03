@@ -134,6 +134,7 @@ function createServer({
   ephemeralEnabled = false,
   driveAuth = createDriveTokenProviderFromEnv(),
   objectStore = undefined,
+  contextProvider = null,
 } = {}) {
   let resolvedObjectStore = objectStore;
   if (resolvedObjectStore === undefined && driveAuth?.rootId) {
@@ -158,13 +159,26 @@ function createServer({
   }
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
   const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;
-  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl });
+  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl, contextProvider });
   const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore, ownerTokenDigest: resolvedOwnerTokenDigest }) : null;
+  const contextHttpHandler = contextProvider ? contextProvider.createHttpHandler({
+    gateway: contextProvider.gateway,
+    namespace: contextProvider.namespace,
+    resourceMetadataUrl,
+    authorize: async (req) => {
+      if (ownerBearerAuthorized(req, mcpToken, mcpTokenDigest)) return true;
+      const header = String(req.headers.authorization || '');
+      const bearer = header.startsWith('Bearer ') ? header.slice(7) : '';
+      if (!bearer || !validateBearer) return false;
+      try { return Boolean(await validateBearer(bearer, req)); } catch { return false; }
+    },
+  }) : null;
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://persistflow.local');
       if (oauthHttpHandler && await oauthHttpHandler(req, res, url)) return;
       if (url.pathname === '/mcp') return mcpNodeHandler(req, res);
+      if (contextHttpHandler && await contextHttpHandler(req, res, url)) return;
       if (req.method === 'GET' && url.pathname === '/persistflow.svg') {
         const body = fs.readFileSync(path.join(__dirname, '../../assets/persistflow.svg'));
         res.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8', 'content-length': body.length, 'cache-control': 'public, max-age=86400' });
@@ -280,6 +294,7 @@ function createServer({
 }
 
 module.exports = {
+  productionDataDir,
   createServer,
   createProductionStore,
   createProductionOAuthStore,
