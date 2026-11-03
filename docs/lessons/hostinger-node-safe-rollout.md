@@ -13,3 +13,12 @@ Confirmed patterns from the Operação50/50 integration,2026-11-03.
 - A startup retrieval receipt proves startup retrieval. It does not prove a positive authenticated request to a new HTTP/MCP route, refresh a client's cached tool catalog, or establish a scheduler/takeover. Keep these acceptance gates separate and report the remaining gap.
 
 Reusable wiring is optional contextProvider in PersistFlow. Project-specific namespace, index, queries and evidence remain in the project's private repository. No paid fallback is necessary for this pattern.
+
+
+## Redefinição da aprovação do proprietário
+
+Verificar a fonte efetiva de autorização em runtime. Arquivo de ambiente alterado e pedido de reinício aceito não comprovam adoção pelo listener. Quando a API mascara valores e substitui o conjunto inteiro, não reenviar máscaras nem presumir que uma cópia de disco prova todos os valores ativos.
+
+PersistFlow já separa ownerTokenDigest da credencial Bearer de serviço. Preferir esse contrato para redefinir somente a aprovação OAuth: verificador privado fora do build, ausência com compatibilidade explícita e arquivo presente inválido/symlink com falha fechada. Manter o segredo bruto em armazenamento privado0700/0600 separado das exportações de estado. Nunca incluir o segredo em pacotes web, Git, documentos, logs ou mensagens.
+
+Testar aprovação nova/antiga, revogação dos grants e preservação da credencial de serviço. Validar build ativo, fingerprint OAuth do proprietário resolvido e comportamento do cliente. O fingerprint demonstra sincronização de startup; a autenticação positiva do proprietário continua sendo um aceite separado. Não restaurar snapshots OAuth antigos automaticamente. A operação de redefinição de aprovação não equivale à rotação do Bearer de serviço.
