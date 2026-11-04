@@ -8,6 +8,7 @@ const { FileOAuthStore } = require('./oauth-store');
 const { PersistFlowService } = require('./service');
 const { createSandboxProviderFromEnv } = require('./sandbox-provider');
 const { createPersistFlowMcpNodeHandler, sameToken } = require('./mcp-handler');
+const { createPlandexCodespaceController } = require('../plandex/codespaces');
 const { createOAuthHttpHandler, requestOrigin } = require('./oauth-server');
 const { FileFleetStore } = require('../fleet/store');
 const { loadFleetConfig } = require('../fleet/contracts');
@@ -138,6 +139,7 @@ function createServer({
   ephemeralEnabled = false,
   driveAuth = createDriveTokenProviderFromEnv(),
   objectStore = undefined,
+  plandexController = createPlandexCodespaceController({ githubToken: process.env.PLANDEX_GITHUB_TOKEN || '' }),
 } = {}) {
   let resolvedObjectStore = objectStore;
   if (resolvedObjectStore === undefined && driveAuth?.rootId) {
@@ -162,7 +164,7 @@ function createServer({
   }
   const validateBearer = oauthStore ? (bearer, req) => oauthStore.validateAccessToken(bearer, `${requestOrigin(req)}/mcp`) : null;
   const resourceMetadataUrl = oauthStore ? (req) => `${requestOrigin(req)}/.well-known/oauth-protected-resource/mcp` : null;
-  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl });
+  const mcpNodeHandler = createPersistFlowMcpNodeHandler({ service, token: mcpToken, tokenDigest: mcpTokenDigest, iconUrl, validateBearer, resourceMetadataUrl, plandexController });
   const oauthHttpHandler = oauthStore ? createOAuthHttpHandler({ store: oauthStore, ownerTokenDigest: resolvedOwnerTokenDigest }) : null;
   return http.createServer(async (req, res) => {
     try {
