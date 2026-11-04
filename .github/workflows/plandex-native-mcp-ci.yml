@@ -29,7 +29,25 @@ jobs:
           npm --prefix persistd ci --ignore-scripts
       - name: Native MCP contract
         run: node --test persistd/plandex-native.test.js persistd/plandex-mcp.test.js
-      - name: Full root suite
-        run: npm test
+      - name: Root suite (Linux-compatible tests)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' suites < <(find tests -maxdepth 1 -type f -name '*.test.js' ! -name 'fleet-installer-windows.test.js' -print0)
+          node --test "${suites[@]}"
       - name: Full PersistFlow suite
         run: npm --prefix persistd test
+  windows-installer-contract:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install locked root dependencies
+        run: npm ci --ignore-scripts
+      - name: Windows fleet installer contracts
+        run: node --test tests/fleet-installer-windows.test.js
