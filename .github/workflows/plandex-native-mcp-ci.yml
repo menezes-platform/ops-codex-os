@@ -51,3 +51,44 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Windows fleet installer contracts
         run: node --test tests/fleet-installer-windows.test.js
+  package-deploy-candidate:
+    needs:
+      - contract
+      - windows-installer-contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build offline-reviewable Hostinger ZIP, no deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/plandex-hostinger/src" "$RUNNER_TEMP/plandex-hostinger/config" "$RUNNER_TEMP/plandex-hostinger/assets"
+          cp -a persistd/src/. "$RUNNER_TEMP/plandex-hostinger/src/"
+          cp persistd/package.json persistd/package-lock.json "$RUNNER_TEMP/plandex-hostinger/"
+          cp persistd/config/fleet.json "$RUNNER_TEMP/plandex-hostinger/config/fleet.json"
+          cp persistd/assets/persistflow.svg "$RUNNER_TEMP/plandex-hostinger/assets/persistflow.svg"
+          test -s "$RUNNER_TEMP/plandex-hostinger/src/hostinger-entry.js"
+          test -s "$RUNNER_TEMP/plandex-hostinger/src/plandex/codespaces.js"
+          test -s "$RUNNER_TEMP/plandex-hostinger/src/persistflow/mcp-handler.js"
+          test ! -e "$RUNNER_TEMP/plandex-hostinger/config/mcp-token.sha256"
+          cd "$RUNNER_TEMP/plandex-hostinger"
+          npm ci --ignore-scripts --omit=dev
+          node -e "require('./src/persistflow/http-server'); console.log('Hostinger module import PASS')"
+          rm -rf node_modules
+          zip -q -r "$RUNNER_TEMP/plandex-persistflow-hostinger-candidate.zip" .
+          unzip -l "$RUNNER_TEMP/plandex-persistflow-hostinger-candidate.zip" | grep -q 'src/hostinger-entry.js'
+          sha256sum "$RUNNER_TEMP/plandex-persistflow-hostinger-candidate.zip"
+      - name: Save candidate for review, never deploy automatically
+        uses: actions/upload-artifact@v4
+        with:
+          name: plandex-hostinger-candidate
+          path: ${{ runner.temp }}/plandex-persistflow-hostinger-candidate.zip
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
