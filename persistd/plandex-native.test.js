@@ -78,3 +78,28 @@ test('untrusted caller budget proof is ignored',async()=>{
   const f=fakeGithub(()=>response(state()));
   await assert.rejects(make({fetchImpl:f.fetchImpl}).start({usageBlocked:true}),/BUDGET_NOT_PROVEN_BLOCKED/);
 });
+
+
+test('concurrent start calls serialize and send only one POST', async()=>{
+  let mode = 'Shutdown', posts=0;
+  const f=fakeGithub(async (url,opt)=>{
+    if(opt.method==='POST'){posts++;await new Promise(resolve=>setTimeout(resolve,10));mode='Available';return response({},202);}
+    return response(state(mode));
+  });
+  const n=Date.now();
+  const c=make({fetchImpl:f.fetchImpl,now:()=>n,budgetVerifier:async()=>({usageBlocked:true,checkedAt:n,source:'github-settings-verified',account:'menezesx2k26-byte'})});
+  const [a,b]=await Promise.all([c.start(),c.start()]);
+  assert.equal(posts,1);
+  assert.equal(a.confirmed,true);
+  assert.equal(b.confirmed,true);
+});
+test('concurrent stop calls serialize and avoid repeated stop POST', async()=>{
+  let mode='Available',posts=0;
+  const f=fakeGithub(async(url,opt)=>{
+    if(opt.method==='POST'){posts++;await new Promise(resolve=>setTimeout(resolve,10));mode='Shutdown';return response({},202);}
+    return response(state(mode));
+  });
+  const c=make({fetchImpl:f.fetchImpl});
+  const [a,b]=await Promise.all([c.stop(),c.stop()]);
+  assert.equal(posts,1);assert.equal(a.confirmed,true);assert.equal(b.confirmed,true);
+});
