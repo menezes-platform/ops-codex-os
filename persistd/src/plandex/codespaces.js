@@ -78,7 +78,7 @@ function createPlandexCodespaceController({
       throw new Error('BUDGET_PROOF_STALE');
     }
   }
-  async function start(_callerInput) {
+  async function startUnlocked(_callerInput) {
     const current = await status();
     if (current.state === 'Available' || current.state === 'Running') {
       return { ...current, confirmed: true, action: 'already_running' };
@@ -95,7 +95,7 @@ function createPlandexCodespaceController({
       action: 'start_requested',
     };
   }
-  async function stop() {
+  async function stopUnlocked() {
     const current = await status();
     if (current.state === 'Shutdown') return { ...current, confirmed: true, action: 'already_stopped' };
     if (current.state === 'ShuttingDown') return { ...current, confirmed: false, action: 'stop_pending' };
@@ -103,6 +103,17 @@ function createPlandexCodespaceController({
     const after = await status();
     return { ...after, confirmed: after.state === 'Shutdown', action: 'stop_requested' };
   }
+  // Serialize lifecycle mutations for the single allowlisted Codespace in this process.
+  // The second caller always rechecks GitHub state after the first transition;
+  // failures release the lock for future retries without leaking credentials.
+  let lifecycleTail = Promise.resolve();
+  function exclusive(operation) {
+    const result = lifecycleTail.then(operation, operation);
+    lifecycleTail = result.then(() => undefined, () => undefined);
+    return result;
+  }
+  async function start(callerInput) { return exclusive(() => startUnlocked(callerInput)); }
+  async function stop() { return exclusive(() => stopUnlocked()); }
   return Object.freeze({ status, start, stop });
 }
 module.exports = { createPlandexCodespaceController, CODESPACE, REPOSITORY };
