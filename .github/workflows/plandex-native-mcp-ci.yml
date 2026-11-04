@@ -1,0 +1,35 @@
+name: Plandex native MCP safety contracts
+on:
+  push:
+    branches:
+      - feature/plandex-native-mcp-20261104
+    paths:
+      - 'persistd/**'
+      - '.github/workflows/plandex-native-mcp-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: plandex-native-mcp-branch
+  cancel-in-progress: true
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install locked dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm --prefix persistd ci --ignore-scripts
+      - name: Native MCP contract
+        run: node --test persistd/plandex-native.test.js persistd/plandex-mcp.test.js
+      - name: Full root suite
+        run: npm test
+      - name: Full PersistFlow suite
+        run: npm --prefix persistd test
