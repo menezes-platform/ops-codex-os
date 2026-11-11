@@ -184,6 +184,8 @@ Worker nodes do not receive the refresh token. They authenticate to PersistFlow 
 
 ## Local cache policy
 
+**Operational policy revision (2026-10-10):** The shared start/eligibility reserve changes from 50 GiB to 30 GiB; the 10% proportional minimum, per-task scratch deduction, pinned-object protection and 80 GiB/15% eviction recovery target are unchanged. The 2026-09-24 historical implementation plan remains an archival record.
+
 Default cache root:
 
 - Windows: `%LOCALAPPDATA%\Gabriel\object-cache`
@@ -195,7 +197,7 @@ Eviction rules:
 
 - never evict pinned/in-use entries;
 - evict least-recently-used unpinned entries first;
-- begin eviction when free space falls below `max(50 GiB, 10% of filesystem capacity)` or cache bytes exceed `GABRIEL_CACHE_MAX_BYTES`;
+- begin eviction when free space falls below `max(30 GiB, 10% of filesystem capacity)` or cache bytes exceed `GABRIEL_CACHE_MAX_BYTES`;
 - stop only after free space reaches `max(80 GiB, 15% of filesystem capacity)` and cache is below its configured maximum;
 - if an incoming object's required scratch space still cannot fit after eviction, route execution elsewhere rather than exhausting the disk.
 

@@ -131,9 +131,11 @@ test('CacheManager throws when pinned entries prevent required headroom', async 
   await assert.rejects(() => manager.evictFor(10 * GiB), /INSUFFICIENT_LOCAL_CAPACITY/);
 });
 
-test('eviction reserves match the 50/80 GiB and 10/15 percent policy', () => {
+test('eviction reserves match the 30/80 GiB and 10/15 percent policy', () => {
   const GiB = 1024 ** 3;
-  assert.deepEqual(evictionReserves(100 * GiB), { startReserve: 50 * GiB, targetReserve: 80 * GiB });
+  assert.deepEqual(evictionReserves(100 * GiB), { startReserve: 30 * GiB, targetReserve: 80 * GiB });
+  assert.deepEqual(evictionReserves(223 * GiB), { startReserve: 30 * GiB, targetReserve: 80 * GiB });
+  assert.deepEqual(evictionReserves(500 * GiB), { startReserve: 50 * GiB, targetReserve: 80 * GiB });
   assert.deepEqual(evictionReserves(1000 * GiB), { startReserve: 100 * GiB, targetReserve: 150 * GiB });
 });
 
