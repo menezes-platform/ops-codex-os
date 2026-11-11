@@ -1,7 +1,27 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {syncPersonalChanges}=require('../modules/context-store/src/personal-drive-sync');
+const {syncPersonalChanges: syncRealPersonalChanges}=require('../modules/context-store/src/personal-drive-sync');
+
+// Existing idempotency tests use a separate test-ledger readback double;
+// production implementations MUST independently read persisted bytes.
+function syncPersonalChanges(options) {
+ const original=options.ledger;
+ if (typeof original.readByIdempotencyKey==='function') return syncRealPersonalChanges(options);
+ const persisted=new Map();
+ const ledger={
+  async appendOrTombstone(change) {
+   const snapshot=structuredClone(change);
+   const receipt=await original.appendOrTombstone(change);
+   if (receipt?.status==='stored' || receipt?.status==='replayed') {
+    persisted.set(snapshot.idempotency_key,{manifest_ref:receipt.manifest_ref,change:snapshot});
+   }
+   return receipt;
+  },
+  async readByIdempotencyKey(key) {return persisted.get(key)||null;}
+ };
+ return syncRealPersonalChanges({...options,ledger});
+}
 
 test('JSON prototype-named keys participate in idempotency fingerprints', async () => {
  let cursor='c0';
@@ -69,7 +89,7 @@ test('idempotency validation (b): op change or invalid scope with same key is no
    return {
     changes: [
      { op: 'append', idempotency_key: 'key-2', event: { scope: 'personal/current' } },
-     { op: 'tombstone', idempotency_key: 'key-2', target_id: 't1' }
+     { op: 'tombstone', idempotency_key: 'key-2', scope: 'personal/current', target_id: 't1' }
     ],
     next_cursor: 'c1'
    };
