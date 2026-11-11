@@ -16,13 +16,27 @@ function sameToken(actual, expected) {
   return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
 }
 
-function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl, validateBearer, resourceMetadataUrl } = {}) {
+function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl, validateBearer, resourceMetadataUrl, contextProvider = null } = {}) {
   if (!service) throw new Error('PERSISTFLOW_SERVICE_REQUIRED');
   const handler = createMcpHandler((ctx) => {
     const resolvedIconUrl = iconUrl || (ctx.requestInfo ? new URL('/persistflow.svg', ctx.requestInfo.url).href : '');
     const info = { name: 'PersistFlow', version: '0.2.0' };
     if (resolvedIconUrl) info.icons = [{ src: resolvedIconUrl }];
     const server = new McpServer(info);
+
+    if (contextProvider) server.registerTool('context_recall', {
+      title: 'Recall private project context',
+      description: 'Read the configured private lexical projection with verifiable source references. Requires its exact namespace.',
+      annotations: { readOnlyHint: true },
+      inputSchema: z.object({ query: z.string().trim().min(1).max(512), namespace: z.string().min(1) }).strict(),
+    }, async ({ query, namespace }) => {
+      if (namespace !== contextProvider.namespace) return { ...jsonResult({ error: 'namespace_denied' }), isError: true };
+      try {
+        const value = await contextProvider.gateway.recall({ query });
+        if (!value || value.status !== 'ok') throw Error('RETRIEVAL_FAILED');
+        return jsonResult(value);
+      } catch { return { ...jsonResult({ error: 'retrieval_unavailable' }), isError: true }; }
+    });
 
     server.registerTool('persist_run_start', {
       title: 'Start PersistFlow run',

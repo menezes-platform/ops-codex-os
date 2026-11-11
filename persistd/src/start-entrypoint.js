@@ -27,7 +27,7 @@ function createProductionFleetRouter({ env = process.env, fleetConfig, fleetStor
   });
 }
 
-function startWeb() {
+function startWeb({ contextProvider = null } = {}) {
   const {
     createServer,
     createProductionStore,
@@ -64,6 +64,7 @@ function startWeb() {
   const server = createServer({
     store, oauthStore, fleetStore, fleetConfig, fleetNodeSecrets, fleetAuthLogger, fleetRouter, pairingRegistry,
     ephemeralProvider, ephemeralEnabled,
+    contextProvider,
   });
   server.listen(port, '0.0.0.0', () => {
     const address = server.address();
