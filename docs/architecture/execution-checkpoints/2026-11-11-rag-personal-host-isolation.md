@@ -28,5 +28,10 @@ Continue the existing RAG, preserving the integration head in PR #46 and the sco
 - These source changes do not affect consumer ChatGPT's native memory engine or force the ChatGPT UI to call the Context Gateway.
 - Git/Memory/Engram/PersistFlow authority boundaries remain unchanged; no paid APIs, personal records, credentials, permissions, production updates, or authority cutover.
 
+## Related live source and continuity checks
+- PR #60 (`feat/operacao-50-50-runtime-20261102`) already implements a separate PersistFlow owner-approval verifier and revocation logic. It is draft; its author explicitly has **not** accepted positive authentication from the client. This is a reusable identity-design reference, **not** proof of a RAG personal owner capability or encrypted ledger key.
+- A direct `PersistFlow.persist_run_inspect` call for `rag-context-recall-20261111` returned an internal tool error. No persisted run/checkpoint was verified in PersistFlow; this Git/PR checkpoint is the durable continuation record for this step.
+- PR #64 was checked as draft, mergeable against PR #63, with no workflow runs or commit status checks on its head at inspection time. Do not mistake the 50 focused Windows tests for CI or deployment.
+
 ## Next safe action
 Verify owner-capability design against the producer-owned runtime and grant boundaries. Implement/qualify private encryption and backend owner scope *before* accepting personal ingestion or attempting native serving. Only then attach an authenticated personal retrieval client to this Gateway, prove real source revision/hash and current-vs-previous index generation, and measure fresh retrieval queries with citations. Reconcile branch/PR ancestry and cost/CI gates before any merge or deploy.
