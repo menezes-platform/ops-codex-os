@@ -1,0 +1,3176 @@
+{
+  "captured_at": "2026-10-05 07:58:42 UTC",
+  "method": "Read-only is:open PR searches + per-PR metadata; repository metadata; and git ls-remote --heads --tags --refs for each frozen-scope repository. PR bodies/checks omitted. Open-PR/ref match requires same repository, branch name, and commit SHA.",
+  "totals": {
+    "repositories": 7,
+    "archived_repositories": 0,
+    "open_prs": 29,
+    "branch_refs": 262,
+    "tag_refs": 3,
+    "exact_open_pr_head_matches": 29,
+    "unmatched_open_pr_heads": 0,
+    "branch_refs_without_exact_open_pr_head": 233,
+    "non_default_branch_refs_without_exact_open_pr_head": 226
+  },
+  "repositories": [
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "repository_id": "1343157860",
+      "default_branch": "main",
+      "archived": false,
+      "branch_count": 52,
+      "tag_count": 0,
+      "open_pr_count": 9,
+      "branches": [
+        {
+          "name": "agent/drive-fleet-exec/20260924",
+          "sha": "97a356d89ed9ec5553f4d5cd5df60938c693e6c0"
+        },
+        {
+          "name": "agent/drive-fleet-plan/20260924-1353",
+          "sha": "b9fc11bf6a9b751e370e843ca16bda0d22396cd0"
+        },
+        {
+          "name": "agent/log-powershell-quoting-20260924-1545",
+          "sha": "57c09c9ed6f04595743d7ce509d66b1a3a028da4"
+        },
+        {
+          "name": "consolidation/p05-generation-contract-20261005",
+          "sha": "a56de48ba3c037e228fabe51662e1608b06b1565"
+        },
+        {
+          "name": "consolidation/p06-provider-policy-20261005",
+          "sha": "18e60fe843295a74297144a7dce005428b3bed83"
+        },
+        {
+          "name": "consolidation/p08-caller-inventory-20261005",
+          "sha": "74f9d5a0785b366a40bb329f0b200f29268304f9"
+        },
+        {
+          "name": "docs/active-learning-ssh-gitdeploy",
+          "sha": "969e6f4a4c9b4e82b8ac5e58dae106cbea8a8d75"
+        },
+        {
+          "name": "docs/clarify-cognition-benchmark",
+          "sha": "2068b34e0693a5c38bb9a3ca01cadc347945a8b0"
+        },
+        {
+          "name": "docs/lesson-ec2-work-browser-auth-20260919",
+          "sha": "3efcf23e632921d31d6a6cbb11e415fbaadfca2d"
+        },
+        {
+          "name": "docs/persistflow-canonical-spec",
+          "sha": "6f6674e2b383d557cd11e56295a5af823bc8c2ba"
+        },
+        {
+          "name": "docs/persistflow-multichannel-design",
+          "sha": "0c066b1e6236d61c90633b853f95a1b321bd4057"
+        },
+        {
+          "name": "docs/persistflow-remote-dev-plan-20260930",
+          "sha": "312967111b3a3576eb733662c1a20136169eed95"
+        },
+        {
+          "name": "docs/platform-consolidation-design-20261002",
+          "sha": "64400da0a0d6a4ec2dc2ae4c1d4b3e024a0b8020"
+        },
+        {
+          "name": "docs/shared-codebuild-sandbox-policy",
+          "sha": "6c4087d14db4bc5ea3dae78bd6c6f0933e81be70"
+        },
+        {
+          "name": "docs/update-benchmark-latency",
+          "sha": "4a77109ab07cec1510f048728d8470709d8afbe8"
+        },
+        {
+          "name": "feat/design-agent-catalogue-router",
+          "sha": "a5bbda068f61f042174c9b2b42b4fc34c80db9b2"
+        },
+        {
+          "name": "feat/fontsource-router",
+          "sha": "96b0a34c2cacba3a37f736a03c44e5065cf11e8c"
+        },
+        {
+          "name": "feat/frontend-director-design",
+          "sha": "d4c18e40f2ef5c4156dc3bcbba6b84d5651ce046"
+        },
+        {
+          "name": "feat/frontend-director-implementation",
+          "sha": "5fa6c7dcb55f1a876c6856634dd5292320fec282"
+        },
+        {
+          "name": "feat/frontend-ui-orchestration",
+          "sha": "a6a0ac14cfef354afd73ccfe1cf4b1de7ba6a298"
+        },
+        {
+          "name": "feat/memory-cognition-provider",
+          "sha": "0f3ae360817ee01f83fdf57290a2cf17f047d8a7"
+        },
+        {
+          "name": "feat/persistd-bootstrap-unify",
+          "sha": "c9eacc62eed1597bf2649bb3bf480b869e541b47"
+        },
+        {
+          "name": "feat/persistd-health-selfheal",
+          "sha": "614aad8002e9ab9640b34a72fe68bd83fc9c3aef"
+        },
+        {
+          "name": "feat/persistd-lifecycle-hardening",
+          "sha": "92c7b122c94a35adcb7fca58ebf796cd7a19a565"
+        },
+        {
+          "name": "feat/persistd-remote-control-hardening",
+          "sha": "b5a863751067268b8e32496ba39def40a3fe4652"
+        },
+        {
+          "name": "feat/persistflow-railway-ephemeral-compose",
+          "sha": "c7ef4e4b2c35f3ac5b223c71d815bde527c1d6d2"
+        },
+        {
+          "name": "feat/persistflow-sandbox-provider",
+          "sha": "46f6ebd672b636c1b4c6a75a5f88f0c6bcaddd2c"
+        },
+        {
+          "name": "feat/public-apis-discovery",
+          "sha": "7d0b5d4c94455f0691a3f9f70b0a10d427977814"
+        },
+        {
+          "name": "feat/ragflow-shadow-provider",
+          "sha": "831426c79ba17bee81f2225b470d969d2d8cbb5a"
+        },
+        {
+          "name": "feat/railway-ephemeral-worker-loop-20260927",
+          "sha": "485910f95a1bfa4b89e7bf189dfbf7bdd199de38"
+        },
+        {
+          "name": "feat/revise-alias",
+          "sha": "38d41fc08e9360c69519a62dfc84ea1242508c34"
+        },
+        {
+          "name": "feat/router-visual-manus-vendors",
+          "sha": "d1a29425c394e26c6def98eb9c8b46a46d897c86"
+        },
+        {
+          "name": "feat/swarm-worker-hardening",
+          "sha": "16d04b4b9b003133eb27c06eea4094cf65d1dc38"
+        },
+        {
+          "name": "feat/windows-desktop-operator-skill",
+          "sha": "48c3c1314dc22f640cffcc31cbbf811639fcc205"
+        },
+        {
+          "name": "feature/youcine-bridge",
+          "sha": "6a90ae4dd014a765b01a83af0d51f820eb341208"
+        },
+        {
+          "name": "fix/drive-file-loader/20260925",
+          "sha": "cd39f52f577cae22ea8d561b47f048148d2e837a"
+        },
+        {
+          "name": "fix/persistd-auth-preflight-20260919",
+          "sha": "f7ddbada067b7a27cb838538b493f8f911bbb17d"
+        },
+        {
+          "name": "fix/persistd-claim-request-proof-20260920",
+          "sha": "6333984c6492902102d0a443f4b86e35eda08569"
+        },
+        {
+          "name": "fix/persistd-composer-control-lock-20260920",
+          "sha": "08978fa7b07020ff6a5424c1d44dcaeceb414ab9"
+        },
+        {
+          "name": "fix/persistd-installed-test-path",
+          "sha": "fc63b4cf2f7919d81f5f7827574a4024255366f6"
+        },
+        {
+          "name": "fix/persistd-rdc-control-lock-selfheal-20260923",
+          "sha": "04b10b3d66ef01b93979ae71f5e399ec1bcd9c3c"
+        },
+        {
+          "name": "fix/persistd-single-visible-chat",
+          "sha": "dc33ff1665573735eb8a39f5a5d40e805f726634"
+        },
+        {
+          "name": "fix/railway-runtime-target-audit-2026-09-28",
+          "sha": "720aa6759a4cd3ea3d6bc7329025514274d7b4b4"
+        },
+        {
+          "name": "fix/retire-aws-vm-from-fleet",
+          "sha": "3d8cc380fd56140bc272c189941b073608bd38d2"
+        },
+        {
+          "name": "hardening/quota-context-circuit-breaker-20260919",
+          "sha": "3669de446fee80ea86e83067a8160a6684f6c9df"
+        },
+        {
+          "name": "hardening/thin-controller-budget-20260919",
+          "sha": "176caeaacd4a0630a4141f8059e21a890e2954f3"
+        },
+        {
+          "name": "main",
+          "sha": "f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8"
+        },
+        {
+          "name": "migration/platform-consolidation-p00",
+          "sha": "2ea3ac927e7d2e24410a8ac891d2c1c59cfb8994"
+        },
+        {
+          "name": "migration/platform-consolidation-p01",
+          "sha": "f4a916bc7a202094ab28f75d87522ed824d650bc"
+        },
+        {
+          "name": "migration/platform-consolidation-p02",
+          "sha": "ba44eb8e61948a95f6194d18dd40ca84d9bc296e"
+        },
+        {
+          "name": "migration/platform-consolidation-p03",
+          "sha": "7a211eaae2b54ad8bcbe15ff03b2abb953feed2b"
+        },
+        {
+          "name": "plans/mcp-reliability-railway-2026-09-27",
+          "sha": "9b46946fc4e8109a6e1103b78e2c90e5dde6934b"
+        }
+      ],
+      "tags": []
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "repository_id": "1375179297",
+      "default_branch": "main",
+      "archived": false,
+      "branch_count": 14,
+      "tag_count": 0,
+      "open_pr_count": 1,
+      "branches": [
+        {
+          "name": "consolidation/p04-fenced-worker-results-20261005",
+          "sha": "2fc86be578b898e5e8302c214b8b06cf81f2f15c"
+        },
+        {
+          "name": "feat/capability-mesh",
+          "sha": "bb89e3a19067cd8f2fef1f8fc4dd6b76f56e08a8"
+        },
+        {
+          "name": "feat/context-session-lifecycle-20260920",
+          "sha": "7103cee52f19d1ddc77a68c108a5999dad0b7eda"
+        },
+        {
+          "name": "feat/job-engine",
+          "sha": "33fec3202c2b22a9d7bb4a291ed51cd7b0cd066f"
+        },
+        {
+          "name": "feat/os-broker",
+          "sha": "560e529b6734629dc4979ac4e67023244da1e123"
+        },
+        {
+          "name": "feat/owner-plane",
+          "sha": "3aeb9e6ed8e57da842aaf074b9f33dbb39b586bf"
+        },
+        {
+          "name": "feat/protocol-plane",
+          "sha": "4738af181cf43f51a228a7e00f2019a9df7a93b5"
+        },
+        {
+          "name": "feat/security-policy",
+          "sha": "6cbd7b31fe5c7638d1022b68035f5c05c6de5632"
+        },
+        {
+          "name": "feat/storage-lifecycle",
+          "sha": "61f333995cf7d4fe634c5fa7ff4ff1f7b7451eab"
+        },
+        {
+          "name": "feat/supply-recovery",
+          "sha": "3aeb9e6ed8e57da842aaf074b9f33dbb39b586bf"
+        },
+        {
+          "name": "integration/final-inline",
+          "sha": "5ca0ec9c95d0376cf16b30c80ae8348be414f895"
+        },
+        {
+          "name": "integration/portable-mcp-host",
+          "sha": "be3b5bd2ce7caaa91d22f1f80bf076daf772572b"
+        },
+        {
+          "name": "main",
+          "sha": "14b4cb2f94227d918c42564447f50f28e4763c88"
+        },
+        {
+          "name": "migration/platform-consolidation-p02",
+          "sha": "68a6ae81a831b11b2b0d596b21aeb4de1a57c828"
+        }
+      ],
+      "tags": []
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "repository_id": "1343965485",
+      "default_branch": "main",
+      "archived": false,
+      "branch_count": 51,
+      "tag_count": 0,
+      "open_pr_count": 9,
+      "branches": [
+        {
+          "name": "acq/ACQ-001-agent-reach",
+          "sha": "9b850cc20b4e6b7525c9e487368f1585dc200ac3"
+        },
+        {
+          "name": "build/contrito-0.4.0",
+          "sha": "51049aba78440c600bb6cf28706fca11a03538f2"
+        },
+        {
+          "name": "codex/codex-os-integration",
+          "sha": "08015852df13a7603d58087c90bc2d99b7097b2a"
+        },
+        {
+          "name": "design/browser-bridge-tailscale",
+          "sha": "bdbeb9613e37c0e518d1cd670173849e954f7e5d"
+        },
+        {
+          "name": "design/conthabil-hydra-revenue-runtime",
+          "sha": "ddd70807d65be729a41eda75ae21bf3741d1e98d"
+        },
+        {
+          "name": "docs/infra-workbench-spec-20260927",
+          "sha": "950e2b9248de41338df373499659ccaee0e28113"
+        },
+        {
+          "name": "docs/semantic-cache-design-20260919",
+          "sha": "8668e85ff1a6cf0cd582d71efe7aff2168f6abef"
+        },
+        {
+          "name": "feat/ANDROID-VIRTUAL-DISPLAY-001",
+          "sha": "28d78c7ea8964a9c4788d98abc2eeede560cc7a0"
+        },
+        {
+          "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-clean",
+          "sha": "8a354911404724f3283331e5610aac475e113a55"
+        },
+        {
+          "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-docs",
+          "sha": "8a354911404724f3283331e5610aac475e113a55"
+        },
+        {
+          "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-final",
+          "sha": "8a354911404724f3283331e5610aac475e113a55"
+        },
+        {
+          "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-spec",
+          "sha": "8a354911404724f3283331e5610aac475e113a55"
+        },
+        {
+          "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-spec-review",
+          "sha": "8a354911404724f3283331e5610aac475e113a55"
+        },
+        {
+          "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-spec2",
+          "sha": "8a354911404724f3283331e5610aac475e113a55"
+        },
+        {
+          "name": "feat/codex-readonly-cache-dispatch",
+          "sha": "9e9447112d5182eb00e6e8db92a80221085376a3"
+        },
+        {
+          "name": "feat/computer-control-plane",
+          "sha": "5e0b0c56a6ea756ce2d2cf7f8a84016bf2a3829a"
+        },
+        {
+          "name": "feat/omniroute-chatgpt-oauth",
+          "sha": "0c01368a4f53fb09d02dce533ba1a15e4ba5c7d9"
+        },
+        {
+          "name": "feat/OMNIROUTE-MCP-001",
+          "sha": "75db42674fc3eec094bfb9bba31a2df22d25751b"
+        },
+        {
+          "name": "feat/SEMANTIC-CACHE-001",
+          "sha": "197e503001318721f35b99e1659cfc5e6d4e1d65"
+        },
+        {
+          "name": "feat/SEMANTIC-CACHE-001-ci",
+          "sha": "4da4475ac8d86c9434fb5485ec1d3fca35fb5df1"
+        },
+        {
+          "name": "feat/SEMANTIC-CACHE-002-codex-preprovider",
+          "sha": "00b3021b5c1fd89b08647bebaf6f84e7e629cc7b"
+        },
+        {
+          "name": "feat/UI-REFERENCE-LAYER-001",
+          "sha": "ebba425396abfce914c6a073122f31477827a793"
+        },
+        {
+          "name": "feat/WINDOWS-INTERACTIVE-CONTROL-001",
+          "sha": "59b46d8ef4fbb9f6c0a4732ef5d8f2bdf6e29d6a"
+        },
+        {
+          "name": "fix/KEY005-android-sdk37-layout",
+          "sha": "575fee3e784d89ab3585cf6489970c625e4b6f47"
+        },
+        {
+          "name": "fix/KEY005-protocol-migration",
+          "sha": "543a1e2d16332d32d84a59cd908039f2641e44a4"
+        },
+        {
+          "name": "fix/omniroute-capability-fallback-20260922",
+          "sha": "33928bc23d7668d86066895b1dd23fc0cfd5669c"
+        },
+        {
+          "name": "fix/semantic-cache-review-hardening",
+          "sha": "137e65ae56975e7acb0297a1941b45cb5b3dbfed"
+        },
+        {
+          "name": "hardening/control-plane-quota-guard-20260919",
+          "sha": "48ba962b7dd9691e0302ef76dd6020a9fdd0dd40"
+        },
+        {
+          "name": "hydra/HYDRA-001-autonomous",
+          "sha": "efb857a19cf3d24986227780fe4d55a45ce62c00"
+        },
+        {
+          "name": "hydra/HYDRA-001-foundation",
+          "sha": "69e549a6cfd7c1a86bddb5fb537758a8ca905f47"
+        },
+        {
+          "name": "integrate/computer-control-main",
+          "sha": "2ae56e18d5691eacfdc59343f06df64561686b9a"
+        },
+        {
+          "name": "local/intelligence-pilot-prep",
+          "sha": "264333416045e2af5761b59d79553ec8a44772bd"
+        },
+        {
+          "name": "main",
+          "sha": "26c8e80dd6bacd9abc938af8a7da51b3d1abede2"
+        },
+        {
+          "name": "mcp/MCP-BRIDGE-001-readonly",
+          "sha": "afb27e4c4dd918d8f8e4480f10bf752b766b38ab"
+        },
+        {
+          "name": "mcp/MCP-BRIDGE-002-git-relay",
+          "sha": "798483e3fd843a4d131b93267245363eb6a29f0e"
+        },
+        {
+          "name": "mcp/MCP-BRIDGE-003-node24-fix",
+          "sha": "1d3ea43c42c159cd42b4b3e29052e9f8db393c5c"
+        },
+        {
+          "name": "mcp/MCP-BRIDGE-003-one-shot-shell",
+          "sha": "058cc5feddd92ea6614da09cd9093e4c90ea172a"
+        },
+        {
+          "name": "mcp/MCP-BRIDGE-004-write-control-plane",
+          "sha": "e63e8c69dc8246827adb28365e9238bf15013106"
+        },
+        {
+          "name": "mcp/MCP-BRIDGE-005-orquestra-key-android",
+          "sha": "1640ab3704417c0901dd7e5319c80d05a99c33c9"
+        },
+        {
+          "name": "ops/FILE-HYGIENE-001",
+          "sha": "b673c33effee79c84790881e5245d92492fc9f0c"
+        },
+        {
+          "name": "orquestra-queue",
+          "sha": "164be4b851ad88eefd13856c65c51e112629b1a0"
+        },
+        {
+          "name": "orquestra-write-queue",
+          "sha": "ce3e36b15116dad8795d78ce20595385df08f86f"
+        },
+        {
+          "name": "p1/P1-001-codex-only",
+          "sha": "bd5c467d9e09260d18cd38f68d2cee879a397cee"
+        },
+        {
+          "name": "p1/P1-BROWSER-BRIDGE-001-impl",
+          "sha": "dcf3e60907a65751fd3869a10fd3b5d3f2f1e2fd"
+        },
+        {
+          "name": "p1/P1-CHATGPTBOX-001-impl",
+          "sha": "6f87079850825216816a8b740b4fc026268b00ab"
+        },
+        {
+          "name": "phase/1-discipline-isolation",
+          "sha": "bb677541dc3e7b6b72b3298500acde61099fd8d2"
+        },
+        {
+          "name": "phase/2-session-orchestration",
+          "sha": "6b7707135b900cfcb1ff836edd3c1122aca27e96"
+        },
+        {
+          "name": "roadmap/tooling-expansion",
+          "sha": "9630af39de8529b21c6dccbfa905be39db2c6005"
+        },
+        {
+          "name": "runtime/browser-bridge-v1",
+          "sha": "1d4dba276a301be98c77095273956f7928c11a4e"
+        },
+        {
+          "name": "runtime/relay-readonly-v1",
+          "sha": "3c223ca3303d9af91466adecb855cb27a98122bf"
+        },
+        {
+          "name": "setup/orchestrator-foundation",
+          "sha": "98f3a4d6fe722f9c49b9736877f3b0b3a0990205"
+        }
+      ],
+      "tags": []
+    },
+    {
+      "repository": "menezes-platform/ops-persistflow-sandbox",
+      "repository_id": "1372885814",
+      "default_branch": "main",
+      "archived": false,
+      "branch_count": 4,
+      "tag_count": 0,
+      "open_pr_count": 1,
+      "branches": [
+        {
+          "name": "feat/sandbox-dod-final",
+          "sha": "6febd5e189c9a8ff6762727cf30a1fa76725c341"
+        },
+        {
+          "name": "feat/sandbox-v1",
+          "sha": "dba5f9cd54f2c70c9765b3f832876d2da9b7c195"
+        },
+        {
+          "name": "main",
+          "sha": "bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65"
+        },
+        {
+          "name": "spec/interactive-browser-human-gate",
+          "sha": "1c8f7a6b0c76e2193f36e1a0da6d54ac759ff402"
+        }
+      ],
+      "tags": []
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "repository_id": "1373335063",
+      "default_branch": "main",
+      "archived": false,
+      "branch_count": 117,
+      "tag_count": 0,
+      "open_pr_count": 8,
+      "branches": [
+        {
+          "name": "agent/dwarf-desktop-mascot-20260926",
+          "sha": "4a955d4f4517bb2f6b47e3edcff56c6698cb2306"
+        },
+        {
+          "name": "agent/fleet-storage-observability-plan/20260924-1353",
+          "sha": "b3aee8038dbeb6838563a235900dd06734471cb7"
+        },
+        {
+          "name": "audit/codex-orchestrator-prompt-typesafe-20260919",
+          "sha": "9108d26f77d8e8df5d49f98f2fc440f72368a4ba"
+        },
+        {
+          "name": "audit/mcp-reliability-2026-09-27",
+          "sha": "53ee5f5db40224b74a4780fbef38e6029a92792d"
+        },
+        {
+          "name": "chore/cloudflare-production",
+          "sha": "305f722e9bc5514144fb0f2db796a561f1bec1cf"
+        },
+        {
+          "name": "chore/secret-setup-log",
+          "sha": "711289d43a62a9c75de1a8dfd2e80bbaea362b23"
+        },
+        {
+          "name": "codex/email-triage-protected-categories",
+          "sha": "02e49b1deda11e1613559ca7c6f1e0e336223ad6"
+        },
+        {
+          "name": "codex/email-triage-review-gate",
+          "sha": "2e20343e831afcbc55333fd912d9d55d503cff74"
+        },
+        {
+          "name": "codex/email-triage-security-vetoes",
+          "sha": "5486914bbcfcffc40ee053b36a7a16181f7cb659"
+        },
+        {
+          "name": "consolidation/p07-source-audit-20261005",
+          "sha": "b483e6eb7571cccff3cc0dcfd285b5a06e0ac71e"
+        },
+        {
+          "name": "data/notebook-outreach-queue",
+          "sha": "56afbdf7099efa005fd5ecb2c207da9d2c262dcb"
+        },
+        {
+          "name": "design/live-feed",
+          "sha": "3f16e834a2fc9308cc4f2e8650123df7a3fc3bbc"
+        },
+        {
+          "name": "diagnostics/p03-installed-callers-20261004",
+          "sha": "af355080ae27df6c77613e792efd025ef958e000"
+        },
+        {
+          "name": "docs/dashboard-dod-20260918",
+          "sha": "4302aab808e72388a1502e9ac554208d21cfb5b1"
+        },
+        {
+          "name": "docs/fleet-runbook-v201",
+          "sha": "24e34b086ba7305b6d97393047969a9fdf9b6b96"
+        },
+        {
+          "name": "docs/gabriel-remote-mcp-connection-2026-09-28",
+          "sha": "781bac7d7cd04c9220c7a1c10cbe4f270d417f24"
+        },
+        {
+          "name": "docs/hostinger-connection-audit-20260928",
+          "sha": "3afd33a2e09b54e70071c53d3196f6b2ae27a219"
+        },
+        {
+          "name": "docs/hostinger-node-audit-2026-09-28",
+          "sha": "42999e6697064b624e1aeb8a43fbe2da970217af"
+        },
+        {
+          "name": "feat/agent-runtime-control-plane",
+          "sha": "ccbb525b7198ef780ba12180153445fae1448477"
+        },
+        {
+          "name": "feat/canonical-project-catalog",
+          "sha": "4bf56531e2de5b759785683a55be8d7b8191b872"
+        },
+        {
+          "name": "feat/connect-all-sources",
+          "sha": "3f63ecbee0528d6893061d476198a9c7701259be"
+        },
+        {
+          "name": "feat/dashboard-auth",
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c"
+        },
+        {
+          "name": "feat/dashboard-integration",
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c"
+        },
+        {
+          "name": "feat/dashboard-recovery-20260920",
+          "sha": "2dd3bb9b690012e6baaf129dc2cdd62d6a189855"
+        },
+        {
+          "name": "feat/dashboard-sync",
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c"
+        },
+        {
+          "name": "feat/dashboard-verification",
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c"
+        },
+        {
+          "name": "feat/dashboard-visual",
+          "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c"
+        },
+        {
+          "name": "feat/dungeon-ops-visual-merge-20260923",
+          "sha": "9d083600e7348f964661c76673bd696d7455abaf"
+        },
+        {
+          "name": "feat/fleet-auto-enrollment-v2",
+          "sha": "adc0350e27ad0400b5ace54b445e1a53efe27eca"
+        },
+        {
+          "name": "feat/fleet-cloudshell-bootstrap",
+          "sha": "8b1e147375f966530c5130b4448ec42cc2a64f84"
+        },
+        {
+          "name": "feat/gabriel-fleet-bootstrap-v1",
+          "sha": "50782b5b9f9fb7a72674f446037b319e5b72c304"
+        },
+        {
+          "name": "feat/gabriel-ops-v1",
+          "sha": "ebf36af4317b51a57e0d0435b60f9387035e2eea"
+        },
+        {
+          "name": "feat/gcp-mcp-cloudrun-upstream",
+          "sha": "b65bdecd711d05105c59d00c6d970ad6b48a8097"
+        },
+        {
+          "name": "feat/gcp-readonly-mcp",
+          "sha": "ee2b2a47e83d7d92ba33f8eccfc68be92f1bf8a0"
+        },
+        {
+          "name": "feat/geometry-dojo-preview",
+          "sha": "0660304a357d0bc18e0794b55b58f0fd6c01afe0"
+        },
+        {
+          "name": "feat/jev-email-triage",
+          "sha": "a6d83473ad6b39cc5827765e94258afc8bb35622"
+        },
+        {
+          "name": "feat/live-project-feed",
+          "sha": "8950180232eafea7a87e23c28978a20ce19f11d8"
+        },
+        {
+          "name": "feat/notebook-outreach-infra",
+          "sha": "be1372b3947e789389d28f38bd125a89dbe89436"
+        },
+        {
+          "name": "feat/tiktok-max-priority-feed",
+          "sha": "078ffb576e1e44db52e5b0745f61508f69a50499"
+        },
+        {
+          "name": "feat/typesafe-guardrail",
+          "sha": "0f8084d1ab2a795d6ca677b193b0e494a4fe952e"
+        },
+        {
+          "name": "fix/auth-readiness-propagation",
+          "sha": "c7f315cb3c4bc303b357952cf25496ec1cba8525"
+        },
+        {
+          "name": "fix/auth-runtime-observability",
+          "sha": "d8dc9384b3ec48446d720c7ca2bf491b1d476888"
+        },
+        {
+          "name": "fix/auth-runtime-probe-20260920",
+          "sha": "c4894fa02057b8fec36761702718886aa3eb9df8"
+        },
+        {
+          "name": "fix/cloudflare-account-selection",
+          "sha": "e3e1dfb2124f26bf50e6842945a94d7ce828b71c"
+        },
+        {
+          "name": "fix/cloudflare-cron-health",
+          "sha": "861972fa2813a7659dd5c2f425d4f16517cb450f"
+        },
+        {
+          "name": "fix/cloudflare-cron-health-route",
+          "sha": "208bc109ef550bb2ed4e2f27bac4c6d21398dac5"
+        },
+        {
+          "name": "fix/cloudflare-github-concurrency",
+          "sha": "68f4538d8f2df47ed459e21138e836e71bd6f8c0"
+        },
+        {
+          "name": "fix/cloudflare-github-cron",
+          "sha": "87c630ea5f2ee7fb157658e196860bfb7717a780"
+        },
+        {
+          "name": "fix/cloudflare-github-fetch-receiver-20260920",
+          "sha": "95a811f07c3e972d2b9f16dc15a3b19299579570"
+        },
+        {
+          "name": "fix/cloudflare-github-subrequests",
+          "sha": "640ba917be589f2b0165b63336af91080cecccf2"
+        },
+        {
+          "name": "fix/cloudflare-pbkdf2-limit-20260920",
+          "sha": "177adc3ad6b9468fc5f2625f9d447a598000ad74"
+        },
+        {
+          "name": "fix/composio-akimcp-redirect",
+          "sha": "e700c2452ef4c64a0bb8429cad7c52cb2c265b16"
+        },
+        {
+          "name": "fix/dashboard-active-sync",
+          "sha": "6a30930b5de4a60c5526c385fe9505e391d46994"
+        },
+        {
+          "name": "fix/dashboard-auth-credential-recovery-20260920",
+          "sha": "174f0d563d4f22d06a2243760c28fe7e89280ad6"
+        },
+        {
+          "name": "fix/dashboard-bearer-failover",
+          "sha": "d7852a97a441adf2690a755db629080a042a3fb9"
+        },
+        {
+          "name": "fix/dashboard-machine-auth-diagnostics",
+          "sha": "ff6c1111acfdc31c10496a9bd643cd23e56f2b8b"
+        },
+        {
+          "name": "fix/dashboard-machine-auth-worker",
+          "sha": "09731d8ebcc1627fb6e88fa17363ba9012b0de62"
+        },
+        {
+          "name": "fix/dashboard-sync-reconcile",
+          "sha": "774d67741163f0067be55a809a2a020f313e553e"
+        },
+        {
+          "name": "fix/dashboard-ux-live-telemetry",
+          "sha": "dd4f43e44fccb713b05b993307026b5fe9a40ba1"
+        },
+        {
+          "name": "fix/dashboard-worker-secret-init",
+          "sha": "d8857c4a5da85414bd9f35f168cea1bf049ee53b"
+        },
+        {
+          "name": "fix/decommission-legacy-aws-vm-20260928",
+          "sha": "9cc2c59b34c3d787f8d9e27ab25470e8f2e43fb2"
+        },
+        {
+          "name": "fix/final-project-feed-ci",
+          "sha": "b7b8b140480d70ed368bddc1e39c3b1c3ba50437"
+        },
+        {
+          "name": "fix/fleet-hub-deploy-ssm",
+          "sha": "f7557d3038c9b4bf4364264f4e6a6a0c0f40bc09"
+        },
+        {
+          "name": "fix/fleet-windows-legacy-migration",
+          "sha": "6db4369c9c5cdac4b90cb01047ba67b2715d8293"
+        },
+        {
+          "name": "fix/full-sync-kv",
+          "sha": "31abcc7b0c64a7049686e5177b2cd96d0cb9facc"
+        },
+        {
+          "name": "fix/gcp-cloudrun-health-path",
+          "sha": "94831e20b57146234c211d4c9f253a75d96d28c4"
+        },
+        {
+          "name": "fix/github-snapshot-connection-hardening-20260918",
+          "sha": "356894e57d577e0a09f0fe9ded86b2975abd25b0"
+        },
+        {
+          "name": "fix/jev-email-triage-compact-fetch",
+          "sha": "34be53a747edc7bbcd9ad50123ba1af381a8a856"
+        },
+        {
+          "name": "fix/jev-email-triage-fetch-window",
+          "sha": "dfbc0dda7dc4034d3d58bd7b06dad55a0c663ba9"
+        },
+        {
+          "name": "fix/jev-email-triage-local-authority",
+          "sha": "095515ba7a041d6930d60b8f3ed0ac0451b6b6a4"
+        },
+        {
+          "name": "fix/jev-email-triage-local-fetch-envelope",
+          "sha": "d82c58e26e5e464cc54d10103443d22ab30880bd"
+        },
+        {
+          "name": "fix/jev-local-gmail-identity-drift",
+          "sha": "7bd207f2a71d77d4d3ae995ffbec74f6c88e7e0a"
+        },
+        {
+          "name": "fix/live-dungeon-single-project",
+          "sha": "a867391c1e7e18d55d823828870c3fa09c3ccf54"
+        },
+        {
+          "name": "fix/mobile-dashboard-ux-20260919",
+          "sha": "a883e384bb91caa9138bb9ba69085183fbcc20d3"
+        },
+        {
+          "name": "fix/private-source-http-transport-20260919",
+          "sha": "7f3c184ca10aebefcf70121ed4d9f8746ed93116"
+        },
+        {
+          "name": "fix/production-smoke-owner-credential-20260920",
+          "sha": "e1c564cc3614ce0fae8f88dc9399400dd1fd061a"
+        },
+        {
+          "name": "fix/project-feed-bom",
+          "sha": "4151580715f7fff4c93d22be8b822ca162ca6780"
+        },
+        {
+          "name": "fix/raw-body-machine-auth",
+          "sha": "bf4b5cb6e241b0055ff836b4dd7515d064dc7e08"
+        },
+        {
+          "name": "fix/sync-dashboard-secret-via-deploy-20260920",
+          "sha": "efdfff428881231535f465465ce9099ec5861af2"
+        },
+        {
+          "name": "fix/tiktok-dashboard-live-sync",
+          "sha": "55fb735c0bf985d3154998f85136c214f51f93da"
+        },
+        {
+          "name": "fix/tiktok-live-project-feed",
+          "sha": "9be7d8ceae3e5d4f15db8ebbd101f2f15b4684fe"
+        },
+        {
+          "name": "fix/tiktok-runtime-deployment-state",
+          "sha": "b2e43de47ec65a535154e8ada58b51981e0412f7"
+        },
+        {
+          "name": "fix/use-proven-snapshot-scheduler",
+          "sha": "9119d5c506a6a29068094dea67d068ca9be3cfb3"
+        },
+        {
+          "name": "fix/webcrypto-machine-auth",
+          "sha": "567456b777f31963d8c535628b075e823abf2356"
+        },
+        {
+          "name": "fix/windows-snapshot-scheduler",
+          "sha": "f2398c21ddb57ad7384536c97e6b85b7bb4f7c6b"
+        },
+        {
+          "name": "infra/dispatch-gabriel-ops-tsim",
+          "sha": "d63e75642b7b7b2a18de20f55ecbdedd5167402e"
+        },
+        {
+          "name": "infra/hermes-aws-bootstrap",
+          "sha": "330c9469e9951c1082bfdc975654136b6b278776"
+        },
+        {
+          "name": "integrate/live-snapshot-functional",
+          "sha": "2d808c7a2b0971ef67b28e099902d885612853ee"
+        },
+        {
+          "name": "main",
+          "sha": "8dfcca2d544655b7317671fbc0d007c8d961c674"
+        },
+        {
+          "name": "migration/platform-consolidation-p02",
+          "sha": "86c23f65b40fa6b3ebca95f339c45ee9286b5547"
+        },
+        {
+          "name": "notebook-outreach-agent",
+          "sha": "b1c9b52a71f4c7e10bd76d8723d6954b4cf9e0e6"
+        },
+        {
+          "name": "ops/auth-recovery-20260920",
+          "sha": "ea78e1ebab2a7f0390cb77a488b7f54afe5e8b35"
+        },
+        {
+          "name": "ops/auth-recovery-pass2-20260920",
+          "sha": "85780c3ea5912f1b82b65dec5892f4ded3fd3e64"
+        },
+        {
+          "name": "ops/auth-recovery-pass4-record",
+          "sha": "692e102a3e175f43ed35eb4b43b24092d068930e"
+        },
+        {
+          "name": "ops/auth-recovery-pass5-20260920",
+          "sha": "017548de23ed3b38a7d7e40fcbb80cb292b0fbc1"
+        },
+        {
+          "name": "ops/auth-recovery-token-bootstrap-20260920",
+          "sha": "fb2aa6ce5dcd2831d9a8c677db6c8d9b3f356790"
+        },
+        {
+          "name": "ops/cloudflare-deploy-learning-20260923",
+          "sha": "e0d567313d767367d30c1d564789a01ce52abe43"
+        },
+        {
+          "name": "ops/deploy-fleet-enrollment-now",
+          "sha": "d2646208966971f0b0322ccccdbf5b1fa3f9d9bc"
+        },
+        {
+          "name": "ops/gcp-agent-inventory",
+          "sha": "f6c114aa30462d4293ed1f6d0c8230c5c73f031c"
+        },
+        {
+          "name": "ops/gcp-auth-bootstrap",
+          "sha": "9de1534bf76d43c5cb017f439d9c6ca7487b2eb1"
+        },
+        {
+          "name": "ops/gcp-cloudrun-deploy-health-fix",
+          "sha": "eaa8563e20976534099137f106c2d1784ca3735d"
+        },
+        {
+          "name": "ops/gcp-cloudrun-preflight",
+          "sha": "db68a2ce438fcef6026464c93f1b3e9f4c4207a5"
+        },
+        {
+          "name": "ops/gcp-mcp-cloudrun-bootstrap",
+          "sha": "b5ea8497d00aea7564e47a3445f319c295df582d"
+        },
+        {
+          "name": "ops/live-broadcast-node-20260925",
+          "sha": "f192f87bd091b93f059d80bc56c88ee1c72144ad"
+        },
+        {
+          "name": "ops/omniroute-chatgpt-plugin",
+          "sha": "824d519266aa4faef98757bfbb28f6e8d03db021"
+        },
+        {
+          "name": "ops/rdc-refresh-token-tab-leak-20260919",
+          "sha": "2bd052f2396d3c404576a3adc1148d30e568978e"
+        },
+        {
+          "name": "ops/remove-one-shot-dashboard-recovery-record",
+          "sha": "2c5a41f10a97f580f07bd12acec27b9f001ece18"
+        },
+        {
+          "name": "ops/scrapling-codebuild-scout-20261003",
+          "sha": "e2b1e148d39fa25052a7d88a710fa96e1f4e440f"
+        },
+        {
+          "name": "ops/ttk-live-control-probe",
+          "sha": "f4ff8a1816cb79cf532ad1ad2fa2e6c9498214d4"
+        },
+        {
+          "name": "reconcile/catalog-2026-09-21",
+          "sha": "ac3d668dd3db25a97942c59bda15d8cfacd10444"
+        },
+        {
+          "name": "reconcile/ttk-single-project-20260919",
+          "sha": "70b0e9b51d2edf628eba1774d242583ee313455f"
+        },
+        {
+          "name": "reconcile/ttk-single-project-20260919-v2",
+          "sha": "3d90bf40aa3491928966ce6b5dd7e2745ca7fa66"
+        },
+        {
+          "name": "recovery/release-verifier",
+          "sha": "586d51deabd67c921598960520b955321fa8222f"
+        },
+        {
+          "name": "recovery/sync-pipeline",
+          "sha": "8e7520d29371333d1a5fa84f7cc10f83d9438365"
+        },
+        {
+          "name": "recovery/visual-ops-console",
+          "sha": "d00f41df577e9f104581454413dac85e305fd5cd"
+        },
+        {
+          "name": "refactor/connector-runtime",
+          "sha": "79358350fae75a661487208b649b4acbe95874db"
+        },
+        {
+          "name": "tooling/ai-design-stack",
+          "sha": "59a04b0ea8af909bf7ff429fff5aba37924f9571"
+        }
+      ],
+      "tags": []
+    },
+    {
+      "repository": "menezesx2k26-byte/Memory",
+      "repository_id": "1376676747",
+      "default_branch": "main",
+      "archived": false,
+      "branch_count": 3,
+      "tag_count": 0,
+      "open_pr_count": 1,
+      "branches": [
+        {
+          "name": "feat/agent-cognitive-memory-20260927",
+          "sha": "885b4fa6d416533c65bfc82ad04e9bcaf10067c2"
+        },
+        {
+          "name": "feat/project-scoped-memory-candidates-v2",
+          "sha": "373b0cf87ed5800e63d8c6aa7b22e75921e74d31"
+        },
+        {
+          "name": "main",
+          "sha": "2f43e8d1b20f6325c44e7a3174e80e00e3a809b7"
+        }
+      ],
+      "tags": []
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "repository_id": "1343276914",
+      "default_branch": "main",
+      "archived": false,
+      "branch_count": 21,
+      "tag_count": 3,
+      "open_pr_count": 0,
+      "branches": [
+        {
+          "name": "debug/concursos-cloudflare-auth",
+          "sha": "40b8113c01ee667f1a2c8f654daf956fd926d368"
+        },
+        {
+          "name": "feat/cloudops-mcp",
+          "sha": "115ef38ed798f7d5701baef9e6999b0a1d2b822e"
+        },
+        {
+          "name": "feat/concursos-central-deploy",
+          "sha": "352aed9b6b112e97cb40283e6c678f0e9546301a"
+        },
+        {
+          "name": "feat/fleet-installers-edge",
+          "sha": "e60b1aac6715a2ea66462aecaef7c1c9a54d6c2a"
+        },
+        {
+          "name": "feat/geometria-dojo-preview",
+          "sha": "f7e741a51f77b4940865881ab2e72f7117f22ce4"
+        },
+        {
+          "name": "feat/hostinger-mcp-origin-20260928",
+          "sha": "ce845bb168706d8392380cd86e26606a5877950d"
+        },
+        {
+          "name": "feat/pet3d-editorial-html",
+          "sha": "17f2b938fc73bf08ef4dd86a330c41f75ca71bf9"
+        },
+        {
+          "name": "feat/pet3d-siteops-registration",
+          "sha": "75e63d6a64d430d4f977f31c7ac9b4922413ad21"
+        },
+        {
+          "name": "feat/register-punctum-pet3d",
+          "sha": "e4dd2253a5ee6f100fc1306c57c23c33700a79d5"
+        },
+        {
+          "name": "fix/composio-dcr-edge-shim",
+          "sha": "c3fabb0eeec08b48228bb1cdf1c06bb7fe5b4336"
+        },
+        {
+          "name": "fix/concursos-kv-delegation",
+          "sha": "e4dd2253a5ee6f100fc1306c57c23c33700a79d5"
+        },
+        {
+          "name": "fix/edge-acceptance-convergence",
+          "sha": "ba086af1904e990abceb762ad39b514b29f0071f"
+        },
+        {
+          "name": "fix/edge-composio-convergence",
+          "sha": "c61e1c6ad489d25f3441735e23b2db32acadb7b5"
+        },
+        {
+          "name": "fix/edge-oauth-response-type",
+          "sha": "96bc3e6805af4969eaf3564c12f111a0c62cf358"
+        },
+        {
+          "name": "fix/fleet-hub-8443",
+          "sha": "2b37ff4748035a385fdd1e5f97edcf1aaf673610"
+        },
+        {
+          "name": "fix/fleet-installers-base64",
+          "sha": "57a8a8f3eeb738070d58d9eb62a44502362ad82b"
+        },
+        {
+          "name": "fix/fleet-windows-installer-v201",
+          "sha": "fea6798ec122b773a677d1476abbc9a1c58ce0f9"
+        },
+        {
+          "name": "fix/retire-aws-vm-edge-provision-20260928",
+          "sha": "d3738e6a6a80e81cde29e569766817eff705eb32"
+        },
+        {
+          "name": "main",
+          "sha": "65e17e37915b283a3b3c8cb8de907f60b38331a5"
+        },
+        {
+          "name": "ops/fleet-edge-acceptance",
+          "sha": "4c9c5bb1444388a1bd53134f124970f205798681"
+        },
+        {
+          "name": "test/mcp-bridge-smoke-20260823",
+          "sha": "a402cda1a9b5c496af0e5efcabec7d6655daa85f"
+        }
+      ],
+      "tags": [
+        {
+          "name": "conthabil-source-10dd9e669f00",
+          "sha": "b7f655eabb9a93d66dee21e9307b7614ddbdc7be"
+        },
+        {
+          "name": "conthabil-source-155e4ebcb101",
+          "sha": "32719091c4100add0d180a3b506a7f7765e2b7f7"
+        },
+        {
+          "name": "conthabil-source-a8569c429a38",
+          "sha": "6ddf403735d579ddf0f4ebef2bfc44952deae01d"
+        }
+      ]
+    }
+  ],
+  "open_pr_head_refs": [
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 32,
+      "title": "P05 prep: plan scoped index generation publication and rollback",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/32",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "migration/platform-consolidation-p03",
+      "base_sha": "7a211eaae2b54ad8bcbe15ff03b2abb953feed2b",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "consolidation/p05-generation-contract-20261005",
+      "head_sha": "a56de48ba3c037e228fabe51662e1608b06b1565"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 31,
+      "title": "docs: refresh Platform Consolidation checkpoints",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/31",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "main",
+      "base_sha": "f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "consolidation/p08-caller-inventory-20261005",
+      "head_sha": "74f9d5a0785b366a40bb329f0b200f29268304f9"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 30,
+      "title": "Prepare Provider Gateway fallback, budgets and freshness-aware exact cache",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/30",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "migration/platform-consolidation-p03",
+      "base_sha": "7a211eaae2b54ad8bcbe15ff03b2abb953feed2b",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "consolidation/p06-provider-policy-20261005",
+      "head_sha": "18e60fe843295a74297144a7dce005428b3bed83"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 25,
+      "title": "docs(incident): correct PersistFlow runtime target audit",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/25",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "main",
+      "base_sha": "d6eec994de5543e490f69ee098a59626d576ec11",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "fix/railway-runtime-target-audit-2026-09-28",
+      "head_sha": "720aa6759a4cd3ea3d6bc7329025514274d7b4b4"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 20,
+      "title": "docs(plan): MCP reliability and Railway worker integration",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/20",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "main",
+      "base_sha": "4425d1b2538fafe3e593d934bde5b3f6e22863b9",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "plans/mcp-reliability-railway-2026-09-27",
+      "head_sha": "9b46946fc4e8109a6e1103b78e2c90e5dde6934b"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 17,
+      "title": "feat: add Drive-backed fleet storage and TypeSafe routing",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/17",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "agent/drive-fleet-plan/20260924-1353",
+      "base_sha": "b9fc11bf6a9b751e370e843ca16bda0d22396cd0",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "agent/drive-fleet-exec/20260924",
+      "head_sha": "97a356d89ed9ec5553f4d5cd5df60938c693e6c0"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 14,
+      "title": "fix(persistd): stop retry loop at authentication boundary",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/14",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "main",
+      "base_sha": "4ada52766d9380f36ccf4c20af25bd1d7ce553e6",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "fix/persistd-auth-preflight-20260919",
+      "head_sha": "f7ddbada067b7a27cb838538b493f8f911bbb17d"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 13,
+      "title": "feat: add quota/context circuit breaker",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/13",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "main",
+      "base_sha": "7f79cbcaaebab0fbd11c44a2982456fd1828a101",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "hardening/quota-context-circuit-breaker-20260919",
+      "head_sha": "3669de446fee80ea86e83067a8160a6684f6c9df"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 1,
+      "title": "Enforce observable frontend tool activation",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/1",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-codex-os",
+      "base": "main",
+      "base_sha": "fda54f187e752451064031c06dcf7095f1a4ac10",
+      "head_repository": "menezes-platform/ops-codex-os",
+      "head": "feat/frontend-ui-orchestration",
+      "head_sha": "a6a0ac14cfef354afd73ccfe1cf4b1de7ba6a298"
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "number": 1,
+      "title": "[P04 draft] Fence worker results by lease and security epoch",
+      "url": "https://github.com/menezesx2k26-byte/resident-node/pull/1",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezesx2k26-byte/resident-node",
+      "base": "main",
+      "base_sha": "14b4cb2f94227d918c42564447f50f28e4763c88",
+      "head_repository": "menezesx2k26-byte/resident-node",
+      "head": "consolidation/p04-fenced-worker-results-20261005",
+      "head_sha": "2fc86be578b898e5e8302c214b8b06cf81f2f15c"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 24,
+      "title": "Semantic Cache CI verification",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/24",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "8cad543c1b196dd3b6ae0cd9d9c6345788babf5f",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "feat/SEMANTIC-CACHE-001-ci",
+      "head_sha": "4da4475ac8d86c9434fb5485ec1d3fca35fb5df1"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 23,
+      "title": "feat: enforce control-plane quota guard",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/23",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "8cad543c1b196dd3b6ae0cd9d9c6345788babf5f",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "hardening/control-plane-quota-guard-20260919",
+      "head_sha": "48ba962b7dd9691e0302ef76dd6020a9fdd0dd40"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 22,
+      "title": "HYDRA-001 foundation",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/22",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "9b850cc20b4e6b7525c9e487368f1585dc200ac3",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "hydra/HYDRA-001-foundation",
+      "head_sha": "69e549a6cfd7c1a86bddb5fb537758a8ca905f47"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 20,
+      "title": "feat: integrate resident computer control into main",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/20",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "8a354911404724f3283331e5610aac475e113a55",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "integrate/computer-control-main",
+      "head_sha": "2ae56e18d5691eacfdc59343f06df64561686b9a"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 18,
+      "title": "Require observable frontend tool use",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/18",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "8a354911404724f3283331e5610aac475e113a55",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "feat/UI-REFERENCE-LAYER-001",
+      "head_sha": "ebba425396abfce914c6a073122f31477827a793"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 17,
+      "title": "P1-001: close Codex-only discipline and isolation gate",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/17",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "26c8e80dd6bacd9abc938af8a7da51b3d1abede2",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "p1/P1-001-codex-only",
+      "head_sha": "bd5c467d9e09260d18cd38f68d2cee879a397cee"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 10,
+      "title": "Integrate Gabriel-Codex-OS as cognitive control plane",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/10",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "57ba281ba93bb56b55531a86168fd694a042d5fb",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "codex/codex-os-integration",
+      "head_sha": "08015852df13a7603d58087c90bc2d99b7097b2a"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 9,
+      "title": "docs: prepare Serena and Context7 local intelligence pilot",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/9",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "db09dd61897e95c7198c1b3e93f15e2962be8d7a",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "local/intelligence-pilot-prep",
+      "head_sha": "264333416045e2af5761b59d79553ec8a44772bd"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 8,
+      "title": "ci: compile Contrito 0.4.0",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/8",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezes-platform/ops-dev-orquestra",
+      "base": "main",
+      "base_sha": "02b68915995e530f2f90f239852fdf66afd1a870",
+      "head_repository": "menezes-platform/ops-dev-orquestra",
+      "head": "build/contrito-0.4.0",
+      "head_sha": "51049aba78440c600bb6cf28706fca11a03538f2"
+    },
+    {
+      "repository": "menezes-platform/ops-persistflow-sandbox",
+      "number": 1,
+      "title": "feat: build PersistFlow Sandbox v1",
+      "url": "https://github.com/menezes-platform/ops-persistflow-sandbox/pull/1",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezes-platform/ops-persistflow-sandbox",
+      "base": "main",
+      "base_sha": "bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65",
+      "head_repository": "menezes-platform/ops-persistflow-sandbox",
+      "head": "feat/sandbox-v1",
+      "head_sha": "dba5f9cd54f2c70c9765b3f832876d2da9b7c195"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 82,
+      "title": "P07 source audit: document state writers and guard read-only routes",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/82",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "base": "main",
+      "base_sha": "8dfcca2d544655b7317671fbc0d007c8d961c674",
+      "head_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "head": "consolidation/p07-source-audit-20261005",
+      "head_sha": "b483e6eb7571cccff3cc0dcfd285b5a06e0ac71e"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 69,
+      "title": "docs(mcp): add evidence-based reliability audit",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/69",
+      "state": "open",
+      "draft": true,
+      "base_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "base": "main",
+      "base_sha": "e7280a3523ca96b3b7b5a2cbc903eabb60116f9b",
+      "head_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "head": "audit/mcp-reliability-2026-09-27",
+      "head_sha": "53ee5f5db40224b74a4780fbef38e6029a92792d"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 58,
+      "title": "refactor(catalog): reconcile 40 repos into 33 logical projects",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/58",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "base": "main",
+      "base_sha": "81b88d386ef4d2884640d6b61709b1a1f4089588",
+      "head_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "head": "reconcile/catalog-2026-09-21",
+      "head_sha": "ac3d668dd3db25a97942c59bda15d8cfacd10444"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 57,
+      "title": "Fix production auth readiness propagation race",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/57",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "base": "main",
+      "base_sha": "81b88d386ef4d2884640d6b61709b1a1f4089588",
+      "head_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "head": "fix/auth-readiness-propagation",
+      "head_sha": "c7f315cb3c4bc303b357952cf25496ec1cba8525"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 34,
+      "title": " docs: record secret setup recovery failures",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/34",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "base": "main",
+      "base_sha": "fb41023215ef1ba16967db6f17af1ab8a94654b4",
+      "head_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "head": "chore/secret-setup-log",
+      "head_sha": "711289d43a62a9c75de1a8dfd2e80bbaea362b23"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 29,
+      "title": "fix: harden GitHub snapshot collector connectivity",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/29",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "base": "main",
+      "base_sha": "4cf46928eafd109a6194bcfe02cc4acbdfdd19b1",
+      "head_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "head": "fix/github-snapshot-connection-hardening-20260918",
+      "head_sha": "356894e57d577e0a09f0fe9ded86b2975abd25b0"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 28,
+      "title": "feat(verifier): add fail-closed Gabriel Ops release harness",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/28",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "base": "main",
+      "base_sha": "4cf46928eafd109a6194bcfe02cc4acbdfdd19b1",
+      "head_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "head": "recovery/release-verifier",
+      "head_sha": "586d51deabd67c921598960520b955321fa8222f"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 26,
+      "title": "fix(sync): recover truthful private-source pipeline",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/26",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "base": "main",
+      "base_sha": "4cf46928eafd109a6194bcfe02cc4acbdfdd19b1",
+      "head_repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "head": "recovery/sync-pipeline",
+      "head_sha": "8e7520d29371333d1a5fa84f7cc10f83d9438365"
+    },
+    {
+      "repository": "menezesx2k26-byte/Memory",
+      "number": 4,
+      "title": "feat(memory): add explicit project candidate v2 validation",
+      "url": "https://github.com/menezesx2k26-byte/Memory/pull/4",
+      "state": "open",
+      "draft": false,
+      "base_repository": "menezesx2k26-byte/Memory",
+      "base": "main",
+      "base_sha": "eb23f7ef3478edf4f44a4a43bbacf75e0ce66336",
+      "head_repository": "menezesx2k26-byte/Memory",
+      "head": "feat/project-scoped-memory-candidates-v2",
+      "head_sha": "373b0cf87ed5800e63d8c6aa7b22e75921e74d31"
+    }
+  ],
+  "exact_open_pr_head_matches": [
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 32,
+      "head": "consolidation/p05-generation-contract-20261005",
+      "head_sha": "a56de48ba3c037e228fabe51662e1608b06b1565",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/32"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 31,
+      "head": "consolidation/p08-caller-inventory-20261005",
+      "head_sha": "74f9d5a0785b366a40bb329f0b200f29268304f9",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/31"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 30,
+      "head": "consolidation/p06-provider-policy-20261005",
+      "head_sha": "18e60fe843295a74297144a7dce005428b3bed83",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/30"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 25,
+      "head": "fix/railway-runtime-target-audit-2026-09-28",
+      "head_sha": "720aa6759a4cd3ea3d6bc7329025514274d7b4b4",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/25"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 20,
+      "head": "plans/mcp-reliability-railway-2026-09-27",
+      "head_sha": "9b46946fc4e8109a6e1103b78e2c90e5dde6934b",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/20"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 17,
+      "head": "agent/drive-fleet-exec/20260924",
+      "head_sha": "97a356d89ed9ec5553f4d5cd5df60938c693e6c0",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/17"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 14,
+      "head": "fix/persistd-auth-preflight-20260919",
+      "head_sha": "f7ddbada067b7a27cb838538b493f8f911bbb17d",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/14"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 13,
+      "head": "hardening/quota-context-circuit-breaker-20260919",
+      "head_sha": "3669de446fee80ea86e83067a8160a6684f6c9df",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/13"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "number": 1,
+      "head": "feat/frontend-ui-orchestration",
+      "head_sha": "a6a0ac14cfef354afd73ccfe1cf4b1de7ba6a298",
+      "url": "https://github.com/menezes-platform/ops-codex-os/pull/1"
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "number": 1,
+      "head": "consolidation/p04-fenced-worker-results-20261005",
+      "head_sha": "2fc86be578b898e5e8302c214b8b06cf81f2f15c",
+      "url": "https://github.com/menezesx2k26-byte/resident-node/pull/1"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 24,
+      "head": "feat/SEMANTIC-CACHE-001-ci",
+      "head_sha": "4da4475ac8d86c9434fb5485ec1d3fca35fb5df1",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/24"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 23,
+      "head": "hardening/control-plane-quota-guard-20260919",
+      "head_sha": "48ba962b7dd9691e0302ef76dd6020a9fdd0dd40",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/23"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 22,
+      "head": "hydra/HYDRA-001-foundation",
+      "head_sha": "69e549a6cfd7c1a86bddb5fb537758a8ca905f47",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/22"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 20,
+      "head": "integrate/computer-control-main",
+      "head_sha": "2ae56e18d5691eacfdc59343f06df64561686b9a",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/20"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 18,
+      "head": "feat/UI-REFERENCE-LAYER-001",
+      "head_sha": "ebba425396abfce914c6a073122f31477827a793",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/18"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 17,
+      "head": "p1/P1-001-codex-only",
+      "head_sha": "bd5c467d9e09260d18cd38f68d2cee879a397cee",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/17"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 10,
+      "head": "codex/codex-os-integration",
+      "head_sha": "08015852df13a7603d58087c90bc2d99b7097b2a",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/10"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 9,
+      "head": "local/intelligence-pilot-prep",
+      "head_sha": "264333416045e2af5761b59d79553ec8a44772bd",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/9"
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "number": 8,
+      "head": "build/contrito-0.4.0",
+      "head_sha": "51049aba78440c600bb6cf28706fca11a03538f2",
+      "url": "https://github.com/menezes-platform/ops-dev-orquestra/pull/8"
+    },
+    {
+      "repository": "menezes-platform/ops-persistflow-sandbox",
+      "number": 1,
+      "head": "feat/sandbox-v1",
+      "head_sha": "dba5f9cd54f2c70c9765b3f832876d2da9b7c195",
+      "url": "https://github.com/menezes-platform/ops-persistflow-sandbox/pull/1"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 82,
+      "head": "consolidation/p07-source-audit-20261005",
+      "head_sha": "b483e6eb7571cccff3cc0dcfd285b5a06e0ac71e",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/82"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 69,
+      "head": "audit/mcp-reliability-2026-09-27",
+      "head_sha": "53ee5f5db40224b74a4780fbef38e6029a92792d",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/69"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 58,
+      "head": "reconcile/catalog-2026-09-21",
+      "head_sha": "ac3d668dd3db25a97942c59bda15d8cfacd10444",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/58"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 57,
+      "head": "fix/auth-readiness-propagation",
+      "head_sha": "c7f315cb3c4bc303b357952cf25496ec1cba8525",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/57"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 34,
+      "head": "chore/secret-setup-log",
+      "head_sha": "711289d43a62a9c75de1a8dfd2e80bbaea362b23",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/34"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 29,
+      "head": "fix/github-snapshot-connection-hardening-20260918",
+      "head_sha": "356894e57d577e0a09f0fe9ded86b2975abd25b0",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/29"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 28,
+      "head": "recovery/release-verifier",
+      "head_sha": "586d51deabd67c921598960520b955321fa8222f",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/28"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "number": 26,
+      "head": "recovery/sync-pipeline",
+      "head_sha": "8e7520d29371333d1a5fa84f7cc10f83d9438365",
+      "url": "https://github.com/menezesx2k26-byte/ops-gabriel-ops/pull/26"
+    },
+    {
+      "repository": "menezesx2k26-byte/Memory",
+      "number": 4,
+      "head": "feat/project-scoped-memory-candidates-v2",
+      "head_sha": "373b0cf87ed5800e63d8c6aa7b22e75921e74d31",
+      "url": "https://github.com/menezesx2k26-byte/Memory/pull/4"
+    }
+  ],
+  "unmatched_open_pr_heads": [],
+  "branch_refs_without_exact_open_pr_head": [
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "agent/drive-fleet-plan/20260924-1353",
+      "sha": "b9fc11bf6a9b751e370e843ca16bda0d22396cd0",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "agent/log-powershell-quoting-20260924-1545",
+      "sha": "57c09c9ed6f04595743d7ce509d66b1a3a028da4",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/active-learning-ssh-gitdeploy",
+      "sha": "969e6f4a4c9b4e82b8ac5e58dae106cbea8a8d75",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/clarify-cognition-benchmark",
+      "sha": "2068b34e0693a5c38bb9a3ca01cadc347945a8b0",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/lesson-ec2-work-browser-auth-20260919",
+      "sha": "3efcf23e632921d31d6a6cbb11e415fbaadfca2d",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/persistflow-canonical-spec",
+      "sha": "6f6674e2b383d557cd11e56295a5af823bc8c2ba",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/persistflow-multichannel-design",
+      "sha": "0c066b1e6236d61c90633b853f95a1b321bd4057",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/persistflow-remote-dev-plan-20260930",
+      "sha": "312967111b3a3576eb733662c1a20136169eed95",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/platform-consolidation-design-20261002",
+      "sha": "64400da0a0d6a4ec2dc2ae4c1d4b3e024a0b8020",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/shared-codebuild-sandbox-policy",
+      "sha": "6c4087d14db4bc5ea3dae78bd6c6f0933e81be70",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "docs/update-benchmark-latency",
+      "sha": "4a77109ab07cec1510f048728d8470709d8afbe8",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/design-agent-catalogue-router",
+      "sha": "a5bbda068f61f042174c9b2b42b4fc34c80db9b2",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/fontsource-router",
+      "sha": "96b0a34c2cacba3a37f736a03c44e5065cf11e8c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/frontend-director-design",
+      "sha": "d4c18e40f2ef5c4156dc3bcbba6b84d5651ce046",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/frontend-director-implementation",
+      "sha": "5fa6c7dcb55f1a876c6856634dd5292320fec282",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/memory-cognition-provider",
+      "sha": "0f3ae360817ee01f83fdf57290a2cf17f047d8a7",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/persistd-bootstrap-unify",
+      "sha": "c9eacc62eed1597bf2649bb3bf480b869e541b47",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/persistd-health-selfheal",
+      "sha": "614aad8002e9ab9640b34a72fe68bd83fc9c3aef",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/persistd-lifecycle-hardening",
+      "sha": "92c7b122c94a35adcb7fca58ebf796cd7a19a565",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/persistd-remote-control-hardening",
+      "sha": "b5a863751067268b8e32496ba39def40a3fe4652",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/persistflow-railway-ephemeral-compose",
+      "sha": "c7ef4e4b2c35f3ac5b223c71d815bde527c1d6d2",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/persistflow-sandbox-provider",
+      "sha": "46f6ebd672b636c1b4c6a75a5f88f0c6bcaddd2c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/public-apis-discovery",
+      "sha": "7d0b5d4c94455f0691a3f9f70b0a10d427977814",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/ragflow-shadow-provider",
+      "sha": "831426c79ba17bee81f2225b470d969d2d8cbb5a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/railway-ephemeral-worker-loop-20260927",
+      "sha": "485910f95a1bfa4b89e7bf189dfbf7bdd199de38",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/revise-alias",
+      "sha": "38d41fc08e9360c69519a62dfc84ea1242508c34",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/router-visual-manus-vendors",
+      "sha": "d1a29425c394e26c6def98eb9c8b46a46d897c86",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/swarm-worker-hardening",
+      "sha": "16d04b4b9b003133eb27c06eea4094cf65d1dc38",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feat/windows-desktop-operator-skill",
+      "sha": "48c3c1314dc22f640cffcc31cbbf811639fcc205",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "feature/youcine-bridge",
+      "sha": "6a90ae4dd014a765b01a83af0d51f820eb341208",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "fix/drive-file-loader/20260925",
+      "sha": "cd39f52f577cae22ea8d561b47f048148d2e837a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "fix/persistd-claim-request-proof-20260920",
+      "sha": "6333984c6492902102d0a443f4b86e35eda08569",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "fix/persistd-composer-control-lock-20260920",
+      "sha": "08978fa7b07020ff6a5424c1d44dcaeceb414ab9",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "fix/persistd-installed-test-path",
+      "sha": "fc63b4cf2f7919d81f5f7827574a4024255366f6",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "fix/persistd-rdc-control-lock-selfheal-20260923",
+      "sha": "04b10b3d66ef01b93979ae71f5e399ec1bcd9c3c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "fix/persistd-single-visible-chat",
+      "sha": "dc33ff1665573735eb8a39f5a5d40e805f726634",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "fix/retire-aws-vm-from-fleet",
+      "sha": "3d8cc380fd56140bc272c189941b073608bd38d2",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "hardening/thin-controller-budget-20260919",
+      "sha": "176caeaacd4a0630a4141f8059e21a890e2954f3",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "main",
+      "sha": "f4e31b4897f9fc4bf6c9bc8cf743c8cf712693b8",
+      "default_branch": true
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "migration/platform-consolidation-p00",
+      "sha": "2ea3ac927e7d2e24410a8ac891d2c1c59cfb8994",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "migration/platform-consolidation-p01",
+      "sha": "f4a916bc7a202094ab28f75d87522ed824d650bc",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "migration/platform-consolidation-p02",
+      "sha": "ba44eb8e61948a95f6194d18dd40ca84d9bc296e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "name": "migration/platform-consolidation-p03",
+      "sha": "7a211eaae2b54ad8bcbe15ff03b2abb953feed2b",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/capability-mesh",
+      "sha": "bb89e3a19067cd8f2fef1f8fc4dd6b76f56e08a8",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/context-session-lifecycle-20260920",
+      "sha": "7103cee52f19d1ddc77a68c108a5999dad0b7eda",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/job-engine",
+      "sha": "33fec3202c2b22a9d7bb4a291ed51cd7b0cd066f",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/os-broker",
+      "sha": "560e529b6734629dc4979ac4e67023244da1e123",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/owner-plane",
+      "sha": "3aeb9e6ed8e57da842aaf074b9f33dbb39b586bf",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/protocol-plane",
+      "sha": "4738af181cf43f51a228a7e00f2019a9df7a93b5",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/security-policy",
+      "sha": "6cbd7b31fe5c7638d1022b68035f5c05c6de5632",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/storage-lifecycle",
+      "sha": "61f333995cf7d4fe634c5fa7ff4ff1f7b7451eab",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "feat/supply-recovery",
+      "sha": "3aeb9e6ed8e57da842aaf074b9f33dbb39b586bf",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "integration/final-inline",
+      "sha": "5ca0ec9c95d0376cf16b30c80ae8348be414f895",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "integration/portable-mcp-host",
+      "sha": "be3b5bd2ce7caaa91d22f1f80bf076daf772572b",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "main",
+      "sha": "14b4cb2f94227d918c42564447f50f28e4763c88",
+      "default_branch": true
+    },
+    {
+      "repository": "menezesx2k26-byte/resident-node",
+      "name": "migration/platform-consolidation-p02",
+      "sha": "68a6ae81a831b11b2b0d596b21aeb4de1a57c828",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "acq/ACQ-001-agent-reach",
+      "sha": "9b850cc20b4e6b7525c9e487368f1585dc200ac3",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "design/browser-bridge-tailscale",
+      "sha": "bdbeb9613e37c0e518d1cd670173849e954f7e5d",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "design/conthabil-hydra-revenue-runtime",
+      "sha": "ddd70807d65be729a41eda75ae21bf3741d1e98d",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "docs/infra-workbench-spec-20260927",
+      "sha": "950e2b9248de41338df373499659ccaee0e28113",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "docs/semantic-cache-design-20260919",
+      "sha": "8668e85ff1a6cf0cd582d71efe7aff2168f6abef",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/ANDROID-VIRTUAL-DISPLAY-001",
+      "sha": "28d78c7ea8964a9c4788d98abc2eeede560cc7a0",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-clean",
+      "sha": "8a354911404724f3283331e5610aac475e113a55",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-docs",
+      "sha": "8a354911404724f3283331e5610aac475e113a55",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-final",
+      "sha": "8a354911404724f3283331e5610aac475e113a55",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-spec",
+      "sha": "8a354911404724f3283331e5610aac475e113a55",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-spec-review",
+      "sha": "8a354911404724f3283331e5610aac475e113a55",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/ANDROID-VIRTUAL-DISPLAY-001-spec2",
+      "sha": "8a354911404724f3283331e5610aac475e113a55",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/codex-readonly-cache-dispatch",
+      "sha": "9e9447112d5182eb00e6e8db92a80221085376a3",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/computer-control-plane",
+      "sha": "5e0b0c56a6ea756ce2d2cf7f8a84016bf2a3829a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/omniroute-chatgpt-oauth",
+      "sha": "0c01368a4f53fb09d02dce533ba1a15e4ba5c7d9",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/OMNIROUTE-MCP-001",
+      "sha": "75db42674fc3eec094bfb9bba31a2df22d25751b",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/SEMANTIC-CACHE-001",
+      "sha": "197e503001318721f35b99e1659cfc5e6d4e1d65",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/SEMANTIC-CACHE-002-codex-preprovider",
+      "sha": "00b3021b5c1fd89b08647bebaf6f84e7e629cc7b",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "feat/WINDOWS-INTERACTIVE-CONTROL-001",
+      "sha": "59b46d8ef4fbb9f6c0a4732ef5d8f2bdf6e29d6a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "fix/KEY005-android-sdk37-layout",
+      "sha": "575fee3e784d89ab3585cf6489970c625e4b6f47",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "fix/KEY005-protocol-migration",
+      "sha": "543a1e2d16332d32d84a59cd908039f2641e44a4",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "fix/omniroute-capability-fallback-20260922",
+      "sha": "33928bc23d7668d86066895b1dd23fc0cfd5669c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "fix/semantic-cache-review-hardening",
+      "sha": "137e65ae56975e7acb0297a1941b45cb5b3dbfed",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "hydra/HYDRA-001-autonomous",
+      "sha": "efb857a19cf3d24986227780fe4d55a45ce62c00",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "main",
+      "sha": "26c8e80dd6bacd9abc938af8a7da51b3d1abede2",
+      "default_branch": true
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "mcp/MCP-BRIDGE-001-readonly",
+      "sha": "afb27e4c4dd918d8f8e4480f10bf752b766b38ab",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "mcp/MCP-BRIDGE-002-git-relay",
+      "sha": "798483e3fd843a4d131b93267245363eb6a29f0e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "mcp/MCP-BRIDGE-003-node24-fix",
+      "sha": "1d3ea43c42c159cd42b4b3e29052e9f8db393c5c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "mcp/MCP-BRIDGE-003-one-shot-shell",
+      "sha": "058cc5feddd92ea6614da09cd9093e4c90ea172a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "mcp/MCP-BRIDGE-004-write-control-plane",
+      "sha": "e63e8c69dc8246827adb28365e9238bf15013106",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "mcp/MCP-BRIDGE-005-orquestra-key-android",
+      "sha": "1640ab3704417c0901dd7e5319c80d05a99c33c9",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "ops/FILE-HYGIENE-001",
+      "sha": "b673c33effee79c84790881e5245d92492fc9f0c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "orquestra-queue",
+      "sha": "164be4b851ad88eefd13856c65c51e112629b1a0",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "orquestra-write-queue",
+      "sha": "ce3e36b15116dad8795d78ce20595385df08f86f",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "p1/P1-BROWSER-BRIDGE-001-impl",
+      "sha": "dcf3e60907a65751fd3869a10fd3b5d3f2f1e2fd",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "p1/P1-CHATGPTBOX-001-impl",
+      "sha": "6f87079850825216816a8b740b4fc026268b00ab",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "phase/1-discipline-isolation",
+      "sha": "bb677541dc3e7b6b72b3298500acde61099fd8d2",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "phase/2-session-orchestration",
+      "sha": "6b7707135b900cfcb1ff836edd3c1122aca27e96",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "roadmap/tooling-expansion",
+      "sha": "9630af39de8529b21c6dccbfa905be39db2c6005",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "runtime/browser-bridge-v1",
+      "sha": "1d4dba276a301be98c77095273956f7928c11a4e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "runtime/relay-readonly-v1",
+      "sha": "3c223ca3303d9af91466adecb855cb27a98122bf",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-dev-orquestra",
+      "name": "setup/orchestrator-foundation",
+      "sha": "98f3a4d6fe722f9c49b9736877f3b0b3a0990205",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-persistflow-sandbox",
+      "name": "feat/sandbox-dod-final",
+      "sha": "6febd5e189c9a8ff6762727cf30a1fa76725c341",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-persistflow-sandbox",
+      "name": "main",
+      "sha": "bc3249f2793ebc0e1abeb0dea8e0a6428f0bab65",
+      "default_branch": true
+    },
+    {
+      "repository": "menezes-platform/ops-persistflow-sandbox",
+      "name": "spec/interactive-browser-human-gate",
+      "sha": "1c8f7a6b0c76e2193f36e1a0da6d54ac759ff402",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "agent/dwarf-desktop-mascot-20260926",
+      "sha": "4a955d4f4517bb2f6b47e3edcff56c6698cb2306",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "agent/fleet-storage-observability-plan/20260924-1353",
+      "sha": "b3aee8038dbeb6838563a235900dd06734471cb7",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "audit/codex-orchestrator-prompt-typesafe-20260919",
+      "sha": "9108d26f77d8e8df5d49f98f2fc440f72368a4ba",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "chore/cloudflare-production",
+      "sha": "305f722e9bc5514144fb0f2db796a561f1bec1cf",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "codex/email-triage-protected-categories",
+      "sha": "02e49b1deda11e1613559ca7c6f1e0e336223ad6",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "codex/email-triage-review-gate",
+      "sha": "2e20343e831afcbc55333fd912d9d55d503cff74",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "codex/email-triage-security-vetoes",
+      "sha": "5486914bbcfcffc40ee053b36a7a16181f7cb659",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "data/notebook-outreach-queue",
+      "sha": "56afbdf7099efa005fd5ecb2c207da9d2c262dcb",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "design/live-feed",
+      "sha": "3f16e834a2fc9308cc4f2e8650123df7a3fc3bbc",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "diagnostics/p03-installed-callers-20261004",
+      "sha": "af355080ae27df6c77613e792efd025ef958e000",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "docs/dashboard-dod-20260918",
+      "sha": "4302aab808e72388a1502e9ac554208d21cfb5b1",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "docs/fleet-runbook-v201",
+      "sha": "24e34b086ba7305b6d97393047969a9fdf9b6b96",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "docs/gabriel-remote-mcp-connection-2026-09-28",
+      "sha": "781bac7d7cd04c9220c7a1c10cbe4f270d417f24",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "docs/hostinger-connection-audit-20260928",
+      "sha": "3afd33a2e09b54e70071c53d3196f6b2ae27a219",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "docs/hostinger-node-audit-2026-09-28",
+      "sha": "42999e6697064b624e1aeb8a43fbe2da970217af",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/agent-runtime-control-plane",
+      "sha": "ccbb525b7198ef780ba12180153445fae1448477",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/canonical-project-catalog",
+      "sha": "4bf56531e2de5b759785683a55be8d7b8191b872",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/connect-all-sources",
+      "sha": "3f63ecbee0528d6893061d476198a9c7701259be",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/dashboard-auth",
+      "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/dashboard-integration",
+      "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/dashboard-recovery-20260920",
+      "sha": "2dd3bb9b690012e6baaf129dc2cdd62d6a189855",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/dashboard-sync",
+      "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/dashboard-verification",
+      "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/dashboard-visual",
+      "sha": "303d06cbd72399f4dc0282bfad7f10ac196a2b7c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/dungeon-ops-visual-merge-20260923",
+      "sha": "9d083600e7348f964661c76673bd696d7455abaf",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/fleet-auto-enrollment-v2",
+      "sha": "adc0350e27ad0400b5ace54b445e1a53efe27eca",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/fleet-cloudshell-bootstrap",
+      "sha": "8b1e147375f966530c5130b4448ec42cc2a64f84",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/gabriel-fleet-bootstrap-v1",
+      "sha": "50782b5b9f9fb7a72674f446037b319e5b72c304",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/gabriel-ops-v1",
+      "sha": "ebf36af4317b51a57e0d0435b60f9387035e2eea",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/gcp-mcp-cloudrun-upstream",
+      "sha": "b65bdecd711d05105c59d00c6d970ad6b48a8097",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/gcp-readonly-mcp",
+      "sha": "ee2b2a47e83d7d92ba33f8eccfc68be92f1bf8a0",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/geometry-dojo-preview",
+      "sha": "0660304a357d0bc18e0794b55b58f0fd6c01afe0",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/jev-email-triage",
+      "sha": "a6d83473ad6b39cc5827765e94258afc8bb35622",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/live-project-feed",
+      "sha": "8950180232eafea7a87e23c28978a20ce19f11d8",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/notebook-outreach-infra",
+      "sha": "be1372b3947e789389d28f38bd125a89dbe89436",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/tiktok-max-priority-feed",
+      "sha": "078ffb576e1e44db52e5b0745f61508f69a50499",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "feat/typesafe-guardrail",
+      "sha": "0f8084d1ab2a795d6ca677b193b0e494a4fe952e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/auth-runtime-observability",
+      "sha": "d8dc9384b3ec48446d720c7ca2bf491b1d476888",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/auth-runtime-probe-20260920",
+      "sha": "c4894fa02057b8fec36761702718886aa3eb9df8",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/cloudflare-account-selection",
+      "sha": "e3e1dfb2124f26bf50e6842945a94d7ce828b71c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/cloudflare-cron-health",
+      "sha": "861972fa2813a7659dd5c2f425d4f16517cb450f",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/cloudflare-cron-health-route",
+      "sha": "208bc109ef550bb2ed4e2f27bac4c6d21398dac5",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/cloudflare-github-concurrency",
+      "sha": "68f4538d8f2df47ed459e21138e836e71bd6f8c0",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/cloudflare-github-cron",
+      "sha": "87c630ea5f2ee7fb157658e196860bfb7717a780",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/cloudflare-github-fetch-receiver-20260920",
+      "sha": "95a811f07c3e972d2b9f16dc15a3b19299579570",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/cloudflare-github-subrequests",
+      "sha": "640ba917be589f2b0165b63336af91080cecccf2",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/cloudflare-pbkdf2-limit-20260920",
+      "sha": "177adc3ad6b9468fc5f2625f9d447a598000ad74",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/composio-akimcp-redirect",
+      "sha": "e700c2452ef4c64a0bb8429cad7c52cb2c265b16",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/dashboard-active-sync",
+      "sha": "6a30930b5de4a60c5526c385fe9505e391d46994",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/dashboard-auth-credential-recovery-20260920",
+      "sha": "174f0d563d4f22d06a2243760c28fe7e89280ad6",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/dashboard-bearer-failover",
+      "sha": "d7852a97a441adf2690a755db629080a042a3fb9",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/dashboard-machine-auth-diagnostics",
+      "sha": "ff6c1111acfdc31c10496a9bd643cd23e56f2b8b",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/dashboard-machine-auth-worker",
+      "sha": "09731d8ebcc1627fb6e88fa17363ba9012b0de62",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/dashboard-sync-reconcile",
+      "sha": "774d67741163f0067be55a809a2a020f313e553e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/dashboard-ux-live-telemetry",
+      "sha": "dd4f43e44fccb713b05b993307026b5fe9a40ba1",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/dashboard-worker-secret-init",
+      "sha": "d8857c4a5da85414bd9f35f168cea1bf049ee53b",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/decommission-legacy-aws-vm-20260928",
+      "sha": "9cc2c59b34c3d787f8d9e27ab25470e8f2e43fb2",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/final-project-feed-ci",
+      "sha": "b7b8b140480d70ed368bddc1e39c3b1c3ba50437",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/fleet-hub-deploy-ssm",
+      "sha": "f7557d3038c9b4bf4364264f4e6a6a0c0f40bc09",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/fleet-windows-legacy-migration",
+      "sha": "6db4369c9c5cdac4b90cb01047ba67b2715d8293",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/full-sync-kv",
+      "sha": "31abcc7b0c64a7049686e5177b2cd96d0cb9facc",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/gcp-cloudrun-health-path",
+      "sha": "94831e20b57146234c211d4c9f253a75d96d28c4",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/jev-email-triage-compact-fetch",
+      "sha": "34be53a747edc7bbcd9ad50123ba1af381a8a856",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/jev-email-triage-fetch-window",
+      "sha": "dfbc0dda7dc4034d3d58bd7b06dad55a0c663ba9",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/jev-email-triage-local-authority",
+      "sha": "095515ba7a041d6930d60b8f3ed0ac0451b6b6a4",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/jev-email-triage-local-fetch-envelope",
+      "sha": "d82c58e26e5e464cc54d10103443d22ab30880bd",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/jev-local-gmail-identity-drift",
+      "sha": "7bd207f2a71d77d4d3ae995ffbec74f6c88e7e0a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/live-dungeon-single-project",
+      "sha": "a867391c1e7e18d55d823828870c3fa09c3ccf54",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/mobile-dashboard-ux-20260919",
+      "sha": "a883e384bb91caa9138bb9ba69085183fbcc20d3",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/private-source-http-transport-20260919",
+      "sha": "7f3c184ca10aebefcf70121ed4d9f8746ed93116",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/production-smoke-owner-credential-20260920",
+      "sha": "e1c564cc3614ce0fae8f88dc9399400dd1fd061a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/project-feed-bom",
+      "sha": "4151580715f7fff4c93d22be8b822ca162ca6780",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/raw-body-machine-auth",
+      "sha": "bf4b5cb6e241b0055ff836b4dd7515d064dc7e08",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/sync-dashboard-secret-via-deploy-20260920",
+      "sha": "efdfff428881231535f465465ce9099ec5861af2",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/tiktok-dashboard-live-sync",
+      "sha": "55fb735c0bf985d3154998f85136c214f51f93da",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/tiktok-live-project-feed",
+      "sha": "9be7d8ceae3e5d4f15db8ebbd101f2f15b4684fe",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/tiktok-runtime-deployment-state",
+      "sha": "b2e43de47ec65a535154e8ada58b51981e0412f7",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/use-proven-snapshot-scheduler",
+      "sha": "9119d5c506a6a29068094dea67d068ca9be3cfb3",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/webcrypto-machine-auth",
+      "sha": "567456b777f31963d8c535628b075e823abf2356",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "fix/windows-snapshot-scheduler",
+      "sha": "f2398c21ddb57ad7384536c97e6b85b7bb4f7c6b",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "infra/dispatch-gabriel-ops-tsim",
+      "sha": "d63e75642b7b7b2a18de20f55ecbdedd5167402e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "infra/hermes-aws-bootstrap",
+      "sha": "330c9469e9951c1082bfdc975654136b6b278776",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "integrate/live-snapshot-functional",
+      "sha": "2d808c7a2b0971ef67b28e099902d885612853ee",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "main",
+      "sha": "8dfcca2d544655b7317671fbc0d007c8d961c674",
+      "default_branch": true
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "migration/platform-consolidation-p02",
+      "sha": "86c23f65b40fa6b3ebca95f339c45ee9286b5547",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "notebook-outreach-agent",
+      "sha": "b1c9b52a71f4c7e10bd76d8723d6954b4cf9e0e6",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/auth-recovery-20260920",
+      "sha": "ea78e1ebab2a7f0390cb77a488b7f54afe5e8b35",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/auth-recovery-pass2-20260920",
+      "sha": "85780c3ea5912f1b82b65dec5892f4ded3fd3e64",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/auth-recovery-pass4-record",
+      "sha": "692e102a3e175f43ed35eb4b43b24092d068930e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/auth-recovery-pass5-20260920",
+      "sha": "017548de23ed3b38a7d7e40fcbb80cb292b0fbc1",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/auth-recovery-token-bootstrap-20260920",
+      "sha": "fb2aa6ce5dcd2831d9a8c677db6c8d9b3f356790",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/cloudflare-deploy-learning-20260923",
+      "sha": "e0d567313d767367d30c1d564789a01ce52abe43",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/deploy-fleet-enrollment-now",
+      "sha": "d2646208966971f0b0322ccccdbf5b1fa3f9d9bc",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/gcp-agent-inventory",
+      "sha": "f6c114aa30462d4293ed1f6d0c8230c5c73f031c",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/gcp-auth-bootstrap",
+      "sha": "9de1534bf76d43c5cb017f439d9c6ca7487b2eb1",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/gcp-cloudrun-deploy-health-fix",
+      "sha": "eaa8563e20976534099137f106c2d1784ca3735d",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/gcp-cloudrun-preflight",
+      "sha": "db68a2ce438fcef6026464c93f1b3e9f4c4207a5",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/gcp-mcp-cloudrun-bootstrap",
+      "sha": "b5ea8497d00aea7564e47a3445f319c295df582d",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/live-broadcast-node-20260925",
+      "sha": "f192f87bd091b93f059d80bc56c88ee1c72144ad",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/omniroute-chatgpt-plugin",
+      "sha": "824d519266aa4faef98757bfbb28f6e8d03db021",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/rdc-refresh-token-tab-leak-20260919",
+      "sha": "2bd052f2396d3c404576a3adc1148d30e568978e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/remove-one-shot-dashboard-recovery-record",
+      "sha": "2c5a41f10a97f580f07bd12acec27b9f001ece18",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/scrapling-codebuild-scout-20261003",
+      "sha": "e2b1e148d39fa25052a7d88a710fa96e1f4e440f",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "ops/ttk-live-control-probe",
+      "sha": "f4ff8a1816cb79cf532ad1ad2fa2e6c9498214d4",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "reconcile/ttk-single-project-20260919",
+      "sha": "70b0e9b51d2edf628eba1774d242583ee313455f",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "reconcile/ttk-single-project-20260919-v2",
+      "sha": "3d90bf40aa3491928966ce6b5dd7e2745ca7fa66",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "recovery/visual-ops-console",
+      "sha": "d00f41df577e9f104581454413dac85e305fd5cd",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "refactor/connector-runtime",
+      "sha": "79358350fae75a661487208b649b4acbe95874db",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "name": "tooling/ai-design-stack",
+      "sha": "59a04b0ea8af909bf7ff429fff5aba37924f9571",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/Memory",
+      "name": "feat/agent-cognitive-memory-20260927",
+      "sha": "885b4fa6d416533c65bfc82ad04e9bcaf10067c2",
+      "default_branch": false
+    },
+    {
+      "repository": "menezesx2k26-byte/Memory",
+      "name": "main",
+      "sha": "2f43e8d1b20f6325c44e7a3174e80e00e3a809b7",
+      "default_branch": true
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "debug/concursos-cloudflare-auth",
+      "sha": "40b8113c01ee667f1a2c8f654daf956fd926d368",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "feat/cloudops-mcp",
+      "sha": "115ef38ed798f7d5701baef9e6999b0a1d2b822e",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "feat/concursos-central-deploy",
+      "sha": "352aed9b6b112e97cb40283e6c678f0e9546301a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "feat/fleet-installers-edge",
+      "sha": "e60b1aac6715a2ea66462aecaef7c1c9a54d6c2a",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "feat/geometria-dojo-preview",
+      "sha": "f7e741a51f77b4940865881ab2e72f7117f22ce4",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "feat/hostinger-mcp-origin-20260928",
+      "sha": "ce845bb168706d8392380cd86e26606a5877950d",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "feat/pet3d-editorial-html",
+      "sha": "17f2b938fc73bf08ef4dd86a330c41f75ca71bf9",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "feat/pet3d-siteops-registration",
+      "sha": "75e63d6a64d430d4f977f31c7ac9b4922413ad21",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "feat/register-punctum-pet3d",
+      "sha": "e4dd2253a5ee6f100fc1306c57c23c33700a79d5",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/composio-dcr-edge-shim",
+      "sha": "c3fabb0eeec08b48228bb1cdf1c06bb7fe5b4336",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/concursos-kv-delegation",
+      "sha": "e4dd2253a5ee6f100fc1306c57c23c33700a79d5",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/edge-acceptance-convergence",
+      "sha": "ba086af1904e990abceb762ad39b514b29f0071f",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/edge-composio-convergence",
+      "sha": "c61e1c6ad489d25f3441735e23b2db32acadb7b5",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/edge-oauth-response-type",
+      "sha": "96bc3e6805af4969eaf3564c12f111a0c62cf358",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/fleet-hub-8443",
+      "sha": "2b37ff4748035a385fdd1e5f97edcf1aaf673610",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/fleet-installers-base64",
+      "sha": "57a8a8f3eeb738070d58d9eb62a44502362ad82b",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/fleet-windows-installer-v201",
+      "sha": "fea6798ec122b773a677d1476abbc9a1c58ce0f9",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "fix/retire-aws-vm-edge-provision-20260928",
+      "sha": "d3738e6a6a80e81cde29e569766817eff705eb32",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "main",
+      "sha": "65e17e37915b283a3b3c8cb8de907f60b38331a5",
+      "default_branch": true
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "ops/fleet-edge-acceptance",
+      "sha": "4c9c5bb1444388a1bd53134f124970f205798681",
+      "default_branch": false
+    },
+    {
+      "repository": "menezes-platform/ops-site-ops",
+      "name": "test/mcp-bridge-smoke-20260823",
+      "sha": "a402cda1a9b5c496af0e5efcabec7d6655daa85f",
+      "default_branch": false
+    }
+  ]
+}

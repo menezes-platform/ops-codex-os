@@ -1,0 +1,54 @@
+{
+  "captured_at_utc": "2026-10-05T08:51:39Z",
+  "scope": "Read-only head/ref reconciliation for the three PRs updated during this continuation.",
+  "global_inventory_reference": {
+    "path": "2026-10-05-P09-P11-ref-inventory-0840.json",
+    "captured_at_utc": "2026-10-05T08:40:41Z",
+    "open_prs": 29,
+    "branch_refs": 262,
+    "tag_refs": 3
+  },
+  "observations": [
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "pr_number": 30,
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "head_branch": "consolidation/p06-provider-policy-20261005",
+      "pr_head_sha": "5ffe57937af75680f458746aaaa0a2255265d96f",
+      "branch_ref_sha": "5ffe57937af75680f458746aaaa0a2255265d96f",
+      "github_pull_ref_sha": "5ffe57937af75680f458746aaaa0a2255265d96f",
+      "association": "MATCH"
+    },
+    {
+      "repository": "menezes-platform/ops-codex-os",
+      "pr_number": 31,
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "head_branch": "consolidation/p08-caller-inventory-20261005",
+      "pr_head_sha": "1c799252a2a5d33dc452f1edafef14ae3e1ae7c4",
+      "branch_ref_sha": "1c799252a2a5d33dc452f1edafef14ae3e1ae7c4",
+      "github_pull_ref_sha": "1c799252a2a5d33dc452f1edafef14ae3e1ae7c4",
+      "association": "MATCH"
+    },
+    {
+      "repository": "menezesx2k26-byte/ops-gabriel-ops",
+      "pr_number": 82,
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "head_branch": "consolidation/p07-source-audit-20261005",
+      "pr_head_sha": "b8d1aa6cb13435bc19f83e4a6c4fd43c15f77acd",
+      "branch_ref_sha": "b8d1aa6cb13435bc19f83e4a6c4fd43c15f77acd",
+      "github_pull_ref_sha": "b8d1aa6cb13435bc19f83e4a6c4fd43c15f77acd",
+      "association": "MATCH"
+    }
+  ],
+  "limitations": [
+    "This is a delta for PRs #30, #31, and #82 only; it does not refresh the full 29-PR head/ref association.",
+    "The 08:40Z global ref inventory remains the latest full branch/tag listing; this delta confirms the later heads for three PRs.",
+    "No branch, tag, PR, deployment, repository, or production state was changed."
+  ]
+}
