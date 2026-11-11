@@ -80,6 +80,14 @@ These are persistent cross-project operating rules for Codex.
 - Do not save tokens by guessing, skipping required validation, or ignoring material uncertainty.
 - Use OpenViking (`https://github.com/volcengine/OpenViking`) as an architectural reference for hierarchical/tiered context loading and observable retrieval when relevant; do not introduce it as a dependency without evaluating license, privacy, operational cost, and project fit.
 
+## ChatGPT browser workers (cos-bridge)
+- When the user's goal is to conserve Codex usage and a task contains independent bounded work, prefer the `cos-bridge` CLI and installed `$cos-bridge` skill to send suitable tasks to Chat On Steroids ChatGPT browser worker chats. Codex remains the planner, code integrator, and final verifier.
+- Confirm `cos-bridge health` exposes the broker worker API and that Local control API, Allow actions, and workers have been explicitly enabled in Chat On Steroids. If unavailable, mark external delegation BLOCKED and use the authorized native agent route; do not manufacture success or bypass local permissions.
+- Start with at most two concurrent workers; pass narrow self-contained contexts and isolate any mutating work. Reuse sleeping workers rather than repeatedly spawning, and collect reports by stable ownerId/runId before acknowledging exact report ids.
+- Do not send secrets, cookies, tokens, personally sensitive materials, or unauthorized repository content to browser chat workers. Preserve scoped permissions, review changes/diffs, execute the required tests, and retain Codex's authority for commits, merges and deployments.
+- Treat ChatGPT limits as separate constraints subject to verification, not as unlimited/free throughput. Do not sacrifice correctness, safety, or service terms to save quota.
+- Integration reference: https://github.com/abdulsalamgs/cos-bridge (CLI and skill, MIT). Keep third-party installation separate from the Codex OS installer unless security and version pinning are reviewed.
+
 ## Verification budget
 - Treat full-repository verification as a costly integration gate, not as a default exploration step.
 - Do not run the entire test/lint/typecheck/build matrix at the start of a session merely to "confirm state" when a recent green result exists for unchanged relevant code.
