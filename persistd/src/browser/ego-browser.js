@@ -5,7 +5,7 @@ const {
   buildSuccessorScript, buildTerminalScript, buildRenameChatsScript, buildArchiveRunChatScript, buildDiscoverRunChatsScript, buildCloseRunChatScript, buildCloseRunTargetScript, buildCleanupRunScratchTabsScript, buildPruneRunTabsScript, buildRunChatActivityScript, buildCleanupScript, buildHealthScript, parseEgoResult,
 } = require('./ego-script');
 const { buildFindAssistantLineScript, buildSendMessageScript } = require('./conversation-script');
-const { ensureEdgeBrowser } = require('./edge-host');
+const { ensureEdgeBrowser, pruneManagedEdgeTargets } = require('./edge-host');
 
 function parseWindowsShim(text) {
   const match = text.match(/^\s*"([^"\r\n]*node\.exe)"\s+"([^"\r\n]+\.mjs)"\s+%\*\s*$/mi);
@@ -109,6 +109,10 @@ function createEgoBrowserTransport(options = {}) {
     },
     async healthCheck({ state } = {}) {
       return run(buildHealthScript({ runId: state?.RUN_ID || 'health' }), { timeoutMs: 15000 });
+    },
+    async pruneManagedTargets({ state, keepChatId, staleChatIds }) {
+      const browserEnv = resolvePersistdBrowserEnv({ env: runOptions.env || process.env });
+      return pruneManagedEdgeTargets({ env: browserEnv, keepChatId: keepChatId || state?.CHAT_ID || null, staleChatIds });
     },
     async sendTerminalNotification({ state, message }) {
       if (!state.CHAT_ID || state.CHAT_ID === 'NONE') return { sent: false, status: 'CHAT_ID_MISSING' };

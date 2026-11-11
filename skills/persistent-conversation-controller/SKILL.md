@@ -54,6 +54,23 @@ Before any local, browser, or interactive mutation, **read and obey `references/
 
 An ended model response, saved baton, opened tab, submitted prompt, visible claim text, or worker saying "done" is never sufficient by itself.
 
+## Quota and Context Telemetry Gate
+
+When the active model exposes quota or context telemetry, the controller must persist the latest usable sample in `CONTROL.md` before starting another heavy agent, broad L2 retrieval, full raw log ingestion, or expensive verification pass.
+
+Supported fields:
+- `MODEL_QUOTA_USED_PERCENT`
+- `MODEL_QUOTA_PREVIOUS_USED_PERCENT`
+- `MODEL_QUOTA_SAMPLE_MINUTES`
+- `MODEL_CONTEXT_TOKENS`
+- `MODEL_CONTEXT_WINDOW`
+
+`persistd` evaluates these fields through `src/quota-guard.js` on every tick. The deterministic bands are `NORMAL`, `CONSERVE`, `PRESSURE`, `ROLLOVER`, and `EMERGENCY`.
+
+At `ROLLOVER` or `EMERGENCY`, `persistd` records the guard result and promotes a non-terminal active run to `STATUS: CONTEXT_RISK`. Existing busy-turn protection still applies: it waits for the current assistant turn to stop before creating a successor. Terminal/auth/tool-wait states are never overwritten by the quota guard.
+
+The controller must preserve `QUOTA_GUARD_PRESERVE_QUALITY_GATES: true`. No quota state may skip required independent review, safety/security validation, production/release gates, or irreversible-action checks.
+
 ## Generation and Lease Rule
 
 The active controller generation is the highest **durably claimed** generation.
