@@ -107,6 +107,7 @@ function createContextGateway({ executionPlaneClient, personalRetrievalClient = 
     },
 
     async recallAcrossProjects(request) {
+      if (!projectReaderAvailable) throw new Error('EXECUTION_PLANE_CLIENT_REQUIRED');
       assertOnlyFields(request, new Set(['query', 'filters', 'allowlisted_scopes']));
       const query = normalizeQuery(request.query);
       const filters = normalizeFilters(request.filters);
