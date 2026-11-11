@@ -44,3 +44,12 @@ test('unverified owner blocks the personal retrieval provider before dispatch',a
  await assert.rejects(gateway.recallPersonal({query:'hello'}),/OWNER_NOT_VERIFIED/);
  assert.equal(calls,0);
 });
+
+test('personal-only host cannot invoke multi-project retrieval despite an allowlisted scope',async()=>{
+ const gateway=createContextGateway({
+  personalRetrievalClient:{async retrieve(){return {status:'miss',evidence:[]}}},
+  resolvePersonalOwner:async()=>({verified:true,principal_id:'verified-owner'}),
+  allowlistedMultiProjectScopes:['project/owner/repo']
+ });
+ await assert.rejects(gateway.recallAcrossProjects({query:'past',allowlisted_scopes:['project/owner/repo'],filters:{}}),/EXECUTION_PLANE_CLIENT_REQUIRED/);
+});
