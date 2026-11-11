@@ -38,16 +38,22 @@ function assertIdempotencyKey(value) {
   if (typeof value !== 'string' || !value.trim()) throw new Error('IDEMPOTENCY_KEY_REQUIRED');
 }
 
-function createContextGateway({ executionPlaneClient, resolveProjectScope, allowlistedMultiProjectScopes = [], resolvePersonalOwner = null } = {}) {
+function createContextGateway({ executionPlaneClient, personalRetrievalClient = null, resolveProjectScope, allowlistedMultiProjectScopes = [], resolvePersonalOwner = null } = {}) {
   // Project read/reindex and authenticated personal retrieval are distinct lanes.
   // A read-only or personal-only host must not need an unrelated project writer.
-  if (!executionPlaneClient || typeof executionPlaneClient.retrieve !== 'function') {
-    throw new Error('EXECUTION_PLANE_CLIENT_REQUIRED');
-  }
   const projectConfigured = typeof resolveProjectScope === 'function';
   const personalConfigured = typeof resolvePersonalOwner === 'function';
+  const projectReaderAvailable = executionPlaneClient && typeof executionPlaneClient.retrieve === 'function';
+  if (projectConfigured && !projectReaderAvailable) throw new Error('EXECUTION_PLANE_CLIENT_REQUIRED');
   if (resolveProjectScope != null && !projectConfigured) throw new Error('PROJECT_SCOPE_RESOLVER_REQUIRED');
   if (!projectConfigured && !personalConfigured) throw new Error('PROJECT_SCOPE_RESOLVER_REQUIRED');
+  // A personal provider is supplied by the trusted host, never selected by the model.
+  // Keep the existing injected-client fallback for compatibility, but do not fall
+  // back to project memory when a dedicated personal adapter was explicitly supplied.
+  if (personalConfigured && (personalRetrievalClient != null
+    ? typeof personalRetrievalClient.retrieve !== 'function' : !projectReaderAvailable)) {
+    throw new Error('PERSONAL_RETRIEVAL_CLIENT_REQUIRED');
+  }
   if (!Array.isArray(allowlistedMultiProjectScopes)) throw new Error('MULTI_PROJECT_ALLOWLIST_INVALID');
 
   const configuredScopes = new Set(allowlistedMultiProjectScopes.map(assertProjectScope));
@@ -59,7 +65,7 @@ function createContextGateway({ executionPlaneClient, resolveProjectScope, allow
   }
 
   const personalRecall = personalConfigured
-    ? createPersonalRecall({ executionPlaneClient, ownerResolver: resolvePersonalOwner }) : null;
+    ? createPersonalRecall({ executionPlaneClient: personalRetrievalClient ?? executionPlaneClient, ownerResolver: resolvePersonalOwner }) : null;
   return Object.freeze({
     async answerWithContext({ userIntent, historyReferences = false, answerProducer } = {}) {
       // Purely personal recall must not depend on an active Git checkout.
