@@ -111,6 +111,12 @@ These are persistent cross-project operating rules for Codex.
 - Before asserting something is *not implemented* or *not done*, satisfy negative-claim coverage: check relevant newer branches, worktrees and handoffs, or explicitly say the newer source is unavailable. If any source is unavailable, state the gap and do not silently downgrade more recent reported progress.
 - Never confuse retrieval/index availability with active tool invocation, production promotion, automatic cross-session memory, or an authority cutover. Preserve project scopes, privacy and existing cost gates.
 
+## Tool-substitution evidence gate
+- Before recommending a replacement for an existing tool, automation platform, local executor, browser/desktop bridge or multi-agent runner, invoke $evidence-grounded-tool-equivalence when available. Recover the user's actual required capabilities and non-negotiable cost/entitlement constraints from recent context before researching options.
+- Check each capability against a dated, verifiable source or observed connected tool schema. Missing, stale or conflicting evidence is UNKNOWN, not an affirmative claim or proof of absence. A terminal bridge, browser-only agent or workflow engine is not a full desktop/multi-worker replacement unless every required capability is independently proven.
+- For claims of full replacement, require complete capability coverage and distinguish using a ChatGPT subscription from paid API/Codex/other-model quota consumption. Never invent an app ID, link, install/connection state, or runtime test. Label partial substitutes and unverified candidates explicitly.
+- This policy guards retrieval-grounded claims; it does not by itself publish a BM25/FAISS index, alter native ChatGPT memory, or prove live computer control.
+
 ## Mandatory account-memory ingestion
 - Before finalizing every substantive chat or task, decide whether the interaction produced stable cross-project user context that should survive the conversation.
 - If it produced a durable user fact, preference, constraint, correction, cross-project context item, or recurring lesson, update the smallest relevant file in `menezesx2k26-byte/Memory` without waiting for the user to ask again.
