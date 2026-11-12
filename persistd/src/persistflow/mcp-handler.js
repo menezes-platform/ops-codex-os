@@ -24,12 +24,16 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
     if (resolvedIconUrl) info.icons = [{ src: resolvedIconUrl }];
     const server = new McpServer(info);
 
-    if (contextProvider) server.registerTool('context_recall', {
+    // Tool discovery must stay stable across startup, index loss and rebuilds.
+    // A missing private projection remains fail-closed at invocation time.
+    server.registerTool('context_recall', {
       title: 'Recall private project context',
       description: 'Read the configured private lexical projection with verifiable source references. Requires its exact namespace.',
       annotations: { readOnlyHint: true },
       inputSchema: z.object({ query: z.string().trim().min(1).max(512), namespace: z.string().min(1) }).strict(),
     }, async ({ query, namespace }) => {
+      if (!contextProvider || !contextProvider.gateway || typeof contextProvider.gateway.recall !== 'function')
+        return { ...jsonResult({ error: 'retrieval_unavailable' }), isError: true };
       if (namespace !== contextProvider.namespace) return { ...jsonResult({ error: 'namespace_denied' }), isError: true };
       try {
         const value = await contextProvider.gateway.recall({ query });
