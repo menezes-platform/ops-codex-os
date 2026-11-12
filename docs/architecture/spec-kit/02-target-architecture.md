@@ -77,24 +77,18 @@ It owns:
 
 It does not own platform architecture, project architecture, execution state, or technical project corpus.
 
-## Initial physical deployment
+## Cloud-primary physical deployment (owner availability requirement, 2026-11-11)
 
-One primary machine runs:
+A **hosted/cloud primary** runs the Context Gateway and the single-fenced Execution Plane authority with qualified native retrieval/indexing and server-side secret custody. Its service endpoints, source ingest, scheduled refresh and recovery **must remain functional with the developer's Windows PC completely off**. The Windows desktop is optional development, diagnostics and maintenance infrastructure only; it cannot be the primary, required tunnel, mandatory cron executor, exclusive secrets vault, source of unique data or automatic fallback.
 
-- `agent-platform` as an isolated native service;
-- `execution-plane` as an isolated native service;
-- local retrieval/index working sets;
-- encrypted local secrets vault.
+- Preserve exactly one authoritative primary and approved producer-owned interfaces; no multi-primary or implicit leader election.
+- Preserve the existing Hostinger Node application as a candidate cloud HTTP/control-plane host, subject to plan and runtime qualification. Shared Hostinger Node hosting does not imply support for native Rust/FAISS binaries or indefinitely running workers.
+- Use a bounded cloud scheduler (existing Hostinger Node Cron or Cloudflare Cron Trigger if eligible) for incremental ingress/checks. Cloudflare's lightweight Worker must not silently become the CPU-heavy index host.
+- Keep encrypted owner-approved corpus and backups in durable remote storage; active BM25/FAISS snapshots are derived local materializations **on the qualified cloud executor**, not in the deploy tree or Windows.
+- Use private HTTPS/JSON and versioned contracts for inter-plane and client access, with authenticated owner capabilities, source revisions, freshness and rollback receipts.
+- When hosted retrieval/ingestion is down, explicitly return unavailable/stale; never fabricate current data or depend on an unattended Windows machine.
 
-The two top-level services communicate only through official versioned interfaces even when colocated.
-
-Initial inter-plane transport:
-
-- private HTTP/JSON;
-- over Tailscale/private networking;
-- transport-independent platform contracts.
-
-Remote Railway, Hostinger, CloudShell and future ephemeral workers are subordinate executors.
+This replaces the initial PC-host placement, not the existing authority and migration gates. **The cloud-primary runtime and PC-off drill are NOT yet qualified or deployed.** See ADR 0013.
 
 ## Context flow
 
