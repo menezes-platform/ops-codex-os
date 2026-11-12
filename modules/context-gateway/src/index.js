@@ -1,6 +1,8 @@
 const { createPersonalRecall } = require('./personal-recall');
 const { enforceRecall } = require('./recall-enforcer');
 const { validateRecallEvidence } = require('./recall-evidence');
+const { sanitizeEvidenceForModel } = require('./evidence-sanitizer');
+const { normalizeRecallStatus } = require('./recall-status');
 const PROJECT_SCOPE = /^project\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const FILTER_FIELDS = new Set(['source_types', 'revision', 'after', 'before']);
 
@@ -38,7 +40,7 @@ function assertIdempotencyKey(value) {
   if (typeof value !== 'string' || !value.trim()) throw new Error('IDEMPOTENCY_KEY_REQUIRED');
 }
 
-function createContextGateway({ executionPlaneClient, personalRetrievalClient = null, resolveProjectScope, allowlistedMultiProjectScopes = [], resolvePersonalOwner = null } = {}) {
+function createContextGateway({ executionPlaneClient, personalRetrievalClient = null, projectCorpusReader = null, resolveProjectScope, allowlistedMultiProjectScopes = [], resolvePersonalOwner = null } = {}) {
   // Project read/reindex and authenticated personal retrieval are distinct lanes.
   // A read-only or personal-only host must not need an unrelated project writer.
   const projectConfigured = typeof resolveProjectScope === 'function';
@@ -93,6 +95,51 @@ function createContextGateway({ executionPlaneClient, personalRetrievalClient = 
         },
         answerProducer,
       });
+    },
+    // Derived project indexes are candidates, never Git authority. Explicit host
+    // adapter and separate method: the canonical answerWithContext route stays Git-only.
+    async answerWithProjectCorpus({userIntent,answerProducer}={}) {
+      if (!projectCorpusReader || typeof projectCorpusReader.retrieve !== 'function')
+        throw new Error('PROJECT_CORPUS_ADAPTER_REQUIRED');
+      if (typeof answerProducer !== 'function') throw new Error('ANSWER_PRODUCER_REQUIRED');
+      if (!userIntent || typeof userIntent !== 'object' || userIntent.domain !== 'project')
+        throw new Error('PROJECT_CORPUS_SCOPE_DENIED');
+      const query=normalizeQuery(userIntent.text);
+      if (Buffer.byteLength(query,'utf8')>4096) throw new Error('QUERY_LIMIT_EXCEEDED');
+      const scope=await currentScope();
+      if (userIntent.projectScope !== undefined && userIntent.projectScope !== scope)
+        throw new Error('PROJECT_CORPUS_SCOPE_DENIED');
+      let raw, verified;
+      try {
+        raw=await projectCorpusReader.retrieve({scope,query,filters:{source_types:['project-derived']}});
+        const normalized=normalizeRecallStatus({primary:raw,policy:{allowEngram:false}});
+        if(normalized.status!=='ok')
+          return {answer:null,receipt:Object.freeze({required:true,status:normalized.status,
+            reason_code:normalized.reason_code})};
+        const hits=normalized.evidence;
+        if (!hits.length || hits.length>100 ||
+            new Set(hits.map(hit=>hit.evidence_id)).size!==hits.length ||
+            hits.some(hit=>hit.scope!==scope || typeof hit.source_ref!=='string' ||
+              !hit.source_ref.startsWith('https://') || hit.source==='git' || hit.authority==='git'))
+          throw new Error('PROJECT_CORPUS_EVIDENCE_INVALID');
+        verified=validateRecallEvidence({hits,
+          manifest:{scope,revision:raw.revision,generation_id:raw.generation_id},
+          sourceAuthority:'project-derived'});
+      } catch {
+        return {answer:null,receipt:Object.freeze({required:true,status:'unavailable',
+          reason_code:'PROJECT_CORPUS_UNVERIFIED'})};
+      }
+      const safe=sanitizeEvidenceForModel(verified);
+      if (safe.evidence.every(hit=>hit.suspicious))
+        return {answer:null,receipt:Object.freeze({required:true,status:'denied',
+          reason_code:'DERIVED_EVIDENCE_UNTRUSTED'})};
+      const promptBoundary=safe.promptBoundary+
+        ' Project-derived evidence is NOT authoritative. Cite the original source and verify current Git/project truth before asserting operational facts.';
+      const answer=await answerProducer({evidence:safe.evidence,
+        promptBoundary,memoryStatus:'candidate'});
+      return {answer,receipt:Object.freeze({required:true,status:'candidate',
+        reason_code:'DERIVED_CONTEXT_CANDIDATE',generation_id:raw.generation_id,
+        evidence_count:verified.length})};
     },
     async recallPersonal(request) {
       if (!personalRecall) throw new Error('PERSONAL_RECALL_DISABLED');
