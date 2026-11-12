@@ -46,8 +46,13 @@ Stacked on PR #64, which is stacked on PR #63 and the RAG integration PR #46. No
 
 ### New seam test / evidence status
 - Added `tests/cloud-context-gateway-roundtrip.test.js` to **the existing PR #65** (blob SHA `1e5b97070ecee633ad212341536335e8d02373e3`). Six cases specify host-classified personal recall → HTTPS adapter → owner scope → digest/revision/generation → cited answer + receipt; stale/foreign-owner/denied/injected data must fail closed; irrelevant requests must avoid personal access.
-- This **new six-case suite is SOURCE-ADDED, NOT YET GREEN**. GitHub returned zero workflow runs for PR #65 HEAD `9e456dd6d38502bf3300b171b462977dc694d06d`. A remote desktop test attempt reached an OS command-length limit and then a local computer executor alternated between DESKTOP-L6CITUI and MARTHA. Temporary files were removed from both. Do not call that attempt a test pass or a reliable serving lane. Independent Linux client/TLS tests remain 11/11 green.
+- **Verified 17/17 on independent Linux Node v22.16.0 (0 failed, 0 skipped):** the new six-case Context Gateway round trip plus nine HTTPS client tests and two genuine local TLS handshake tests. All 12 source/test files used in this run matched the exact Git blob SHAs fetched from this private PR branch (including `tests/cloud-context-gateway-roundtrip.test.js` = `1e5b97070ecee633ad212341536335e8d02373e3`). Tests used synthetic source responses, not real Drive OAuth or hosted production. GitHub returned no workflow runs for PR #65 HEAD at inspection. Earlier attempts using COS desktop tools failed from Windows process command-length constraints and changing DESKTOP-L6CITUI/MARTHA routing; all temporary files from these attempts were explicitly cleaned on both hosts, and the final **successful** test used the independent Linux environment only.
 - PersistFlow read for the existing RAG run returned an internal error; the run/checkpoint state was **not proven** through PersistFlow. This Git checkpoint is a source record only.
+
+
+### Regression confidence / current release state
+- The composed host -> cloud personal client -> Context Gateway -> owner verified evidence -> cited answer -> receipt chain is **GREEN with fixtures** in portable Node 22. It rejects stale sync, forged owner, denied bearer and prompt-injection content; irrelevant requests do not access private memory.
+- Exactly **17 tests** observed green on Linux, **0 CI runs** observed for PR #65, and **0 live private RAG endpoints** proven by this test. Do not claim real backend Drive auth, continuous serving, current BM25+FAISS or consumer ChatGPT automatic interception.
 
 ### DoD, next boundaries
 1. Use the already-active Automations cloud mirror and original municipal offline code; do not create another indexer or scheduler. A mirror NOOP does not imply an updated RAG index.
