@@ -34,6 +34,7 @@ A failed automatic gate triggers diagnose -> fix within approved architecture ->
 - `FG-005` — current/previous retrieval snapshot rollback succeeds.
 - `FG-006` — local embedding/index manifest records required version fields.
 - `FG-007` — Gabriel Ops renders unavailable providers as unavailable, not synthetic success.
+- `FG-008` — cloud RAG ingress/retrieval, fresh evidence and restart succeed while developer Windows is OFF; no hidden localhost/Windows fallback. Offline-only Node tests do not satisfy production acceptance.
 
 ## Data/state migration gates
 

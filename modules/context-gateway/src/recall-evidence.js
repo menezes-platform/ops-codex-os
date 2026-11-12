@@ -1,7 +1,7 @@
 'use strict';
 const {createHash}=require('node:crypto');
 const UTC=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
-const AUTHORITIES=new Set(['git','drive-episodic','memory']);
+const AUTHORITIES=new Set(['git','drive-episodic','memory','project-derived']);
 const METHODS=new Set(['bm25','faiss','vector','hybrid','manual']);
 function validateRecallEvidence({hits,manifest,sourceAuthority}={}) {
  if (!manifest || typeof manifest.scope!=='string' || !manifest.scope ||
@@ -24,7 +24,7 @@ function validateRecallEvidence({hits,manifest,sourceAuthority}={}) {
   if (hit.content_sha256!==digest) throw new Error('EVIDENCE_DIGEST_MISMATCH');
   return Object.freeze({evidence_id:hit.evidence_id,scope:hit.scope,source_ref:hit.source_ref,
    source_revision:hit.source_revision,observed_at:hit.observed_at,
-   current_state:hit.source_revision===manifest.revision?'current':'superseded',
+   current_state:sourceAuthority==='project-derived'?'candidate':(hit.source_revision===manifest.revision?'current':'superseded'),
    authority:sourceAuthority,content:hit.content,retrieval_method:hit.retrieval_method,
    generation_id:manifest.generation_id,content_sha256:digest});
  }));

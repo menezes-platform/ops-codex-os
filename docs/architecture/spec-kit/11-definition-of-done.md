@@ -43,6 +43,9 @@ The consolidation is done only when the new architecture works **and** obsolete 
 - current/previous generation publication and rollback work;
 - cross-project retrieval leakage = **0**;
 - RAGFlow runtime is not required by the initial target.
+- the hosted RAG serves authenticated, scope-correct, current cited retrieval while the developer Windows is switched off;
+- bounded cloud scheduling, real source freshness, encrypted remote backup, independent restore and no Windows fallback are proven;
+- any unsupported native cloud index/secret-custody requirement stays a blocking gate, never a silent substitution.
 
 ## Execution/security end state
 

@@ -46,6 +46,9 @@ A phase exits only with verifiable evidence. “Looks good”, “seems migrated
 - current/previous rollback works;
 - cross-project leakage = 0;
 - RAGFlow runtime dependency = 0.
+- hosted/cloud primary is independent of the developer Windows PC for retrieval, source synchronization, index serving, credentials and restore;
+- verified cloud schedule updates a real authorized source while Windows is off, with no always-running desktop worker;
+- remote owner auth, freshness/index-generation receipts, encrypted backup/restore and cloud-native BM25+FAISS qualification are observed, not inferred from mock tests.
 
 ## P06 — Provider Gateway Migration
 - platform-owned model calls bypassing Provider Gateway = 0;
