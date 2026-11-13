@@ -11,6 +11,13 @@ Base reutilizável para deixar o Codex mais consistente em qualquer projeto.
 - `scripts/update.ps1`: atualiza a instalação local a partir deste repositório
 - `scripts/bootstrap-project.ps1`: cria a estrutura inicial de um novo projeto
 
+
+## Context HEAD — entrada de recuperação
+
+- [`CONTEXT_HEAD.md`](CONTEXT_HEAD.md) é o contrato de pré-consulta seletiva antes de responder sobre projetos e infraestrutura do usuário: Git/branches/CI, Memory privada, Engram, Drive, PersistFlow e Context Gateway por namespace.
+- [`$context-head`](skills/context-head/SKILL.md) é a skill instalável para agentes; `global/AGENTS.md` exige sua aplicação quando o assunto pede contexto próprio.
+- **Estado:** source-only nesta branch/PR. A existência do HEAD **não garante** invocação automática do ChatGPT nativo, indexação híbrida publicada ou controle sobre contas/serviços não conectados. Não usar o namespace do RAG 50/50 para outros projetos.
+
 ## Estratégia
 
 A arquitetura tem 3 camadas:
