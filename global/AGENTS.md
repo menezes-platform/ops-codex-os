@@ -2,6 +2,11 @@
 
 These are persistent cross-project operating rules for Codex.
 
+## Context HEAD — pre-answer recovery gate
+- Antes de responder ou executar tarefa substantiva sobre a infraestrutura do usuário, projetos, documentos, decisões passadas ou continuidade, aplicar `$context-head` quando disponível e o contrato `CONTEXT_HEAD.md`: pré-consulta seletiva em fontes já conectadas. Não esperar o usuário lembrar quais ferramentas existem.
+- Git/CI/runtime orientam estado de projeto; Memory privada orienta contexto pessoal durável; Engram é episódio; Drive é fonte documental; PersistFlow é continuidade; Context Gateway autentica e limita recall ao namespace exato. Inspecionar branches e handoffs recentes. Indisponibilidade = `source unavailable`, não invenção.
+- Não transformar o RAG da Operação 50/50 em índice global, não copiar segredos, não depender do Windows ligado, nem criar custo novo. Esta regra de agent harness não prova que o ChatGPT nativo executa um hook automático em toda conversa.
+
 ## Core behavior
 - For new projects and non-trivial feature work, prioritize the **first executable vertical slice**: deliver the smallest safe, runnable end-to-end outcome with real input, observable output, and verification evidence before optional improvements; apply `$shipping-functional-slices` automatically.
 - Start by understanding the current project state before making changes.
@@ -104,6 +109,12 @@ These are persistent cross-project operating rules for Codex.
 - For Cloudflare Workers deployments, resolve the exact live hostname to its `workers.dev` account subdomain/account before writing, and verify the active credential/connection controls that same account. A matching Worker script name in another account is not the same production target; stop rather than overwrite it.
 - Never store secrets or credentials in durable context.
 - Use Apache Maka (`https://github.com/apache/maka`) as an architectural reference for durable execution records, recovery, and separation of saved history from model context when relevant; do not make it a dependency unless a project explicitly requires it.
+
+## Cross-source status reconciliation
+- For status, progress, continuation or DoD questions about work spanning agents/sessions, apply `$durable-execution-memory` **before** declaring completed/missing work. Inspect the newest relevant evidence, including current Git/main, non-default branches, PRs and CI, available worktrees/local agent results, scoped Drive handoffs, PersistFlow and Engram, as authorized and relevant. Do not rely on one old checkpoint or search only main.
+- Compare source timestamps and precise revisions, then label evidence as `OBSERVED_REMOTE`, `OBSERVED_LOCAL`, `REPORTED_LOCAL`, `HISTORICAL` or `NOT_VERIFIED`. Separate implementation, tests, physical/runtime acceptance, deployment and formal DoD. An agent's report is not the same as independently rerunning its checks.
+- Before asserting something is *not implemented* or *not done*, satisfy negative-claim coverage: check relevant newer branches, worktrees and handoffs, or explicitly say the newer source is unavailable. If any source is unavailable, state the gap and do not silently downgrade more recent reported progress.
+- Never confuse retrieval/index availability with active tool invocation, production promotion, automatic cross-session memory, or an authority cutover. Preserve project scopes, privacy and existing cost gates.
 
 ## Mandatory account-memory ingestion
 - Before finalizing every substantive chat or task, decide whether the interaction produced stable cross-project user context that should survive the conversation.
