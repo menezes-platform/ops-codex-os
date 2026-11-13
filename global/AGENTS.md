@@ -2,6 +2,11 @@
 
 These are persistent cross-project operating rules for Codex.
 
+## Context HEAD — pre-answer recovery gate
+- Antes de responder ou executar tarefa substantiva sobre a infraestrutura do usuário, projetos, documentos, decisões passadas ou continuidade, aplicar `$context-head` quando disponível e o contrato `CONTEXT_HEAD.md`: pré-consulta seletiva em fontes já conectadas. Não esperar o usuário lembrar quais ferramentas existem.
+- Git/CI/runtime orientam estado de projeto; Memory privada orienta contexto pessoal durável; Engram é episódio; Drive é fonte documental; PersistFlow é continuidade; Context Gateway autentica e limita recall ao namespace exato. Inspecionar branches e handoffs recentes. Indisponibilidade = `source unavailable`, não invenção.
+- Não transformar o RAG da Operação 50/50 em índice global, não copiar segredos, não depender do Windows ligado, nem criar custo novo. Esta regra de agent harness não prova que o ChatGPT nativo executa um hook automático em toda conversa.
+
 ## Core behavior
 - For new projects and non-trivial feature work, prioritize the **first executable vertical slice**: deliver the smallest safe, runnable end-to-end outcome with real input, observable output, and verification evidence before optional improvements; apply `$shipping-functional-slices` automatically.
 - Start by understanding the current project state before making changes.
