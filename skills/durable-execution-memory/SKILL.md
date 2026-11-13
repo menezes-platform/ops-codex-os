@@ -47,6 +47,10 @@ Use repo-local durable context when available:
 
 If the repository uses another established convention, preserve it instead of forcing these paths.
 
+## Context HEAD preflight
+
+Para tarefas substantivas de projetos, infraestrutura, recuperação histórica ou continuidade, aplicar o contrato `CONTEXT_HEAD.md` e a skill `$context-head` antes da resposta. O HEAD roteia fontes atuais de Git, Memory privada, Engram, Drive, PersistFlow e Context Gateway por escopo, e não substitui a reconciliação temporal abaixo. Na falta de skill/arquivo, aplicar fallback seletivo e declarar as lacunas. A presença de instrução no Git não comprova invocação automática do ChatGPT nativo.
+
 ## Start / resume workflow
 1. Inspect repository status and current branch.
 2. Read repo-local `AGENTS.md` and relevant durable context files.
