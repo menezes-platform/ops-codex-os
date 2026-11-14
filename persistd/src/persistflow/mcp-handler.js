@@ -16,7 +16,7 @@ function sameToken(actual, expected) {
   return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
 }
 
-function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl, validateBearer, resourceMetadataUrl } = {}) {
+function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl, validateBearer, resourceMetadataUrl, plandexController } = {}) {
   if (!service) throw new Error('PERSISTFLOW_SERVICE_REQUIRED');
   const handler = createMcpHandler((ctx) => {
     const resolvedIconUrl = iconUrl || (ctx.requestInfo ? new URL('/persistflow.svg', ctx.requestInfo.url).href : '');
@@ -220,6 +220,30 @@ function createPersistFlowMcpNodeHandler({ service, token, tokenDigest, iconUrl,
         nextSafeAction: z.string().optional(),
       }),
     }, async ({ runId, ...input }) => jsonResult(await service.sandboxDestroy(runId, input)));
+
+    // Plandex is only one hardcoded, user-owned GitHub Codespace. The controller
+    // enforces repository identity and refuses start without fresh trusted proof
+    // of a zero-overage hard stop. No shell access, model calls or deletion.
+    if (plandexController) {
+      server.registerTool('plandex_status', {
+        title: 'Inspect private Plandex Codespace',
+        description: 'Read-only status of the single allowlisted GitHub Codespace. Does not start a machine.',
+        inputSchema: z.object({}),
+        annotations: { readOnlyHint: true },
+      }, async () => jsonResult({ codespace: await plandexController.status() }));
+
+      server.registerTool('plandex_start', {
+        title: 'Start private Plandex Codespace',
+        description: 'Starts the existing allowlisted Codespace only with explicit approval and fresh trusted proof of a USD 0 hard-stop budget. Never runs a model.',
+        inputSchema: z.object({ confirm: z.literal(true) }),
+      }, async () => jsonResult({ codespace: await plandexController.start() }));
+
+      server.registerTool('plandex_stop', {
+        title: 'Stop private Plandex Codespace',
+        description: 'Stops only the allowlisted Codespace; verifies current state. Never deletes files or the Codespace.',
+        inputSchema: z.object({}),
+      }, async () => jsonResult({ codespace: await plandexController.stop() }));
+    }
 
     return server;
   }, { responseMode: 'json' });
