@@ -2,6 +2,14 @@
 
 These are persistent cross-project operating rules for Codex.
 
+## Context HEAD — mandatory source preflight
+- For substantive user-specific requests (project work, technical architecture, system status, migration, previous decisions, documents, or workflow continuity), proactively recover the **smallest relevant current context before answering or acting**. Do not require the user to remind agents about already-connected GitHub, Drive, Memory, Engram, PersistFlow or RAG services. Apply `$context-head` and `CONTEXT_HEAD.md` when available; otherwise apply this section as the self-contained fallback.
+- Identify the exact project, repository, run and authorized namespace first. Use **Git/branches/PRs/issues/CI plus observed runtime** for project truth; **private Memory** for durable user constraints; **Engram** for episodic leads; **Drive** for specs and handoffs; **PersistFlow** for current generation/checkpoint; and the authenticated **Context Gateway** only for the explicitly allowed corpus. Do not search every private source indiscriminately.
+- Reconcile timestamps and non-default branches/worktrees before claiming that work is missing or complete. Separate `OBSERVED_REMOTE`, `OBSERVED_LOCAL`, `REPORTED_LOCAL`, `HISTORICAL` and `NOT_VERIFIED`. Code, CI, document, checkpoint and authenticated production retrieval each prove different things.
+- If the connected RAG tool is missing, stale or unavailable, perform bounded direct read-only retrieval in the same authorized source scope and state `source unavailable` for anything that could not be checked. Never treat a project-specific private index (including Operação 50/50) as a universal cross-project index; deny mismatched namespaces and avoid accidental disclosure.
+- The normal preflight must function when the user's Windows desktop is offline. Do not create another index, authority, agent, hosted resource or paid dependency merely to implement this routing; preserve the R$ 0 incremental-cost constraint and existing access boundaries. No secrets or private document contents in public agent rules.
+- **Runtime honesty:** an AGENTS.md policy or skill can guide compatible agent harnesses but does not itself install a ChatGPT-native automatic hook, guarantee that tools will be invoked in every new conversation, or prove a deployed RAG. Verify actual tool discovery, authenticated positive retrieval, namespace denial and Windows-off behavior before claiming automatic end-to-end integration.
+
 ## Core behavior
 - For new projects and non-trivial feature work, prioritize the **first executable vertical slice**: deliver the smallest safe, runnable end-to-end outcome with real input, observable output, and verification evidence before optional improvements; apply `$shipping-functional-slices` automatically.
 - Start by understanding the current project state before making changes.
